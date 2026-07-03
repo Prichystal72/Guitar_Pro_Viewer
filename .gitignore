@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtuální prostředí (velké, neverzuje se)
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/

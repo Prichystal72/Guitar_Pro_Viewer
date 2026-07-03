@@ -1,0 +1,2075 @@
+{
+  "meta": {
+    "format_version": 2,
+    "title": "Dej mi víc své lásky",
+    "artist": "Olympic",
+    "tempo_bpm": 120,
+    "ticks_per_beat": 960,
+    "source": "https://pisnicky-akordy.cz/olympic/dej-mi-vic-sve-lasky",
+    "duration_seconds": 80.0,
+    "total_measures": 40,
+    "track_count": 1
+  },
+  "tempo_map": [
+    {
+      "tick": 960,
+      "bpm": 120
+    }
+  ],
+  "tracks": [
+    {
+      "index": 1,
+      "name": "Dej mi víc své lásky",
+      "type": "guitar",
+      "is_drums": false,
+      "instrument_midi": 25,
+      "has_tab": false
+    }
+  ],
+  "lyrics_timeline": [
+    {
+      "time_s": 0.0,
+      "duration_s": 0.5,
+      "text": "|Ami",
+      "measure": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 0.5,
+      "duration_s": 0.5,
+      "text": "G|E|",
+      "measure": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 1.0,
+      "duration_s": 0.5,
+      "text": "2x",
+      "measure": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 2.0,
+      "duration_s": 0.5,
+      "text": "1.",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 2.5,
+      "duration_s": 0.5,
+      "text": "Vymyslel",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 3.0,
+      "duration_s": 0.5,
+      "text": "jsem",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 3.5,
+      "duration_s": 0.5,
+      "text": "spoustu",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 4.0,
+      "duration_s": 0.5,
+      "text": "napadů,",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 4.5,
+      "duration_s": 0.5,
+      "text": "aú,",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 6.0,
+      "duration_s": 0.5,
+      "text": "co",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 6.5,
+      "duration_s": 0.5,
+      "text": "podporujou",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 7.0,
+      "duration_s": 0.5,
+      "text": "hloupou",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 7.5,
+      "duration_s": 0.5,
+      "text": "náladu,",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 8.0,
+      "duration_s": 0.5,
+      "text": "aú,",
+      "measure": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 10.0,
+      "duration_s": 0.5,
+      "text": "hodit",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 10.5,
+      "duration_s": 0.5,
+      "text": "klíče",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 11.0,
+      "duration_s": 0.5,
+      "text": "do",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 11.5,
+      "duration_s": 0.5,
+      "text": "kanálu,",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 12.0,
+      "duration_s": 0.5,
+      "text": "sjet",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 12.5,
+      "duration_s": 0.5,
+      "text": "po",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 13.0,
+      "duration_s": 0.5,
+      "text": "zadku",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 13.5,
+      "duration_s": 0.5,
+      "text": "holou",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 14.0,
+      "duration_s": 0.5,
+      "text": "skálu,",
+      "measure": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.0,
+      "duration_s": 0.5,
+      "text": "v",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.5,
+      "duration_s": 0.5,
+      "text": "noci",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 17.0,
+      "duration_s": 0.5,
+      "text": "chodit",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 17.5,
+      "duration_s": 0.5,
+      "text": "strašit",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.0,
+      "duration_s": 0.5,
+      "text": "do",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.5,
+      "duration_s": 0.5,
+      "text": "hradu.",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 20.0,
+      "duration_s": 0.5,
+      "text": "2.",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 20.5,
+      "duration_s": 0.5,
+      "text": "Dám",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 21.0,
+      "duration_s": 0.5,
+      "text": "si",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 21.5,
+      "duration_s": 0.5,
+      "text": "dvoje",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 22.0,
+      "duration_s": 0.5,
+      "text": "housle",
+      "measure": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 22.5,
+      "duration_s": 0.5,
+      "text": "pod",
+      "measure": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 23.0,
+      "duration_s": 0.5,
+      "text": "bradu,",
+      "measure": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 23.5,
+      "duration_s": 0.5,
+      "text": "aú,",
+      "measure": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 24.0,
+      "duration_s": 0.5,
+      "text": "v",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 24.5,
+      "duration_s": 0.5,
+      "text": "bílé",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 25.0,
+      "duration_s": 0.5,
+      "text": "plachtě",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 25.5,
+      "duration_s": 0.5,
+      "text": "chodím",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 26.0,
+      "duration_s": 0.5,
+      "text": "pozadu,",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 26.5,
+      "duration_s": 0.5,
+      "text": "aú,",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 28.0,
+      "duration_s": 0.5,
+      "text": "úplně",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 28.5,
+      "duration_s": 0.5,
+      "text": "melancholicky,",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 29.0,
+      "duration_s": 0.5,
+      "text": "s",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 29.5,
+      "duration_s": 0.5,
+      "text": "citem",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 30.0,
+      "duration_s": 0.5,
+      "text": "pro",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 30.5,
+      "duration_s": 0.5,
+      "text": "věc",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 31.0,
+      "duration_s": 0.5,
+      "text": "jako",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 31.5,
+      "duration_s": 0.5,
+      "text": "vždycky",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 32.0,
+      "duration_s": 0.5,
+      "text": "vyrábím",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 32.5,
+      "duration_s": 0.5,
+      "text": "tu",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 33.0,
+      "duration_s": 0.5,
+      "text": "hradní",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 33.5,
+      "duration_s": 0.5,
+      "text": "záhadu,",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 34.0,
+      "duration_s": 0.5,
+      "text": "aú...",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.0,
+      "duration_s": 0.5,
+      "text": "R.",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.5,
+      "duration_s": 0.5,
+      "text": "Má",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 37.0,
+      "duration_s": 0.5,
+      "text": "drahá,",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 37.5,
+      "duration_s": 0.5,
+      "text": "dej",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 38.0,
+      "duration_s": 0.5,
+      "text": "mi",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 38.5,
+      "duration_s": 0.5,
+      "text": "víc,",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 39.0,
+      "duration_s": 0.5,
+      "text": "má",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 39.5,
+      "duration_s": 0.5,
+      "text": "drahá,",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 40.0,
+      "duration_s": 0.5,
+      "text": "dej",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 40.5,
+      "duration_s": 0.5,
+      "text": "mi",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 41.0,
+      "duration_s": 0.5,
+      "text": "víc,",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 42.0,
+      "duration_s": 0.5,
+      "text": "má",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 42.5,
+      "duration_s": 0.5,
+      "text": "drahá,",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 43.0,
+      "duration_s": 0.5,
+      "text": "dej",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 43.5,
+      "duration_s": 0.5,
+      "text": "mi",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 44.0,
+      "duration_s": 0.5,
+      "text": "víc",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 44.5,
+      "duration_s": 0.5,
+      "text": "své",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 45.0,
+      "duration_s": 0.5,
+      "text": "lásky,",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 45.5,
+      "duration_s": 0.5,
+      "text": "aú,",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 46.0,
+      "duration_s": 0.5,
+      "text": "já",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 46.5,
+      "duration_s": 0.5,
+      "text": "nechci",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 47.0,
+      "duration_s": 0.5,
+      "text": "skoro",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 47.5,
+      "duration_s": 0.5,
+      "text": "nic,",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 48.0,
+      "duration_s": 0.5,
+      "text": "já",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 48.5,
+      "duration_s": 0.5,
+      "text": "nechci",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 49.0,
+      "duration_s": 0.5,
+      "text": "skoro",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 49.5,
+      "duration_s": 0.5,
+      "text": "nic,",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 50.0,
+      "duration_s": 0.5,
+      "text": "já",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 50.5,
+      "duration_s": 0.5,
+      "text": "chci",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 51.0,
+      "duration_s": 0.5,
+      "text": "jen",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 51.5,
+      "duration_s": 0.5,
+      "text": "pohladit",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 52.0,
+      "duration_s": 0.5,
+      "text": "tvé",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 52.5,
+      "duration_s": 0.5,
+      "text": "vlásky,",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 53.0,
+      "duration_s": 0.5,
+      "text": "aú...",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 54.0,
+      "duration_s": 0.5,
+      "text": "3.",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 54.5,
+      "duration_s": 0.5,
+      "text": "Nejlepší",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 55.0,
+      "duration_s": 0.5,
+      "text": "z",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 55.5,
+      "duration_s": 0.5,
+      "text": "těch",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 56.0,
+      "duration_s": 0.5,
+      "text": "divnejch",
+      "measure": 29,
+      "track_index": 1
+    },
+    {
+      "time_s": 56.5,
+      "duration_s": 0.5,
+      "text": "nápadů,",
+      "measure": 29,
+      "track_index": 1
+    },
+    {
+      "time_s": 57.0,
+      "duration_s": 0.5,
+      "text": "aú,",
+      "measure": 29,
+      "track_index": 1
+    },
+    {
+      "time_s": 58.0,
+      "duration_s": 0.5,
+      "text": "mi",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 58.5,
+      "duration_s": 0.5,
+      "text": "dokonale",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 59.0,
+      "duration_s": 0.5,
+      "text": "zvednul",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 59.5,
+      "duration_s": 0.5,
+      "text": "náladu,",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 60.0,
+      "duration_s": 0.5,
+      "text": "aú,",
+      "measure": 31,
+      "track_index": 1
+    },
+    {
+      "time_s": 62.0,
+      "duration_s": 0.5,
+      "text": "natrhám",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 62.5,
+      "duration_s": 0.5,
+      "text": "ti",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 63.0,
+      "duration_s": 0.5,
+      "text": "sedmikrásky,",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 63.5,
+      "duration_s": 0.5,
+      "text": "Tebe",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 64.0,
+      "duration_s": 0.5,
+      "text": "celou",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 64.5,
+      "duration_s": 0.5,
+      "text": "s",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.0,
+      "duration_s": 0.5,
+      "text": "tvými",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.5,
+      "duration_s": 0.5,
+      "text": "vlásky",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 66.0,
+      "duration_s": 0.5,
+      "text": "zamknu",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 66.5,
+      "duration_s": 0.5,
+      "text": "si",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 67.0,
+      "duration_s": 0.5,
+      "text": "na",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 67.5,
+      "duration_s": 0.5,
+      "text": "sedm",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 68.0,
+      "duration_s": 0.5,
+      "text": "západů.",
+      "measure": 35,
+      "track_index": 1
+    },
+    {
+      "time_s": 70.0,
+      "duration_s": 0.5,
+      "text": "sólo",
+      "measure": 36,
+      "track_index": 1
+    },
+    {
+      "time_s": 70.5,
+      "duration_s": 0.5,
+      "text": "na",
+      "measure": 36,
+      "track_index": 1
+    },
+    {
+      "time_s": 71.0,
+      "duration_s": 0.5,
+      "text": "2.",
+      "measure": 36,
+      "track_index": 1
+    },
+    {
+      "time_s": 71.5,
+      "duration_s": 0.5,
+      "text": "sloku",
+      "measure": 36,
+      "track_index": 1
+    },
+    {
+      "time_s": 72.0,
+      "duration_s": 0.5,
+      "text": "R.",
+      "measure": 37,
+      "track_index": 1
+    },
+    {
+      "time_s": 74.0,
+      "duration_s": 0.5,
+      "text": "4.=",
+      "measure": 38,
+      "track_index": 1
+    },
+    {
+      "time_s": 74.5,
+      "duration_s": 0.5,
+      "text": "3.",
+      "measure": 38,
+      "track_index": 1
+    },
+    {
+      "time_s": 76.0,
+      "duration_s": 0.5,
+      "text": "Sólo",
+      "measure": 39,
+      "track_index": 1
+    },
+    {
+      "time_s": 76.5,
+      "duration_s": 0.5,
+      "text": "dohra:",
+      "measure": 39,
+      "track_index": 1
+    },
+    {
+      "time_s": 77.0,
+      "duration_s": 0.5,
+      "text": "aú",
+      "measure": 39,
+      "track_index": 1
+    },
+    {
+      "time_s": 77.5,
+      "duration_s": 0.5,
+      "text": "aú",
+      "measure": 39,
+      "track_index": 1
+    },
+    {
+      "time_s": 78.0,
+      "duration_s": 0.5,
+      "text": "aú",
+      "measure": 40,
+      "track_index": 1
+    },
+    {
+      "time_s": 78.5,
+      "duration_s": 0.5,
+      "text": "aú",
+      "measure": 40,
+      "track_index": 1
+    }
+  ],
+  "chords_timeline": [
+    {
+      "time_s": 2.5,
+      "chord": "Ami",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 4.5,
+      "chord": "C",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 6.5,
+      "chord": "Ami",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 7.5,
+      "chord": "G",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 8.0,
+      "chord": "E",
+      "measure": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 10.0,
+      "chord": "Ami",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 12.0,
+      "chord": "D",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 13.5,
+      "chord": "Dmi",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.0,
+      "chord": "Ami",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 17.5,
+      "chord": "E",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.5,
+      "chord": "Ami",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 23.5,
+      "chord": "C",
+      "measure": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 24.5,
+      "chord": "Ami",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 26.0,
+      "chord": "G",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 26.5,
+      "chord": "E",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 28.0,
+      "chord": "Ami",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 29.5,
+      "chord": "D",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 31.0,
+      "chord": "Dmi",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 32.0,
+      "chord": "Ami",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 33.0,
+      "chord": "E",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 33.5,
+      "chord": "Ami",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 34.0,
+      "chord": "G",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.5,
+      "chord": "C",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 39.0,
+      "chord": "E",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 42.0,
+      "chord": "Ami",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 43.0,
+      "chord": "F",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 45.0,
+      "chord": "C",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 45.5,
+      "chord": "G",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 46.0,
+      "chord": "C",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 48.0,
+      "chord": "E",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 50.0,
+      "chord": "Ami",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 51.5,
+      "chord": "F",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 52.5,
+      "chord": "C",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 53.0,
+      "chord": "E",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 54.5,
+      "chord": "Ami",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 57.0,
+      "chord": "C",
+      "measure": 29,
+      "track_index": 1
+    },
+    {
+      "time_s": 58.5,
+      "chord": "Ami",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 60.0,
+      "chord": "G",
+      "measure": 31,
+      "track_index": 1
+    },
+    {
+      "time_s": 62.0,
+      "chord": "Ami",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 63.5,
+      "chord": "D",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.0,
+      "chord": "Dmi",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 66.0,
+      "chord": "Ami",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 67.0,
+      "chord": "E",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 68.0,
+      "chord": "Ami",
+      "measure": 35,
+      "track_index": 1
+    },
+    {
+      "time_s": 71.5,
+      "chord": "C",
+      "measure": 36,
+      "track_index": 1
+    },
+    {
+      "time_s": 72.0,
+      "chord": "Ami",
+      "measure": 37,
+      "track_index": 1
+    }
+  ],
+  "karaoke_lines": [
+    {
+      "start_s": 0.0,
+      "chords": [],
+      "text": "|Ami G|E| 2x",
+      "words": [
+        {
+          "time_s": 0.0,
+          "text": "|Ami",
+          "track_index": 1
+        },
+        {
+          "time_s": 0.5,
+          "text": "G|E|",
+          "track_index": 1
+        },
+        {
+          "time_s": 1.0,
+          "text": "2x",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 2.0,
+      "chords": [
+        "Ami",
+        "C"
+      ],
+      "text": "1. Vymyslel jsem spoustu napadů, aú,",
+      "words": [
+        {
+          "time_s": 2.0,
+          "text": "1.",
+          "track_index": 1
+        },
+        {
+          "time_s": 2.5,
+          "text": "Vymyslel",
+          "track_index": 1
+        },
+        {
+          "time_s": 3.0,
+          "text": "jsem",
+          "track_index": 1
+        },
+        {
+          "time_s": 3.5,
+          "text": "spoustu",
+          "track_index": 1
+        },
+        {
+          "time_s": 4.0,
+          "text": "napadů,",
+          "track_index": 1
+        },
+        {
+          "time_s": 4.5,
+          "text": "aú,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 6.0,
+      "chords": [
+        "C",
+        "Ami",
+        "G",
+        "E"
+      ],
+      "text": "co podporujou hloupou náladu, aú,",
+      "words": [
+        {
+          "time_s": 6.0,
+          "text": "co",
+          "track_index": 1
+        },
+        {
+          "time_s": 6.5,
+          "text": "podporujou",
+          "track_index": 1
+        },
+        {
+          "time_s": 7.0,
+          "text": "hloupou",
+          "track_index": 1
+        },
+        {
+          "time_s": 7.5,
+          "text": "náladu,",
+          "track_index": 1
+        },
+        {
+          "time_s": 8.0,
+          "text": "aú,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 10.0,
+      "chords": [
+        "E",
+        "Ami",
+        "D",
+        "Dmi"
+      ],
+      "text": "hodit klíče do kanálu, sjet po zadku holou skálu,",
+      "words": [
+        {
+          "time_s": 10.0,
+          "text": "hodit",
+          "track_index": 1
+        },
+        {
+          "time_s": 10.5,
+          "text": "klíče",
+          "track_index": 1
+        },
+        {
+          "time_s": 11.0,
+          "text": "do",
+          "track_index": 1
+        },
+        {
+          "time_s": 11.5,
+          "text": "kanálu,",
+          "track_index": 1
+        },
+        {
+          "time_s": 12.0,
+          "text": "sjet",
+          "track_index": 1
+        },
+        {
+          "time_s": 12.5,
+          "text": "po",
+          "track_index": 1
+        },
+        {
+          "time_s": 13.0,
+          "text": "zadku",
+          "track_index": 1
+        },
+        {
+          "time_s": 13.5,
+          "text": "holou",
+          "track_index": 1
+        },
+        {
+          "time_s": 14.0,
+          "text": "skálu,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 16.0,
+      "chords": [
+        "Dmi",
+        "Ami",
+        "E"
+      ],
+      "text": "v noci chodit strašit do hradu.",
+      "words": [
+        {
+          "time_s": 16.0,
+          "text": "v",
+          "track_index": 1
+        },
+        {
+          "time_s": 16.5,
+          "text": "noci",
+          "track_index": 1
+        },
+        {
+          "time_s": 17.0,
+          "text": "chodit",
+          "track_index": 1
+        },
+        {
+          "time_s": 17.5,
+          "text": "strašit",
+          "track_index": 1
+        },
+        {
+          "time_s": 18.0,
+          "text": "do",
+          "track_index": 1
+        },
+        {
+          "time_s": 18.5,
+          "text": "hradu.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 20.0,
+      "chords": [
+        "Ami",
+        "C"
+      ],
+      "text": "2. Dám si dvoje housle pod bradu, aú,",
+      "words": [
+        {
+          "time_s": 20.0,
+          "text": "2.",
+          "track_index": 1
+        },
+        {
+          "time_s": 20.5,
+          "text": "Dám",
+          "track_index": 1
+        },
+        {
+          "time_s": 21.0,
+          "text": "si",
+          "track_index": 1
+        },
+        {
+          "time_s": 21.5,
+          "text": "dvoje",
+          "track_index": 1
+        },
+        {
+          "time_s": 22.0,
+          "text": "housle",
+          "track_index": 1
+        },
+        {
+          "time_s": 22.5,
+          "text": "pod",
+          "track_index": 1
+        },
+        {
+          "time_s": 23.0,
+          "text": "bradu,",
+          "track_index": 1
+        },
+        {
+          "time_s": 23.5,
+          "text": "aú,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 24.0,
+      "chords": [
+        "C",
+        "Ami",
+        "G",
+        "E"
+      ],
+      "text": "v bílé plachtě chodím pozadu, aú,",
+      "words": [
+        {
+          "time_s": 24.0,
+          "text": "v",
+          "track_index": 1
+        },
+        {
+          "time_s": 24.5,
+          "text": "bílé",
+          "track_index": 1
+        },
+        {
+          "time_s": 25.0,
+          "text": "plachtě",
+          "track_index": 1
+        },
+        {
+          "time_s": 25.5,
+          "text": "chodím",
+          "track_index": 1
+        },
+        {
+          "time_s": 26.0,
+          "text": "pozadu,",
+          "track_index": 1
+        },
+        {
+          "time_s": 26.5,
+          "text": "aú,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 28.0,
+      "chords": [
+        "E",
+        "Ami",
+        "D",
+        "Dmi"
+      ],
+      "text": "úplně melancholicky, s citem pro věc jako vždycky",
+      "words": [
+        {
+          "time_s": 28.0,
+          "text": "úplně",
+          "track_index": 1
+        },
+        {
+          "time_s": 28.5,
+          "text": "melancholicky,",
+          "track_index": 1
+        },
+        {
+          "time_s": 29.0,
+          "text": "s",
+          "track_index": 1
+        },
+        {
+          "time_s": 29.5,
+          "text": "citem",
+          "track_index": 1
+        },
+        {
+          "time_s": 30.0,
+          "text": "pro",
+          "track_index": 1
+        },
+        {
+          "time_s": 30.5,
+          "text": "věc",
+          "track_index": 1
+        },
+        {
+          "time_s": 31.0,
+          "text": "jako",
+          "track_index": 1
+        },
+        {
+          "time_s": 31.5,
+          "text": "vždycky",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 32.0,
+      "chords": [
+        "Dmi",
+        "Ami",
+        "E",
+        "G"
+      ],
+      "text": "vyrábím tu hradní záhadu, aú...",
+      "words": [
+        {
+          "time_s": 32.0,
+          "text": "vyrábím",
+          "track_index": 1
+        },
+        {
+          "time_s": 32.5,
+          "text": "tu",
+          "track_index": 1
+        },
+        {
+          "time_s": 33.0,
+          "text": "hradní",
+          "track_index": 1
+        },
+        {
+          "time_s": 33.5,
+          "text": "záhadu,",
+          "track_index": 1
+        },
+        {
+          "time_s": 34.0,
+          "text": "aú...",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 36.0,
+      "chords": [
+        "G",
+        "C",
+        "E"
+      ],
+      "text": "R. Má drahá, dej mi víc, má drahá, dej mi víc,",
+      "words": [
+        {
+          "time_s": 36.0,
+          "text": "R.",
+          "track_index": 1
+        },
+        {
+          "time_s": 36.5,
+          "text": "Má",
+          "track_index": 1
+        },
+        {
+          "time_s": 37.0,
+          "text": "drahá,",
+          "track_index": 1
+        },
+        {
+          "time_s": 37.5,
+          "text": "dej",
+          "track_index": 1
+        },
+        {
+          "time_s": 38.0,
+          "text": "mi",
+          "track_index": 1
+        },
+        {
+          "time_s": 38.5,
+          "text": "víc,",
+          "track_index": 1
+        },
+        {
+          "time_s": 39.0,
+          "text": "má",
+          "track_index": 1
+        },
+        {
+          "time_s": 39.5,
+          "text": "drahá,",
+          "track_index": 1
+        },
+        {
+          "time_s": 40.0,
+          "text": "dej",
+          "track_index": 1
+        },
+        {
+          "time_s": 40.5,
+          "text": "mi",
+          "track_index": 1
+        },
+        {
+          "time_s": 41.0,
+          "text": "víc,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 42.0,
+      "chords": [
+        "E",
+        "Ami",
+        "F",
+        "C",
+        "G"
+      ],
+      "text": "má drahá, dej mi víc své lásky, aú,",
+      "words": [
+        {
+          "time_s": 42.0,
+          "text": "má",
+          "track_index": 1
+        },
+        {
+          "time_s": 42.5,
+          "text": "drahá,",
+          "track_index": 1
+        },
+        {
+          "time_s": 43.0,
+          "text": "dej",
+          "track_index": 1
+        },
+        {
+          "time_s": 43.5,
+          "text": "mi",
+          "track_index": 1
+        },
+        {
+          "time_s": 44.0,
+          "text": "víc",
+          "track_index": 1
+        },
+        {
+          "time_s": 44.5,
+          "text": "své",
+          "track_index": 1
+        },
+        {
+          "time_s": 45.0,
+          "text": "lásky,",
+          "track_index": 1
+        },
+        {
+          "time_s": 45.5,
+          "text": "aú,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 46.0,
+      "chords": [
+        "G",
+        "C",
+        "E"
+      ],
+      "text": "já nechci skoro nic, já nechci skoro nic,",
+      "words": [
+        {
+          "time_s": 46.0,
+          "text": "já",
+          "track_index": 1
+        },
+        {
+          "time_s": 46.5,
+          "text": "nechci",
+          "track_index": 1
+        },
+        {
+          "time_s": 47.0,
+          "text": "skoro",
+          "track_index": 1
+        },
+        {
+          "time_s": 47.5,
+          "text": "nic,",
+          "track_index": 1
+        },
+        {
+          "time_s": 48.0,
+          "text": "já",
+          "track_index": 1
+        },
+        {
+          "time_s": 48.5,
+          "text": "nechci",
+          "track_index": 1
+        },
+        {
+          "time_s": 49.0,
+          "text": "skoro",
+          "track_index": 1
+        },
+        {
+          "time_s": 49.5,
+          "text": "nic,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 50.0,
+      "chords": [
+        "E",
+        "Ami",
+        "F",
+        "C"
+      ],
+      "text": "já chci jen pohladit tvé vlásky, aú...",
+      "words": [
+        {
+          "time_s": 50.0,
+          "text": "já",
+          "track_index": 1
+        },
+        {
+          "time_s": 50.5,
+          "text": "chci",
+          "track_index": 1
+        },
+        {
+          "time_s": 51.0,
+          "text": "jen",
+          "track_index": 1
+        },
+        {
+          "time_s": 51.5,
+          "text": "pohladit",
+          "track_index": 1
+        },
+        {
+          "time_s": 52.0,
+          "text": "tvé",
+          "track_index": 1
+        },
+        {
+          "time_s": 52.5,
+          "text": "vlásky,",
+          "track_index": 1
+        },
+        {
+          "time_s": 53.0,
+          "text": "aú...",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 54.0,
+      "chords": [
+        "E",
+        "Ami",
+        "C"
+      ],
+      "text": "3. Nejlepší z těch divnejch nápadů, aú,",
+      "words": [
+        {
+          "time_s": 54.0,
+          "text": "3.",
+          "track_index": 1
+        },
+        {
+          "time_s": 54.5,
+          "text": "Nejlepší",
+          "track_index": 1
+        },
+        {
+          "time_s": 55.0,
+          "text": "z",
+          "track_index": 1
+        },
+        {
+          "time_s": 55.5,
+          "text": "těch",
+          "track_index": 1
+        },
+        {
+          "time_s": 56.0,
+          "text": "divnejch",
+          "track_index": 1
+        },
+        {
+          "time_s": 56.5,
+          "text": "nápadů,",
+          "track_index": 1
+        },
+        {
+          "time_s": 57.0,
+          "text": "aú,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 58.0,
+      "chords": [
+        "C",
+        "Ami",
+        "G"
+      ],
+      "text": "mi dokonale zvednul náladu, aú,",
+      "words": [
+        {
+          "time_s": 58.0,
+          "text": "mi",
+          "track_index": 1
+        },
+        {
+          "time_s": 58.5,
+          "text": "dokonale",
+          "track_index": 1
+        },
+        {
+          "time_s": 59.0,
+          "text": "zvednul",
+          "track_index": 1
+        },
+        {
+          "time_s": 59.5,
+          "text": "náladu,",
+          "track_index": 1
+        },
+        {
+          "time_s": 60.0,
+          "text": "aú,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 62.0,
+      "chords": [
+        "G",
+        "Ami",
+        "D",
+        "Dmi"
+      ],
+      "text": "natrhám ti sedmikrásky, Tebe celou s tvými vlásky",
+      "words": [
+        {
+          "time_s": 62.0,
+          "text": "natrhám",
+          "track_index": 1
+        },
+        {
+          "time_s": 62.5,
+          "text": "ti",
+          "track_index": 1
+        },
+        {
+          "time_s": 63.0,
+          "text": "sedmikrásky,",
+          "track_index": 1
+        },
+        {
+          "time_s": 63.5,
+          "text": "Tebe",
+          "track_index": 1
+        },
+        {
+          "time_s": 64.0,
+          "text": "celou",
+          "track_index": 1
+        },
+        {
+          "time_s": 64.5,
+          "text": "s",
+          "track_index": 1
+        },
+        {
+          "time_s": 65.0,
+          "text": "tvými",
+          "track_index": 1
+        },
+        {
+          "time_s": 65.5,
+          "text": "vlásky",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 66.0,
+      "chords": [
+        "Dmi",
+        "Ami",
+        "E"
+      ],
+      "text": "zamknu si na sedm západů.",
+      "words": [
+        {
+          "time_s": 66.0,
+          "text": "zamknu",
+          "track_index": 1
+        },
+        {
+          "time_s": 66.5,
+          "text": "si",
+          "track_index": 1
+        },
+        {
+          "time_s": 67.0,
+          "text": "na",
+          "track_index": 1
+        },
+        {
+          "time_s": 67.5,
+          "text": "sedm",
+          "track_index": 1
+        },
+        {
+          "time_s": 68.0,
+          "text": "západů.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 70.0,
+      "chords": [
+        "Ami",
+        "C"
+      ],
+      "text": "sólo na 2. sloku",
+      "words": [
+        {
+          "time_s": 70.0,
+          "text": "sólo",
+          "track_index": 1
+        },
+        {
+          "time_s": 70.5,
+          "text": "na",
+          "track_index": 1
+        },
+        {
+          "time_s": 71.0,
+          "text": "2.",
+          "track_index": 1
+        },
+        {
+          "time_s": 71.5,
+          "text": "sloku",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 72.0,
+      "chords": [
+        "C",
+        "Ami"
+      ],
+      "text": "R.",
+      "words": [
+        {
+          "time_s": 72.0,
+          "text": "R.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 74.0,
+      "chords": [
+        "Ami"
+      ],
+      "text": "4.= 3.",
+      "words": [
+        {
+          "time_s": 74.0,
+          "text": "4.=",
+          "track_index": 1
+        },
+        {
+          "time_s": 74.5,
+          "text": "3.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 76.0,
+      "chords": [
+        "Ami"
+      ],
+      "text": "Sólo dohra: aú aú aú aú",
+      "words": [
+        {
+          "time_s": 76.0,
+          "text": "Sólo",
+          "track_index": 1
+        },
+        {
+          "time_s": 76.5,
+          "text": "dohra:",
+          "track_index": 1
+        },
+        {
+          "time_s": 77.0,
+          "text": "aú",
+          "track_index": 1
+        },
+        {
+          "time_s": 77.5,
+          "text": "aú",
+          "track_index": 1
+        },
+        {
+          "time_s": 78.0,
+          "text": "aú",
+          "track_index": 1
+        },
+        {
+          "time_s": 78.5,
+          "text": "aú",
+          "track_index": 1
+        }
+      ]
+    }
+  ]
+}

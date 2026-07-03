@@ -1,0 +1,1917 @@
+{
+  "meta": {
+    "format_version": 2,
+    "title": "Osmý den",
+    "artist": "Olympic",
+    "tempo_bpm": 120,
+    "ticks_per_beat": 960,
+    "source": "https://pisnicky-akordy.cz/olympic/osmy-den",
+    "duration_seconds": 70.0,
+    "total_measures": 35,
+    "track_count": 1
+  },
+  "tempo_map": [
+    {
+      "tick": 960,
+      "bpm": 120
+    }
+  ],
+  "tracks": [
+    {
+      "index": 1,
+      "name": "Osmý den",
+      "type": "guitar",
+      "is_drums": false,
+      "instrument_midi": 25,
+      "has_tab": false
+    }
+  ],
+  "lyrics_timeline": [
+    {
+      "time_s": 0.0,
+      "duration_s": 0.5,
+      "text": "C",
+      "measure": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 2.0,
+      "duration_s": 0.5,
+      "text": "1.",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 2.5,
+      "duration_s": 0.5,
+      "text": "Z",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 3.0,
+      "duration_s": 0.5,
+      "text": "kraje",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 3.5,
+      "duration_s": 0.5,
+      "text": "týdne",
+      "measure": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 4.0,
+      "duration_s": 0.5,
+      "text": "málo",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 4.5,
+      "duration_s": 0.5,
+      "text": "jsem",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 5.0,
+      "duration_s": 0.5,
+      "text": "ti",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 5.5,
+      "duration_s": 0.5,
+      "text": "vhod,",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 6.0,
+      "duration_s": 0.5,
+      "text": "ve",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 6.5,
+      "duration_s": 0.5,
+      "text": "středu",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 7.0,
+      "duration_s": 0.5,
+      "text": "pak",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 7.5,
+      "duration_s": 0.5,
+      "text": "ztrácíš",
+      "measure": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 8.0,
+      "duration_s": 0.5,
+      "text": "ke",
+      "measure": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 8.5,
+      "duration_s": 0.5,
+      "text": "mně",
+      "measure": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 9.0,
+      "duration_s": 0.5,
+      "text": "kód,",
+      "measure": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 10.0,
+      "duration_s": 0.5,
+      "text": "sedmý",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 10.5,
+      "duration_s": 0.5,
+      "text": "den",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 11.0,
+      "duration_s": 0.5,
+      "text": "jsem",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 11.5,
+      "duration_s": 0.5,
+      "text": "s",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 12.0,
+      "duration_s": 0.5,
+      "text": "tebou",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 12.5,
+      "duration_s": 0.5,
+      "text": "i",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 13.0,
+      "duration_s": 0.5,
+      "text": "když",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 13.5,
+      "duration_s": 0.5,
+      "text": "sám,",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 14.0,
+      "duration_s": 0.5,
+      "text": "osmý",
+      "measure": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 14.5,
+      "duration_s": 0.5,
+      "text": "den",
+      "measure": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 15.0,
+      "duration_s": 0.5,
+      "text": "schází",
+      "measure": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 15.5,
+      "duration_s": 0.5,
+      "text": "nám.",
+      "measure": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.0,
+      "duration_s": 0.5,
+      "text": "2.",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.5,
+      "duration_s": 0.5,
+      "text": "V",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 17.0,
+      "duration_s": 0.5,
+      "text": "pondělí",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 17.5,
+      "duration_s": 0.5,
+      "text": "máš",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.0,
+      "duration_s": 0.5,
+      "text": "důvod",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.5,
+      "duration_s": 0.5,
+      "text": "k",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 19.0,
+      "duration_s": 0.5,
+      "text": "mlčení,",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 20.0,
+      "duration_s": 0.5,
+      "text": "ve",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 20.5,
+      "duration_s": 0.5,
+      "text": "středu",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 21.0,
+      "duration_s": 0.5,
+      "text": "mě",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 21.5,
+      "duration_s": 0.5,
+      "text": "pláčem",
+      "measure": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 22.0,
+      "duration_s": 0.5,
+      "text": "odměníš,",
+      "measure": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 24.0,
+      "duration_s": 0.5,
+      "text": "v",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 24.5,
+      "duration_s": 0.5,
+      "text": "neděli",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 25.0,
+      "duration_s": 0.5,
+      "text": "už",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 25.5,
+      "duration_s": 0.5,
+      "text": "nevím",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 26.0,
+      "duration_s": 0.5,
+      "text": "že",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 26.5,
+      "duration_s": 0.5,
+      "text": "tě",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 27.0,
+      "duration_s": 0.5,
+      "text": "mám,",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 28.0,
+      "duration_s": 0.5,
+      "text": "osmý",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 28.5,
+      "duration_s": 0.5,
+      "text": "den",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 29.0,
+      "duration_s": 0.5,
+      "text": "schází",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 29.5,
+      "duration_s": 0.5,
+      "text": "nám.",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 30.0,
+      "duration_s": 0.5,
+      "text": "R:",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 30.5,
+      "duration_s": 0.5,
+      "text": "Tužku",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 31.0,
+      "duration_s": 0.5,
+      "text": "nemít",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 31.5,
+      "duration_s": 0.5,
+      "text": "nic",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 32.0,
+      "duration_s": 0.5,
+      "text": "mi",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 32.5,
+      "duration_s": 0.5,
+      "text": "nepovíš,",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 34.0,
+      "duration_s": 0.5,
+      "text": "řekni",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 34.5,
+      "duration_s": 0.5,
+      "text": "prosím",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 35.0,
+      "duration_s": 0.5,
+      "text": "aspoň",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 35.5,
+      "duration_s": 0.5,
+      "text": "přísloví,",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.0,
+      "duration_s": 0.5,
+      "text": "osmý",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.5,
+      "duration_s": 0.5,
+      "text": "den",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 37.0,
+      "duration_s": 0.5,
+      "text": "je",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 37.5,
+      "duration_s": 0.5,
+      "text": "nutný",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 38.0,
+      "duration_s": 0.5,
+      "text": "já",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 38.5,
+      "duration_s": 0.5,
+      "text": "to",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 39.0,
+      "duration_s": 0.5,
+      "text": "vím,",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 40.0,
+      "duration_s": 0.5,
+      "text": "sedm",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 40.5,
+      "duration_s": 0.5,
+      "text": "nocí",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 41.0,
+      "duration_s": 0.5,
+      "text": "spíš",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 41.5,
+      "duration_s": 0.5,
+      "text": "jen",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 42.0,
+      "duration_s": 0.5,
+      "text": "spíš",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 42.5,
+      "duration_s": 0.5,
+      "text": "vždyť",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 43.0,
+      "duration_s": 0.5,
+      "text": "víš.",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 44.0,
+      "duration_s": 0.5,
+      "text": "3.",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 44.5,
+      "duration_s": 0.5,
+      "text": "Někdo",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 45.0,
+      "duration_s": 0.5,
+      "text": "to",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 45.5,
+      "duration_s": 0.5,
+      "text": "rád",
+      "measure": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 46.0,
+      "duration_s": 0.5,
+      "text": "horké",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 46.5,
+      "duration_s": 0.5,
+      "text": "jiný",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 47.0,
+      "duration_s": 0.5,
+      "text": "ne,",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 48.0,
+      "duration_s": 0.5,
+      "text": "mlčky",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 48.5,
+      "duration_s": 0.5,
+      "text": "naše",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 49.0,
+      "duration_s": 0.5,
+      "text": "láska",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 49.5,
+      "duration_s": 0.5,
+      "text": "pomine,",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 50.0,
+      "duration_s": 0.5,
+      "text": "pak",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 50.5,
+      "duration_s": 0.5,
+      "text": "si",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 51.0,
+      "duration_s": 0.5,
+      "text": "řeknem",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 51.5,
+      "duration_s": 0.5,
+      "text": "v",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 52.0,
+      "duration_s": 0.5,
+      "text": "duchu",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 52.5,
+      "duration_s": 0.5,
+      "text": "každý",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 53.0,
+      "duration_s": 0.5,
+      "text": "sám,",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 54.0,
+      "duration_s": 0.5,
+      "text": "osmý",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 54.5,
+      "duration_s": 0.5,
+      "text": "den",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 55.0,
+      "duration_s": 0.5,
+      "text": "scházel",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 55.5,
+      "duration_s": 0.5,
+      "text": "nám.",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 56.0,
+      "duration_s": 0.5,
+      "text": "R:",
+      "measure": 29,
+      "track_index": 1
+    },
+    {
+      "time_s": 58.0,
+      "duration_s": 0.5,
+      "text": "C,",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 58.5,
+      "duration_s": 0.5,
+      "text": "F,",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 59.0,
+      "duration_s": 0.5,
+      "text": "C,",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 59.5,
+      "duration_s": 0.5,
+      "text": "F,",
+      "measure": 30,
+      "track_index": 1
+    },
+    {
+      "time_s": 60.0,
+      "duration_s": 0.5,
+      "text": "C,",
+      "measure": 31,
+      "track_index": 1
+    },
+    {
+      "time_s": 60.5,
+      "duration_s": 0.5,
+      "text": "C,",
+      "measure": 31,
+      "track_index": 1
+    },
+    {
+      "time_s": 61.0,
+      "duration_s": 0.5,
+      "text": "F,",
+      "measure": 31,
+      "track_index": 1
+    },
+    {
+      "time_s": 61.5,
+      "duration_s": 0.5,
+      "text": "Dmi,",
+      "measure": 31,
+      "track_index": 1
+    },
+    {
+      "time_s": 62.0,
+      "duration_s": 0.5,
+      "text": "G",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 64.0,
+      "duration_s": 0.5,
+      "text": "osmý",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 64.5,
+      "duration_s": 0.5,
+      "text": "den",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.0,
+      "duration_s": 0.5,
+      "text": "schází",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.5,
+      "duration_s": 0.5,
+      "text": "nám.",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 66.0,
+      "duration_s": 0.5,
+      "text": "R:",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 66.5,
+      "duration_s": 0.5,
+      "text": "Tužku",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 67.0,
+      "duration_s": 0.5,
+      "text": "nemít",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 67.5,
+      "duration_s": 0.5,
+      "text": "nic",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 68.0,
+      "duration_s": 0.5,
+      "text": "mi",
+      "measure": 35,
+      "track_index": 1
+    },
+    {
+      "time_s": 68.5,
+      "duration_s": 0.5,
+      "text": "nepovíš,",
+      "measure": 35,
+      "track_index": 1
+    }
+  ],
+  "chords_timeline": [
+    {
+      "time_s": 0.0,
+      "chord": "C",
+      "measure": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 5.0,
+      "chord": "F",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 5.5,
+      "chord": "C",
+      "measure": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 9.0,
+      "chord": "F",
+      "measure": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 10.0,
+      "chord": "Dmi",
+      "measure": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 13.5,
+      "chord": "G",
+      "measure": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 15.0,
+      "chord": "C",
+      "measure": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 15.5,
+      "chord": "F",
+      "measure": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.5,
+      "chord": "C",
+      "measure": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.5,
+      "chord": "F",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 19.0,
+      "chord": "C",
+      "measure": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 22.0,
+      "chord": "F",
+      "measure": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 24.0,
+      "chord": "Dmi",
+      "measure": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 27.0,
+      "chord": "G",
+      "measure": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 29.0,
+      "chord": "C",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 29.5,
+      "chord": "F",
+      "measure": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 30.5,
+      "chord": "G",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 31.5,
+      "chord": "F",
+      "measure": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 32.5,
+      "chord": "C",
+      "measure": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 34.0,
+      "chord": "G",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 35.0,
+      "chord": "F",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 35.5,
+      "chord": "C",
+      "measure": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.0,
+      "chord": "G",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 37.5,
+      "chord": "F",
+      "measure": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 39.0,
+      "chord": "Dmi",
+      "measure": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 40.0,
+      "chord": "F",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 41.0,
+      "chord": "Dmi",
+      "measure": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 42.0,
+      "chord": "C",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 42.5,
+      "chord": "F",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 43.0,
+      "chord": "C",
+      "measure": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 46.5,
+      "chord": "F",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 47.0,
+      "chord": "C",
+      "measure": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 49.5,
+      "chord": "F",
+      "measure": 25,
+      "track_index": 1
+    },
+    {
+      "time_s": 50.0,
+      "chord": "Dmi",
+      "measure": 26,
+      "track_index": 1
+    },
+    {
+      "time_s": 53.0,
+      "chord": "G",
+      "measure": 27,
+      "track_index": 1
+    },
+    {
+      "time_s": 55.0,
+      "chord": "C",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 55.5,
+      "chord": "F",
+      "measure": 28,
+      "track_index": 1
+    },
+    {
+      "time_s": 56.0,
+      "chord": "C",
+      "measure": 29,
+      "track_index": 1
+    },
+    {
+      "time_s": 62.0,
+      "chord": "F",
+      "measure": 32,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.0,
+      "chord": "C",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.5,
+      "chord": "F",
+      "measure": 33,
+      "track_index": 1
+    },
+    {
+      "time_s": 67.0,
+      "chord": "C",
+      "measure": 34,
+      "track_index": 1
+    },
+    {
+      "time_s": 68.5,
+      "chord": "F",
+      "measure": 35,
+      "track_index": 1
+    }
+  ],
+  "karaoke_lines": [
+    {
+      "start_s": 0.0,
+      "chords": [
+        "C"
+      ],
+      "text": "C",
+      "words": [
+        {
+          "time_s": 0.0,
+          "text": "C",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 2.0,
+      "chords": [
+        "C",
+        "F"
+      ],
+      "text": "1. Z kraje týdne málo jsem ti vhod,",
+      "words": [
+        {
+          "time_s": 2.0,
+          "text": "1.",
+          "track_index": 1
+        },
+        {
+          "time_s": 2.5,
+          "text": "Z",
+          "track_index": 1
+        },
+        {
+          "time_s": 3.0,
+          "text": "kraje",
+          "track_index": 1
+        },
+        {
+          "time_s": 3.5,
+          "text": "týdne",
+          "track_index": 1
+        },
+        {
+          "time_s": 4.0,
+          "text": "málo",
+          "track_index": 1
+        },
+        {
+          "time_s": 4.5,
+          "text": "jsem",
+          "track_index": 1
+        },
+        {
+          "time_s": 5.0,
+          "text": "ti",
+          "track_index": 1
+        },
+        {
+          "time_s": 5.5,
+          "text": "vhod,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 6.0,
+      "chords": [
+        "C",
+        "F"
+      ],
+      "text": "ve středu pak ztrácíš ke mně kód,",
+      "words": [
+        {
+          "time_s": 6.0,
+          "text": "ve",
+          "track_index": 1
+        },
+        {
+          "time_s": 6.5,
+          "text": "středu",
+          "track_index": 1
+        },
+        {
+          "time_s": 7.0,
+          "text": "pak",
+          "track_index": 1
+        },
+        {
+          "time_s": 7.5,
+          "text": "ztrácíš",
+          "track_index": 1
+        },
+        {
+          "time_s": 8.0,
+          "text": "ke",
+          "track_index": 1
+        },
+        {
+          "time_s": 8.5,
+          "text": "mně",
+          "track_index": 1
+        },
+        {
+          "time_s": 9.0,
+          "text": "kód,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 10.0,
+      "chords": [
+        "F",
+        "Dmi",
+        "G"
+      ],
+      "text": "sedmý den jsem s tebou i když sám,",
+      "words": [
+        {
+          "time_s": 10.0,
+          "text": "sedmý",
+          "track_index": 1
+        },
+        {
+          "time_s": 10.5,
+          "text": "den",
+          "track_index": 1
+        },
+        {
+          "time_s": 11.0,
+          "text": "jsem",
+          "track_index": 1
+        },
+        {
+          "time_s": 11.5,
+          "text": "s",
+          "track_index": 1
+        },
+        {
+          "time_s": 12.0,
+          "text": "tebou",
+          "track_index": 1
+        },
+        {
+          "time_s": 12.5,
+          "text": "i",
+          "track_index": 1
+        },
+        {
+          "time_s": 13.0,
+          "text": "když",
+          "track_index": 1
+        },
+        {
+          "time_s": 13.5,
+          "text": "sám,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 14.0,
+      "chords": [
+        "G",
+        "C",
+        "F"
+      ],
+      "text": "osmý den schází nám.",
+      "words": [
+        {
+          "time_s": 14.0,
+          "text": "osmý",
+          "track_index": 1
+        },
+        {
+          "time_s": 14.5,
+          "text": "den",
+          "track_index": 1
+        },
+        {
+          "time_s": 15.0,
+          "text": "schází",
+          "track_index": 1
+        },
+        {
+          "time_s": 15.5,
+          "text": "nám.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 16.0,
+      "chords": [
+        "F",
+        "C"
+      ],
+      "text": "2. V pondělí máš důvod k mlčení,",
+      "words": [
+        {
+          "time_s": 16.0,
+          "text": "2.",
+          "track_index": 1
+        },
+        {
+          "time_s": 16.5,
+          "text": "V",
+          "track_index": 1
+        },
+        {
+          "time_s": 17.0,
+          "text": "pondělí",
+          "track_index": 1
+        },
+        {
+          "time_s": 17.5,
+          "text": "máš",
+          "track_index": 1
+        },
+        {
+          "time_s": 18.0,
+          "text": "důvod",
+          "track_index": 1
+        },
+        {
+          "time_s": 18.5,
+          "text": "k",
+          "track_index": 1
+        },
+        {
+          "time_s": 19.0,
+          "text": "mlčení,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 20.0,
+      "chords": [
+        "C",
+        "F"
+      ],
+      "text": "ve středu mě pláčem odměníš,",
+      "words": [
+        {
+          "time_s": 20.0,
+          "text": "ve",
+          "track_index": 1
+        },
+        {
+          "time_s": 20.5,
+          "text": "středu",
+          "track_index": 1
+        },
+        {
+          "time_s": 21.0,
+          "text": "mě",
+          "track_index": 1
+        },
+        {
+          "time_s": 21.5,
+          "text": "pláčem",
+          "track_index": 1
+        },
+        {
+          "time_s": 22.0,
+          "text": "odměníš,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 24.0,
+      "chords": [
+        "F",
+        "Dmi",
+        "G"
+      ],
+      "text": "v neděli už nevím že tě mám,",
+      "words": [
+        {
+          "time_s": 24.0,
+          "text": "v",
+          "track_index": 1
+        },
+        {
+          "time_s": 24.5,
+          "text": "neděli",
+          "track_index": 1
+        },
+        {
+          "time_s": 25.0,
+          "text": "už",
+          "track_index": 1
+        },
+        {
+          "time_s": 25.5,
+          "text": "nevím",
+          "track_index": 1
+        },
+        {
+          "time_s": 26.0,
+          "text": "že",
+          "track_index": 1
+        },
+        {
+          "time_s": 26.5,
+          "text": "tě",
+          "track_index": 1
+        },
+        {
+          "time_s": 27.0,
+          "text": "mám,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 28.0,
+      "chords": [
+        "G",
+        "C",
+        "F"
+      ],
+      "text": "osmý den schází nám.",
+      "words": [
+        {
+          "time_s": 28.0,
+          "text": "osmý",
+          "track_index": 1
+        },
+        {
+          "time_s": 28.5,
+          "text": "den",
+          "track_index": 1
+        },
+        {
+          "time_s": 29.0,
+          "text": "schází",
+          "track_index": 1
+        },
+        {
+          "time_s": 29.5,
+          "text": "nám.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 30.0,
+      "chords": [
+        "F",
+        "G",
+        "C"
+      ],
+      "text": "R: Tužku nemít nic mi nepovíš,",
+      "words": [
+        {
+          "time_s": 30.0,
+          "text": "R:",
+          "track_index": 1
+        },
+        {
+          "time_s": 30.5,
+          "text": "Tužku",
+          "track_index": 1
+        },
+        {
+          "time_s": 31.0,
+          "text": "nemít",
+          "track_index": 1
+        },
+        {
+          "time_s": 31.5,
+          "text": "nic",
+          "track_index": 1
+        },
+        {
+          "time_s": 32.0,
+          "text": "mi",
+          "track_index": 1
+        },
+        {
+          "time_s": 32.5,
+          "text": "nepovíš,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 34.0,
+      "chords": [
+        "C",
+        "G",
+        "F"
+      ],
+      "text": "řekni prosím aspoň přísloví,",
+      "words": [
+        {
+          "time_s": 34.0,
+          "text": "řekni",
+          "track_index": 1
+        },
+        {
+          "time_s": 34.5,
+          "text": "prosím",
+          "track_index": 1
+        },
+        {
+          "time_s": 35.0,
+          "text": "aspoň",
+          "track_index": 1
+        },
+        {
+          "time_s": 35.5,
+          "text": "přísloví,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 36.0,
+      "chords": [
+        "C",
+        "G",
+        "F",
+        "Dmi"
+      ],
+      "text": "osmý den je nutný já to vím,",
+      "words": [
+        {
+          "time_s": 36.0,
+          "text": "osmý",
+          "track_index": 1
+        },
+        {
+          "time_s": 36.5,
+          "text": "den",
+          "track_index": 1
+        },
+        {
+          "time_s": 37.0,
+          "text": "je",
+          "track_index": 1
+        },
+        {
+          "time_s": 37.5,
+          "text": "nutný",
+          "track_index": 1
+        },
+        {
+          "time_s": 38.0,
+          "text": "já",
+          "track_index": 1
+        },
+        {
+          "time_s": 38.5,
+          "text": "to",
+          "track_index": 1
+        },
+        {
+          "time_s": 39.0,
+          "text": "vím,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 40.0,
+      "chords": [
+        "Dmi",
+        "F",
+        "C"
+      ],
+      "text": "sedm nocí spíš jen spíš vždyť víš.",
+      "words": [
+        {
+          "time_s": 40.0,
+          "text": "sedm",
+          "track_index": 1
+        },
+        {
+          "time_s": 40.5,
+          "text": "nocí",
+          "track_index": 1
+        },
+        {
+          "time_s": 41.0,
+          "text": "spíš",
+          "track_index": 1
+        },
+        {
+          "time_s": 41.5,
+          "text": "jen",
+          "track_index": 1
+        },
+        {
+          "time_s": 42.0,
+          "text": "spíš",
+          "track_index": 1
+        },
+        {
+          "time_s": 42.5,
+          "text": "vždyť",
+          "track_index": 1
+        },
+        {
+          "time_s": 43.0,
+          "text": "víš.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 44.0,
+      "chords": [
+        "C",
+        "F"
+      ],
+      "text": "3. Někdo to rád horké jiný ne,",
+      "words": [
+        {
+          "time_s": 44.0,
+          "text": "3.",
+          "track_index": 1
+        },
+        {
+          "time_s": 44.5,
+          "text": "Někdo",
+          "track_index": 1
+        },
+        {
+          "time_s": 45.0,
+          "text": "to",
+          "track_index": 1
+        },
+        {
+          "time_s": 45.5,
+          "text": "rád",
+          "track_index": 1
+        },
+        {
+          "time_s": 46.0,
+          "text": "horké",
+          "track_index": 1
+        },
+        {
+          "time_s": 46.5,
+          "text": "jiný",
+          "track_index": 1
+        },
+        {
+          "time_s": 47.0,
+          "text": "ne,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 48.0,
+      "chords": [
+        "C",
+        "F"
+      ],
+      "text": "mlčky naše láska pomine,",
+      "words": [
+        {
+          "time_s": 48.0,
+          "text": "mlčky",
+          "track_index": 1
+        },
+        {
+          "time_s": 48.5,
+          "text": "naše",
+          "track_index": 1
+        },
+        {
+          "time_s": 49.0,
+          "text": "láska",
+          "track_index": 1
+        },
+        {
+          "time_s": 49.5,
+          "text": "pomine,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 50.0,
+      "chords": [
+        "F",
+        "Dmi",
+        "G"
+      ],
+      "text": "pak si řeknem v duchu každý sám,",
+      "words": [
+        {
+          "time_s": 50.0,
+          "text": "pak",
+          "track_index": 1
+        },
+        {
+          "time_s": 50.5,
+          "text": "si",
+          "track_index": 1
+        },
+        {
+          "time_s": 51.0,
+          "text": "řeknem",
+          "track_index": 1
+        },
+        {
+          "time_s": 51.5,
+          "text": "v",
+          "track_index": 1
+        },
+        {
+          "time_s": 52.0,
+          "text": "duchu",
+          "track_index": 1
+        },
+        {
+          "time_s": 52.5,
+          "text": "každý",
+          "track_index": 1
+        },
+        {
+          "time_s": 53.0,
+          "text": "sám,",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 54.0,
+      "chords": [
+        "G",
+        "C",
+        "F"
+      ],
+      "text": "osmý den scházel nám.",
+      "words": [
+        {
+          "time_s": 54.0,
+          "text": "osmý",
+          "track_index": 1
+        },
+        {
+          "time_s": 54.5,
+          "text": "den",
+          "track_index": 1
+        },
+        {
+          "time_s": 55.0,
+          "text": "scházel",
+          "track_index": 1
+        },
+        {
+          "time_s": 55.5,
+          "text": "nám.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 56.0,
+      "chords": [
+        "F",
+        "C"
+      ],
+      "text": "R:",
+      "words": [
+        {
+          "time_s": 56.0,
+          "text": "R:",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 58.0,
+      "chords": [
+        "C",
+        "F"
+      ],
+      "text": "C, F, C, F, C, C, F, Dmi, G",
+      "words": [
+        {
+          "time_s": 58.0,
+          "text": "C,",
+          "track_index": 1
+        },
+        {
+          "time_s": 58.5,
+          "text": "F,",
+          "track_index": 1
+        },
+        {
+          "time_s": 59.0,
+          "text": "C,",
+          "track_index": 1
+        },
+        {
+          "time_s": 59.5,
+          "text": "F,",
+          "track_index": 1
+        },
+        {
+          "time_s": 60.0,
+          "text": "C,",
+          "track_index": 1
+        },
+        {
+          "time_s": 60.5,
+          "text": "C,",
+          "track_index": 1
+        },
+        {
+          "time_s": 61.0,
+          "text": "F,",
+          "track_index": 1
+        },
+        {
+          "time_s": 61.5,
+          "text": "Dmi,",
+          "track_index": 1
+        },
+        {
+          "time_s": 62.0,
+          "text": "G",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 64.0,
+      "chords": [
+        "F",
+        "C"
+      ],
+      "text": "osmý den schází nám.",
+      "words": [
+        {
+          "time_s": 64.0,
+          "text": "osmý",
+          "track_index": 1
+        },
+        {
+          "time_s": 64.5,
+          "text": "den",
+          "track_index": 1
+        },
+        {
+          "time_s": 65.0,
+          "text": "schází",
+          "track_index": 1
+        },
+        {
+          "time_s": 65.5,
+          "text": "nám.",
+          "track_index": 1
+        }
+      ]
+    },
+    {
+      "start_s": 66.0,
+      "chords": [
+        "F",
+        "C"
+      ],
+      "text": "R: Tužku nemít nic mi nepovíš,",
+      "words": [
+        {
+          "time_s": 66.0,
+          "text": "R:",
+          "track_index": 1
+        },
+        {
+          "time_s": 66.5,
+          "text": "Tužku",
+          "track_index": 1
+        },
+        {
+          "time_s": 67.0,
+          "text": "nemít",
+          "track_index": 1
+        },
+        {
+          "time_s": 67.5,
+          "text": "nic",
+          "track_index": 1
+        },
+        {
+          "time_s": 68.0,
+          "text": "mi",
+          "track_index": 1
+        },
+        {
+          "time_s": 68.5,
+          "text": "nepovíš,",
+          "track_index": 1
+        }
+      ]
+    }
+  ]
+}
