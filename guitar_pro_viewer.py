@@ -12,6 +12,7 @@ from typing import Optional, Any
 import guitarpro
 import guitarpro.models as gpm
 from web_import import WebImportDialog
+from timeline_editor import TimelineEditor
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -451,6 +452,11 @@ class GuitarProViewer(QMainWindow):
         cc_layout.addWidget(self.chord_chart_browser)
         self.tabs.addTab(chord_chart_widget, "🎸 Chord Chart")
 
+        # Záložka: Časová osa (editor)
+        self.timeline = TimelineEditor()
+        self.timeline.export_callback = self._export_timeline_json
+        self.tabs.addTab(self.timeline, "🎚️ Časová osa (editor)")
+
         # Záložka 2: Detail stopy
         self.track_detail = TrackDetailWidget()
         self.tabs.addTab(self.track_detail, "Noty / Tabulatura")
@@ -575,6 +581,9 @@ class GuitarProViewer(QMainWindow):
 
         # JSON náhled
         self._update_json_preview()
+
+        # Časová osa (editor) — naplň z karaoke dat
+        self.timeline.load_data(self._build_karaoke_json(preview_only=False))
 
         # Zobraz chord chart jako výchozí záložku
         self.tabs.setCurrentIndex(0)
@@ -1081,6 +1090,29 @@ class GuitarProViewer(QMainWindow):
         except Exception as ex:
             QMessageBox.critical(self, "Chyba exportu", str(ex))
             self.status.showMessage("Chyba při exportu.")
+
+    def _export_timeline_json(self, data: dict) -> None:
+        """Uloží JSON upravený v časové ose (volá se z tlačítka v editoru)."""
+        default_name = ""
+        if self.current_file:
+            default_name = Path(self.current_file).stem + "_edited.json"
+        out_path, _ = QFileDialog.getSaveFileName(
+            self, "Uložit upravený Karaoke JSON", default_name,
+            "JSON soubory (*.json);;Všechny soubory (*)"
+        )
+        if not out_path:
+            return
+        try:
+            with open(out_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            n_l = len(data.get("lyrics_timeline", []))
+            n_c = len(data.get("chords_timeline", []))
+            QMessageBox.information(
+                self, "Export hotov",
+                f"Uloženo: {out_path}\n\n  Text events: {n_l}\n  Akord events: {n_c}")
+            self.status.showMessage(f"Upravená osa exportována → {out_path}")
+        except Exception as ex:
+            QMessageBox.critical(self, "Chyba exportu", str(ex))
 
 
 # ---------------------------------------------------------------------------

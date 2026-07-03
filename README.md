@@ -12,6 +12,9 @@ stažení celého interpreta**.
 - 📖 **Prohlížeč GP souborů** — stopy, ladění, takty, tabulatury, text, akordy.
 - 💾 **Export do JSON** — text + akordy + tabulatury v časové ose. Formát viz
   [JSON_FORMAT.md](JSON_FORMAT.md).
+- 🎚️ **Editor časové osy** — DAW-styl: stopy jako pruhy, bloky textu a akordů
+  na časové ose. Posun bloků po čase, změna délky tažením okraje, editace
+  akordu/textu dvojklikem, přidání/mazání, zoom (Ctrl+kolečko) → export do JSON.
 - 🎸 **Podpora více stop** — každý event nese `track_index` (odkaz na stopu),
   sóla se poznají podle `type: "solo_guitar"`.
 - 🌐 **Import z webu** — rozpozná chord chart (akordy nad textem) a uloží jako
