@@ -27,12 +27,17 @@ from PySide6.QtWidgets import (
 # --- rozměry rozvržení (px) ---
 HEADER_W = 150      # levý sloupec s názvy stop
 RULER_H = 30        # horní pravítko s časem
+LINE_H = 24         # výška pruhu karaoke ŘÁDKŮ
 CHORD_H = 26        # výška pruhu akordů v rámci stopy
-LYRIC_H = 30        # výška pruhu textu v rámci stopy
-TRACK_GAP = 10
-PER_TRACK = CHORD_H + LYRIC_H + TRACK_GAP
+LYRIC_H = 30        # výška pruhu textu (slov) v rámci stopy
+TRACK_GAP = 12
+PER_TRACK = LINE_H + CHORD_H + LYRIC_H + TRACK_GAP
 BLOCK_MIN_W = 14
 EDGE = 6            # zóna u pravého okraje pro resize
+HANDLE_W = 8        # šířka tažného oddělovače řádku
+
+LINE_COLOR = QColor("#9141ac")   # fialová = karaoke řádky
+BREAK_COLOR = QColor("#e5a50a")  # oranžová = tažná hranice řádku
 
 CHORD_COLOR = QColor("#1a5fb4")
 LYRIC_COLOR = QColor("#2d7d2d")
@@ -121,6 +126,23 @@ class BlockItem(QGraphicsRectItem):
         self.editor.edit_block(self)
         ev.accept()
 
+    def contextMenuEvent(self, ev):
+        if self.kind != "lyric":
+            return
+        from PySide6.QtWidgets import QMenu
+        menu = QMenu()
+        first = self.editor.first_word(self.event.get("track_index", 1))
+        is_break = bool(self.event.get("line_start")) and self.event is not first
+        if is_break:
+            act = menu.addAction("⤺ Zrušit zalomení (spojit s předchozím řádkem)")
+        else:
+            act = menu.addAction("➤ Začít zde nový řádek")
+        chosen = menu.exec(ev.screenPos())
+        if chosen is act and self.event is not first:
+            self.event["line_start"] = not is_break
+            self.editor._relayout()
+        ev.accept()
+
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange:
             # zamkni Y na pruh, clampni a přichytni X
@@ -132,6 +154,80 @@ class BlockItem(QGraphicsRectItem):
             self.event["time_s"] = round(t, 3)
             return QPointF(x, self.lane_y)
         return super().itemChange(change, value)
+
+
+class LineItem(QGraphicsRectItem):
+    """Vizuální span jednoho karaoke řádku (seskupení slov). Jen zobrazení."""
+
+    def __init__(self, editor: "TimelineEditor", events: list[dict], lane_y: float):
+        super().__init__()
+        self.editor = editor
+        self.events = events
+        self.lane_y = lane_y
+        self.setZValue(3)
+        self._resync()
+
+    def _resync(self):
+        pps = self.editor.pps
+        t0 = min(e["time_s"] for e in self.events)
+        t1 = max(e["time_s"] + e.get("duration_s", 0.5) for e in self.events)
+        self.setRect(0, 0, max(BLOCK_MIN_W, (t1 - t0) * pps), LINE_H - 6)
+        self.setPos(HEADER_W + t0 * pps, self.lane_y)
+
+    def paint(self, p: QPainter, opt, widget=None):
+        r = self.rect()
+        p.setBrush(QBrush(LINE_COLOR.lighter(175)))
+        p.setPen(QPen(LINE_COLOR, 1))
+        p.drawRoundedRect(r, 3, 3)
+        p.setPen(QPen(LINE_COLOR.darker(120)))
+        p.setFont(QFont("Segoe UI", 8))
+        txt = " ".join(e.get("text", "") for e in self.events)
+        p.drawText(r.adjusted(5, 0, -3, 0), Qt.AlignVCenter | Qt.AlignLeft, txt)
+
+
+class BreakHandle(QGraphicsRectItem):
+    """Tažná hranice mezi řádky — posunutím se přesune konec řádku přes slova."""
+
+    def __init__(self, editor: "TimelineEditor", track_index: int, start_event: dict,
+                 y: float, height: float):
+        super().__init__()
+        self.editor = editor
+        self.track_index = track_index
+        self.start_event = start_event      # slovo, kterým začíná řádek napravo
+        self.y0 = y
+        self.setRect(-HANDLE_W / 2, 0, HANDLE_W, height)
+        self.setBrush(QBrush(BREAK_COLOR))
+        self.setPen(QPen(BREAK_COLOR.darker(130), 1))
+        self.setZValue(30)
+        self.setFlags(
+            QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemSendsGeometryChanges
+        )
+        self.setAcceptHoverEvents(True)
+        self.setCursor(Qt.SizeHorCursor)
+        self.setToolTip("Táhni = posuň konec řádku (kam patří slova)")
+        self._sync()
+
+    def _sync(self):
+        t = float(self.start_event["time_s"])
+        self.setPos(HEADER_W + t * self.editor.pps, self.y0)
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionChange:
+            return QPointF(max(HEADER_W, value.x()), self.y0)   # jen vodorovně
+        return super().itemChange(change, value)
+
+    def mouseReleaseEvent(self, ev):
+        super().mouseReleaseEvent(ev)
+        # přichyť hranici k nejbližšímu začátku slova ve své stopě
+        x = self.pos().x()
+        t = (x - HEADER_W) / self.editor.pps
+        target = self.editor.nearest_word(self.track_index, t)
+        if target is not None and target is not self.start_event:
+            first = self.editor.first_word(self.track_index)
+            if target is not first:                # první slovo nemůže být hranice
+                self.start_event["line_start"] = False
+                target["line_start"] = True
+        self.editor._relayout()
 
 
 class TimelineView(QGraphicsView):
@@ -212,7 +308,8 @@ class TimelineEditor(QWidget):
         bar.addWidget(exp_btn)
 
         bar.addStretch()
-        self.info_lbl = QLabel("Dvojklik = editace · táhni okraj = délka · Ctrl+kolečko = zoom")
+        self.info_lbl = QLabel("Oranžová hranice = táhni konec řádku · dvojklik = editace · "
+                               "pravý klik na slovo = zalomit řádek · Ctrl+kolečko = zoom")
         self.info_lbl.setStyleSheet("color:#777;")
         bar.addWidget(self.info_lbl)
         root.addLayout(bar)
@@ -236,7 +333,51 @@ class TimelineEditor(QWidget):
         # základní délka akordu ~ podle tempa
         bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
         self.default_chord_dur = round(60.0 / bpm, 3)
+        self._seed_line_starts()
         self._relayout(full=True)
+
+    # --- karaoke řádky: seskupení slov, hranice ---
+
+    def _lyrics_of(self, ti: int) -> list[dict]:
+        return sorted(
+            (e for e in self.data.get("lyrics_timeline", []) if e.get("track_index", 1) == ti),
+            key=lambda e: e["time_s"],
+        )
+
+    def first_word(self, ti: int):
+        evs = self._lyrics_of(ti)
+        return evs[0] if evs else None
+
+    def nearest_word(self, ti: int, t: float):
+        evs = self._lyrics_of(ti)
+        if not evs:
+            return None
+        return min(evs, key=lambda e: abs(e["time_s"] - t))
+
+    def _seed_line_starts(self, gap: float = 2.0) -> None:
+        """Poprvé rozdělí slova do řádků podle pauzy a označí začátky (line_start)."""
+        for ti in self._track_order():
+            evs = self._lyrics_of(ti)
+            if any("line_start" in e for e in evs):
+                continue   # už rozděleno (uživatel editoval)
+            prev_end = None
+            for i, e in enumerate(evs):
+                e["line_start"] = bool(i > 0 and prev_end is not None
+                                       and (e["time_s"] - prev_end) > gap)
+                prev_end = e["time_s"] + e.get("duration_s", 0.5)
+
+    def _group_lines(self, ti: int) -> list[list[dict]]:
+        """Rozdělí slova stopy na řádky podle příznaku line_start."""
+        lines: list[list[dict]] = []
+        cur: list[dict] = []
+        for e in self._lyrics_of(ti):
+            if cur and e.get("line_start"):
+                lines.append(cur)
+                cur = []
+            cur.append(e)
+        if cur:
+            lines.append(cur)
+        return lines
 
     def _track_order(self) -> list[int]:
         idxs = [t.get("index", i + 1) for i, t in enumerate(self.tracks)]
@@ -268,16 +409,21 @@ class TimelineEditor(QWidget):
         self._draw_ruler(max_t, total_h)
         for row, ti in enumerate(order):
             top = RULER_H + row * PER_TRACK
-            chord_y = top + 2
-            lyric_y = top + 2 + CHORD_H
-            self._track_lane[ti] = {"chord_y": chord_y, "lyric_y": lyric_y}
+            line_y = top + 2
+            chord_y = line_y + LINE_H
+            lyric_y = chord_y + CHORD_H
+            self._track_lane[ti] = {"line_y": line_y, "chord_y": chord_y, "lyric_y": lyric_y}
             self._draw_lane_bg(ti, top, names.get(ti, f"Stopa {ti}"), total_w)
 
-        # bloky
+        # bloky (akordy, slova)
         for ev in self.data.get("chords_timeline", []):
             self._add_block_item(ev, "chord")
         for ev in self.data.get("lyrics_timeline", []):
             self._add_block_item(ev, "lyric")
+
+        # karaoke řádky: spany + tažné hranice
+        for ti in order:
+            self._add_line_items(ti)
 
     def _draw_ruler(self, max_t: float, total_h: float) -> None:
         pen = QPen(QColor("#cccccc"))
@@ -301,21 +447,42 @@ class TimelineEditor(QWidget):
         self.scene.addLine(HEADER_W, 0, HEADER_W, total_h, pen)
 
     def _draw_lane_bg(self, ti: int, top: float, name: str, total_w: float) -> None:
-        # pruh akordů (světle modrá) + text (světle zelená)
-        self.scene.addRect(HEADER_W, top + 2, total_w - HEADER_W, CHORD_H,
+        line_y = top + 2
+        chord_y = line_y + LINE_H
+        lyric_y = chord_y + CHORD_H
+        w = total_w - HEADER_W
+        # pruhy: řádky (fialová) + akordy (modrá) + text (zelená)
+        self.scene.addRect(HEADER_W, line_y, w, LINE_H,
+                           QPen(Qt.NoPen), QBrush(QColor("#f6eef9")))
+        self.scene.addRect(HEADER_W, chord_y, w, CHORD_H,
                            QPen(Qt.NoPen), QBrush(QColor("#eef3fb")))
-        self.scene.addRect(HEADER_W, top + 2 + CHORD_H, total_w - HEADER_W, LYRIC_H,
+        self.scene.addRect(HEADER_W, lyric_y, w, LYRIC_H,
                            QPen(Qt.NoPen), QBrush(QColor("#eef7ee")))
         # hlavička
         self.scene.addRect(0, top, HEADER_W, PER_TRACK - TRACK_GAP + 2,
                            QPen(QColor("#dddddd")), QBrush(QColor("#fafafa")))
         nm = self.scene.addSimpleText(name)
         nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        nm.setPos(6, top + 4)
-        a = self.scene.addSimpleText("akordy")
-        a.setPos(10, top + 2 + 4); a.setBrush(QBrush(QColor("#1a5fb4")))
-        l = self.scene.addSimpleText("text")
-        l.setPos(10, top + 2 + CHORD_H + 6); l.setBrush(QBrush(QColor("#2d7d2d")))
+        nm.setPos(6, top + 3)
+        for txt, y, col in [("řádky", line_y + 4, "#9141ac"),
+                            ("akordy", chord_y + 4, "#1a5fb4"),
+                            ("text", lyric_y + 6, "#2d7d2d")]:
+            it = self.scene.addSimpleText(txt)
+            it.setPos(12, y); it.setBrush(QBrush(QColor(col)))
+
+    def _add_line_items(self, ti: int) -> None:
+        lane = self._track_lane.get(ti)
+        if lane is None:
+            return
+        lines = self._group_lines(ti)
+        for li, line in enumerate(lines):
+            span = LineItem(self, line, lane["line_y"] + 2)
+            self.scene.addItem(span)
+            # tažná hranice na začátku každého řádku kromě prvního
+            if li > 0:
+                handle = BreakHandle(self, ti, line[0], lane["line_y"],
+                                     LINE_H + CHORD_H + LYRIC_H - 2)
+                self.scene.addItem(handle)
 
     def _add_block_item(self, ev: dict, kind: str) -> None:
         ti = ev.get("track_index", 1)
@@ -390,23 +557,21 @@ class TimelineEditor(QWidget):
         chords = sorted(data.get("chords_timeline", []), key=lambda e: e["time_s"])
         data["lyrics_timeline"] = lyr
         data["chords_timeline"] = chords
-        data["karaoke_lines"] = self._rebuild_karaoke_lines(lyr)
+        # karaoke řádky dle uživatelských zalomení (line_start), po stopách
+        karaoke: list[dict] = []
+        for ti in self._track_order():
+            for line in self._group_lines(ti):
+                words = [{"time_s": e["time_s"], "duration_s": e.get("duration_s", 0.5),
+                          "text": e.get("text", ""), "track_index": ti} for e in line]
+                karaoke.append({
+                    "start_s": words[0]["time_s"],
+                    "end_s": max(w["time_s"] + w["duration_s"] for w in words),
+                    "track_index": ti,
+                    "text": " ".join(w["text"] for w in words),
+                    "words": words,
+                })
+        karaoke.sort(key=lambda l: l["start_s"])
+        data["karaoke_lines"] = karaoke
         meta = data.setdefault("meta", {})
         meta["edited_in_timeline"] = True
         return data
-
-    @staticmethod
-    def _rebuild_karaoke_lines(lyr: list[dict], gap: float = 2.0) -> list[dict]:
-        lines: list[dict] = []
-        cur: list[dict] = []
-        prev_end = 0.0
-        for ev in lyr:
-            if cur and (ev["time_s"] - prev_end) > gap:
-                lines.append({"start_s": cur[0]["time_s"], "end_s": prev_end, "words": cur})
-                cur = []
-            cur.append({"time_s": ev["time_s"], "duration_s": ev.get("duration_s", 0.5),
-                        "text": ev.get("text", ""), "track_index": ev.get("track_index", 1)})
-            prev_end = ev["time_s"] + ev.get("duration_s", 0.5)
-        if cur:
-            lines.append({"start_s": cur[0]["time_s"], "end_s": prev_end, "words": cur})
-        return lines

@@ -437,10 +437,24 @@ class GuitarProViewer(QMainWindow):
 
         splitter.addWidget(left)
 
-        # ---- Pravý panel: záložkový přehled ----
+        # ---- Pravá strana: nahoře HLAVNÍ editor časové osy, dole detailní pohledy ----
+        right_split = QSplitter(Qt.Vertical)
+        splitter.addWidget(right_split)
+        splitter.setSizes([230, 1070])
+
+        # HLAVNÍ plocha okna — editor časové osy
+        tl_box = QGroupBox("🎚️  Editor časové osy — stopy, text a akordy")
+        tl_layout = QVBoxLayout(tl_box)
+        tl_layout.setContentsMargins(4, 4, 4, 4)
+        self.timeline = TimelineEditor()
+        self.timeline.export_callback = self._export_timeline_json
+        tl_layout.addWidget(self.timeline)
+        right_split.addWidget(tl_box)
+
+        # Doplňkové pohledy (menší panel pod editorem)
         self.tabs = QTabWidget()
-        splitter.addWidget(self.tabs)
-        splitter.setSizes([250, 1050])
+        right_split.addWidget(self.tabs)
+        right_split.setSizes([580, 260])
 
         # Záložka 1: Chord Chart (text + akordy nad ním)
         chord_chart_widget = QWidget()
@@ -451,11 +465,6 @@ class GuitarProViewer(QMainWindow):
         self.chord_chart_browser.setOpenLinks(False)
         cc_layout.addWidget(self.chord_chart_browser)
         self.tabs.addTab(chord_chart_widget, "🎸 Chord Chart")
-
-        # Záložka: Časová osa (editor)
-        self.timeline = TimelineEditor()
-        self.timeline.export_callback = self._export_timeline_json
-        self.tabs.addTab(self.timeline, "🎚️ Časová osa (editor)")
 
         # Záložka 2: Detail stopy
         self.track_detail = TrackDetailWidget()
