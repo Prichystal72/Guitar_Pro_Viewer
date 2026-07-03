@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import re
 import json
-from html import escape as html_escape
 from pathlib import Path
 from typing import Any
 
@@ -17,12 +16,22 @@ import guitarpro.models as gpm
 from bs4 import BeautifulSoup
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor, QBrush
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QLabel, QLineEdit, QPushButton, QTextEdit, QTextBrowser,
-    QFileDialog, QMessageBox,
+    QLabel, QLineEdit, QPushButton, QTextEdit,
+    QFileDialog, QMessageBox, QTableWidget, QTableWidgetItem,
+    QComboBox, QHeaderView, QAbstractItemView,
 )
+
+# Typy řádků chord chartu + jejich popisky v editoru
+LINE_TYPES = [
+    ("lyric", "Text"),
+    ("chord", "Akord"),
+    ("section", "Sekce"),
+    ("ignore", "Ignorovat"),
+]
+_TYPE_TO_LABEL = dict(LINE_TYPES)
 
 # ---------------------------------------------------------------------------
 # Chord detekce
@@ -211,7 +220,7 @@ def chart_to_gp_song(detected: list[dict], title: str, artist: str, tempo: int) 
 
     # Zpracujeme detekované řádky na (chord_line, lyric_line) páry
     all_measure_groups: list[list[tuple[str, str]]] = []
-    items = [d for d in detected if d['type'] != 'blank']
+    items = [d for d in detected if d['type'] not in ('blank', 'ignore')]
     i = 0
     while i < len(items):
         item = items[i]
@@ -354,7 +363,7 @@ def build_karaoke_json(
     def ticks_to_s(t: int) -> float:
         return round((t - TICKS_PER_BEAT) / TICKS_PER_BEAT * (60.0 / tempo), 3)
 
-    items = [d for d in detected if d['type'] != 'blank']
+    items = [d for d in detected if d['type'] not in ('blank', 'ignore')]
     i = 0
     while i < len(items):
         item = items[i]
@@ -779,11 +788,17 @@ class WebImportDialog(QDialog):
         ll.addWidget(self.raw_text)
         splitter.addWidget(left_box)
 
-        right_box = QGroupBox("Rozpoznaný chord chart  (preview)")
+        right_box = QGroupBox("Rozpoznané řádky  (uprav typ v prvním sloupci)")
         rl = QVBoxLayout(right_box)
-        self.chart_browser = QTextBrowser()
-        self.chart_browser.setFont(QFont("Courier New", 12))
-        rl.addWidget(self.chart_browser)
+        self.line_table = QTableWidget(0, 2)
+        self.line_table.setHorizontalHeaderLabels(["Typ", "Obsah řádku"])
+        self.line_table.verticalHeader().setVisible(False)
+        self.line_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # obsah jen ke čtení
+        self.line_table.setSelectionMode(QAbstractItemView.NoSelection)
+        hh = self.line_table.horizontalHeader()
+        hh.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        hh.setSectionResizeMode(1, QHeaderView.Stretch)
+        rl.addWidget(self.line_table)
         splitter.addWidget(right_box)
 
         splitter.setSizes([560, 600])
@@ -852,47 +867,95 @@ class WebImportDialog(QDialog):
         clean_lines = [d['text'] for d in self._detected]
         self.raw_text.setPlainText('\n'.join(clean_lines))
 
-        self._render(self._detected)
-        n_c = sum(1 for d in self._detected if d['type'] == 'chord')
-        n_l = sum(1 for d in self._detected if d['type'] == 'lyric')
-        self.status_lbl.setText(
-            f"Načteno: {n_c} chord řádků, {n_l} lyric řádků. "
-            f"Zkontroluj preview → Uložit GP4 + JSON."
-        )
+        self._fill_table(self._detected)
+        self._update_counts("Načteno")
 
     def _parse(self) -> None:
         text = self.raw_text.toPlainText()
         if not text.strip():
             return
         self._detected = apply_chord_templates(detect_chord_chart(text.splitlines()))
-        self._render(self._detected)
+        self._fill_table(self._detected)
+        self._update_counts("Rozpoznáno")
+
+    def _update_counts(self, verb: str) -> None:
         n_c = sum(1 for d in self._detected if d['type'] == 'chord')
         n_l = sum(1 for d in self._detected if d['type'] == 'lyric')
+        n_i = sum(1 for d in self._detected if d['type'] == 'ignore')
+        extra = f", {n_i} ignorováno" if n_i else ""
         self.status_lbl.setText(
-            f"Rozpoznáno: {n_c} chord řádků, {n_l} lyric řádků. "
-            f"Zkontroluj preview → Uložit GP4 + JSON."
+            f"{verb}: {n_c} akord. řádků, {n_l} textových řádků{extra}. "
+            f"Uprav typ řádku vpravo → Uložit GP4 + JSON."
         )
 
-    def _render(self, detected: list[dict]) -> None:
-        parts = [
-            '<html><body style="background:#fafafa;">',
-            '<div style="font-family:\'Courier New\',monospace;font-size:13px;'
-            'padding:15px;white-space:pre;line-height:1.5;">',
-        ]
-        for item in detected:
-            t = html_escape(item['text'])
-            if item['type'] == 'chord':
-                parts.append(f'<span style="color:#1a5fb4;font-weight:bold;">{t}</span>\n')
-            elif item['type'] == 'lyric':
-                parts.append(f'{t}\n')
-            elif item['type'] == 'section':
-                parts.append(f'\n<span style="color:#888;font-style:italic;font-weight:bold;">{t}</span>\n')
-            else:
-                parts.append('\n')
-        parts.append('</div></body></html>')
-        self.chart_browser.setHtml(''.join(parts))
+    # ------------------------------------------------------------------
+    # Editovatelná tabulka řádků (přeřazení typu)
+    # ------------------------------------------------------------------
+
+    def _fill_table(self, detected: list[dict]) -> None:
+        """Naplní tabulku z detekovaných řádků. Prázdné řádky vynecháme."""
+        rows = [d for d in detected if d.get('text', '').strip() or d['type'] == 'ignore']
+        self.line_table.blockSignals(True)
+        self.line_table.setRowCount(0)
+        self.line_table.setRowCount(len(rows))
+        for r, item in enumerate(rows):
+            combo = QComboBox()
+            for code, label in LINE_TYPES:
+                combo.addItem(label, code)
+            idx = next((i for i, (c, _) in enumerate(LINE_TYPES) if c == item['type']), 0)
+            combo.setCurrentIndex(idx)
+            combo.currentIndexChanged.connect(lambda _i, row=r: self._on_type_changed(row))
+            self.line_table.setCellWidget(r, 0, combo)
+
+            cell = QTableWidgetItem(item.get('text', ''))
+            cell.setFont(QFont("Courier New", 11))
+            self.line_table.setItem(r, 1, cell)
+            self._recolor_row(r)
+        self.line_table.blockSignals(False)
+        self.line_table.resizeColumnToContents(0)
+
+    def _on_type_changed(self, row: int) -> None:
+        self._recolor_row(row)
+        # Průběžně promítni změny typů do self._detected a přepočti počty
+        self._detected = self._table_to_detected()
+        self._update_counts("Upraveno")
+
+    def _recolor_row(self, row: int) -> None:
+        combo = self.line_table.cellWidget(row, 0)
+        cell = self.line_table.item(row, 1)
+        if combo is None or cell is None:
+            return
+        code = combo.currentData()
+        colors = {
+            'chord':   (QColor('#1a5fb4'), True,  False),   # modrá, tučně
+            'lyric':   (QColor('#1a1a1a'), False, False),
+            'section': (QColor('#888888'), True,  True),    # šedá, kurzíva
+            'ignore':  (QColor('#c01c28'), False, True),    # červená, kurzíva
+        }
+        color, bold, italic = colors.get(code, (QColor('#1a1a1a'), False, False))
+        cell.setForeground(QBrush(color))
+        f = QFont("Courier New", 11)
+        f.setBold(bold)
+        f.setItalic(italic)
+        cell.setFont(f)
+
+    def _table_to_detected(self) -> list[dict]:
+        """Sestaví seznam detekovaných řádků z tabulky (podle uživatelských typů)."""
+        out: list[dict] = []
+        for r in range(self.line_table.rowCount()):
+            combo = self.line_table.cellWidget(r, 0)
+            cell = self.line_table.item(r, 1)
+            if combo is None or cell is None:
+                continue
+            code = combo.currentData()
+            text = cell.text()
+            out.append({'type': code, 'text': text, 'raw': text})
+        return out
 
     def _save(self) -> None:
+        # Vezmeme aktuální typy řádků z editovatelné tabulky
+        if self.line_table.rowCount():
+            self._detected = self._table_to_detected()
         if not self._detected or not any(d['type'] in ('chord', 'lyric') for d in self._detected):
             QMessageBox.warning(self, "Upozornění", "Nejprve načtěte/rozpoznejte obsah.")
             return

@@ -11,3 +11,6 @@ env/
 # IDE
 .vscode/
 .idea/
+
+# Stažené písně (generovaný výstup, neverzuje se)
+stazeno/
