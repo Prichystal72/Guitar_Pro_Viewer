@@ -12,11 +12,21 @@ stažení celého interpreta**.
 - 📖 **Prohlížeč GP souborů** — stopy, ladění, takty, tabulatury, text, akordy.
 - 💾 **Export do JSON** — text + akordy + tabulatury v časové ose. Formát viz
   [JSON_FORMAT.md](JSON_FORMAT.md).
-- 🎚️ **Editor časové osy** — DAW-styl: stopy jako pruhy, bloky textu a akordů
-  na časové ose. Posun bloků po čase, změna délky tažením okraje, editace
-  akordu/textu dvojklikem, přidání/mazání, zoom (Ctrl+kolečko) → export do JSON.
+- 🎚️ **Editor časové osy (Sony Vegas styl)** — hlavní pracovní plocha okna.
+  Nahoře **master „Displej" stopa** = režie karaoke (co/kdy/jak se ukáže na
+  displeji) skládaná z **klipů**; pod ní zdrojové stopy s bloky textu a akordů.
+  - **Klipy Displeje** — dvojklik vybere zdrojovou stopu + režim
+    (`text+akordy`, `tab+akordy`, `text`, `akordy`, `tabulatura`), tažení okrajů
+    mění délku, pravý klik = rychlá změna režimu / smazání.
+  - **Kurzor (playhead)** — červená čára, táhni ji nebo klikni do pravítka;
+    readout času v liště.
+  - **✂ Rozdělení klipu** v pozici kurzoru (tlačítko / klávesa **S** / pravý klik).
+  - **⏱ Auto-časování slabik** — přerovná časy slabik (rovnoměrně v řádcích dle
+    délky / do oken klipů / přichycení na beat podle tempa).
+  - Posun bloků, editace dvojklikem, zalomení řádků pravým klikem, zoom
+    (Ctrl+kolečko). Náhledy (Chord Chart, Noty, JSON…) jsou ve sbalitelném docku.
 - 🎸 **Podpora více stop** — každý event nese `track_index` (odkaz na stopu),
-  sóla se poznají podle `type: "solo_guitar"`.
+  sóla se poznají podle `type: "solo_guitar"` a míří do klipů `tab+akordy`.
 - 🌐 **Import z webu** — rozpozná chord chart (akordy nad textem) a uloží jako
   GP4 + karaoke JSON. Optimalizováno pro [pisnicky-akordy.cz](https://pisnicky-akordy.cz),
   s obecným fallbackem.
@@ -50,10 +60,15 @@ requests, beautifulsoup4.
 python guitar_pro_viewer.py
 ```
 
-### Prohlížení a export
+### Prohlížení, editace a export
 1. **Otevřít** GP soubor (`.gp3/.gp4/.gp5`).
-2. Projdi stopy, text a akordy v záložkách.
-3. **Uložit Karaoke JSON** — vyexportuje strukturu podle [JSON_FORMAT.md](JSON_FORMAT.md).
+2. V **časové ose** (hlavní plocha) uprav režii displeje — klipy master „Displej"
+   stopy, časování slabik (**⏱ Auto-časování**), zalomení řádků. Detailní náhledy
+   (stopy, text, akordy, JSON) jsou v docku **Zobrazit → Panel náhledů**.
+3. **💾 Export JSON** (v liště osy) nebo **Uložit Karaoke JSON** — vyexportuje
+   strukturu vč. `display_timeline` podle [JSON_FORMAT.md](JSON_FORMAT.md).
+   Tento výstup čte přehrávač na ESP32 (viz
+   [ESP32_KARAOKE_IMPLEMENTATION.md](ESP32_KARAOKE_IMPLEMENTATION.md)).
 
 ### Import z webu
 1. V okně **„Import z webu"** vlož URL písně (např. `pisnicky-akordy.cz/olympic/zelva`)
@@ -73,11 +88,13 @@ python guitar_pro_viewer.py
 
 | Soubor | Popis |
 |--------|-------|
-| `guitar_pro_viewer.py` | Hlavní GUI aplikace (vstupní bod) |
+| `guitar_pro_viewer.py` | Hlavní GUI aplikace (vstupní bod), rozvržení oken |
+| `timeline_editor.py` | Editor časové osy — master „Displej" stopa, klipy, playhead, auto-časování |
 | `web_import.py` | Import z webu, detekce akordů, JSON export, stažení interpreta |
 | `JSON_FORMAT.md` | Specifikace výstupního JSON formátu (`format_version: 2`) |
+| `ESP32_KARAOKE_IMPLEMENTATION.md` | Návod pro přehrávač JSONu na ESP32 (řízení displeje) |
 | `requirements.txt` | Python závislosti |
-| `stazeno/` | Stažené písně (generovaný výstup — **není** ve verzování) |
+| `stažené/` | Stažené písně (generovaný výstup — **není** ve verzování) |
 
 ---
 

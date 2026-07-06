@@ -148,13 +148,46 @@ Slova rozdělená do řádků podle pauz > 2 s. Hotový podklad pro karaoke disp
 ```
 > U web importu má řádek navíc `"chords": ["Am","G"]` a `"text": "celý řádek"`.
 
+### 3.7 `display_timeline[]` — režie karaoke displeje (Vegas program)
+
+**Nepovinná** sekce (chybí = parser si obsah skládá sám z `karaoke_lines` /
+`lyrics_timeline` / `chords_timeline`). Je to **střihová osa (EDL)** ve stylu
+Sony Vegas: seřazený seznam **klipů**, kde každý klip říká, že v okně
+`[start_s, end_s)` má displej ukázat obsah zdrojové stopy v daném režimu.
+Klipy se **nepřekrývají** (jsou seřazené dle `start_s`); mezera = displej nic
+neukazuje. Obsah (slova/akordy/tab noty) klip neduplikuje — jen na něj odkazuje
+přes `source_track` a čas.
+
+```jsonc
+{
+  "id": "clip-1",
+  "start_s": 0.0,
+  "end_s": 12.5,
+  "source_track": 1,          // odkaz na tracks[].index — CO se zobrazí
+  "mode": "lyrics_chords",    // JAK se to zobrazí (viz tabulka)
+  "label": "Sloka 1"          // volitelný popisek klipu (jen pro editor/UI)
+}
+```
+
+| `mode` | Význam pro displej |
+|--------|--------------------|
+| `lyrics_chords` | text zpěvu s akordy nad ním (výchozí pro sloky) |
+| `lyrics` | jen text |
+| `chords` | jen akordy |
+| `tab` | tabulatura zdrojové stopy (`tracks[].beats`) |
+| `tab_chords` | tabulatura s akordy nad ní (výchozí pro **sóla**) |
+
+Parser vezme `mode` + `source_track`, dohledá odpovídající eventy/beaty v daném
+časovém okně a vykreslí je. Neznámý `mode` → fallback `lyrics_chords`.
+
 ---
 
 ## 4. Co číst pro který účel (návod pro ESP / aplikaci)
 
 | Účel | Potřebné sekce | Lze ignorovat |
 |------|----------------|---------------|
-| **Karaoke text + akordy** (ESP) | `meta`, `tempo_map`, `karaoke_lines` **nebo** `lyrics_timeline`+`chords_timeline` | celé `tracks[].beats[]` |
+| **Řízený karaoke displej** (co+kdy) | `meta`, `tempo_map`, `display_timeline` → dle `mode` sáhni do `lyrics_timeline`/`chords_timeline`/`tracks[].beats` | — |
+| **Karaoke text + akordy** (ESP) | `meta`, `tempo_map`, `karaoke_lines` **nebo** `lyrics_timeline`+`chords_timeline` | celé `tracks[].beats[]`, `display_timeline` |
 | **Zobrazení tabulatur / sól** | `tracks[]` (kde `has_tab`), `type == "solo_guitar"` | `karaoke_lines` |
 | **Sync více nástrojů** | timeline eventy + `track_index` → `tracks[].name/type` | — |
 
@@ -171,3 +204,18 @@ exportuje samostatný „slim" soubor bez `tracks[].beats[]`.
   mají **`track_index` (int)** místo dřívějšího opakovaného `"track": "<jméno>"`.
 - `tracks[]` má `has_tab` (u web importu `false`).
 - Web import nově exportuje i `tempo_map` a `tracks` (sjednocení schématu).
+
+## 6. Doplňky `format_version: 2` (aditivní, zpětně kompatibilní)
+
+Verze zůstává **2** — jde o nepovinné klíče, které starší parser ignoruje.
+
+- **`display_timeline[]`** (§3.7) — režie karaoke displeje (klipy: co/kdy/jak).
+  Produkuje ji editor časové osy. Když chybí, parser si obsah skládá z
+  `karaoke_lines` / `lyrics_timeline` / `chords_timeline`.
+- **`meta.edited_in_timeline: true`** — příznak, že JSON prošel editorem časové
+  osy (přerovnané časy slabik, ruční zalomení řádků, klipy Displeje).
+- Časy slabik (`lyrics_timeline[].time_s/duration_s`) mohou být **přerovnané**
+  automatickým časováním (rovnoměrně dle slabik / na beat) — parser s nimi
+  pracuje stejně, jsou to pořád sekundy od začátku.
+
+> Implementaci přehrávače na ESP32 popisuje **`ESP32_KARAOKE_IMPLEMENTATION.md`**.

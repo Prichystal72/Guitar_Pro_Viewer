@@ -27,13 +27,15 @@ from PySide6.QtWidgets import (
 # --- rozměry rozvržení (px) ---
 HEADER_W = 150      # levý sloupec s názvy stop
 RULER_H = 30        # horní pravítko s časem
+DISPLAY_H = 44      # výška klipů master "Displej" stopy
+DISPLAY_ROW_H = DISPLAY_H + 14   # celá master stopa i s hlavičkou/mezerou
 LINE_H = 24         # výška pruhu karaoke ŘÁDKŮ
 CHORD_H = 26        # výška pruhu akordů v rámci stopy
 LYRIC_H = 30        # výška pruhu textu (slov) v rámci stopy
 TRACK_GAP = 12
 PER_TRACK = LINE_H + CHORD_H + LYRIC_H + TRACK_GAP
 BLOCK_MIN_W = 14
-EDGE = 6            # zóna u pravého okraje pro resize
+EDGE = 6            # zóna u okraje pro resize
 HANDLE_W = 8        # šířka tažného oddělovače řádku
 
 LINE_COLOR = QColor("#9141ac")   # fialová = karaoke řádky
@@ -42,6 +44,224 @@ BREAK_COLOR = QColor("#e5a50a")  # oranžová = tažná hranice řádku
 CHORD_COLOR = QColor("#1a5fb4")
 LYRIC_COLOR = QColor("#2d7d2d")
 SEL_COLOR = QColor("#e5a50a")
+
+# --- režimy zobrazení master "Displej" klipu (co karaoke displej vykreslí) ---
+MODE_LABELS = {
+    "lyrics_chords": "Text + akordy",
+    "lyrics": "Text",
+    "chords": "Akordy",
+    "tab": "Tabulatura",
+    "tab_chords": "Tab + akordy",
+}
+MODE_ORDER = ["lyrics_chords", "lyrics", "chords", "tab", "tab_chords"]
+MODE_COLORS = {
+    "lyrics_chords": QColor("#9141ac"),
+    "lyrics": QColor("#2d7d2d"),
+    "chords": QColor("#1a5fb4"),
+    "tab": QColor("#c64600"),
+    "tab_chords": QColor("#a51d2d"),
+}
+
+PLAYHEAD_COLOR = QColor("#e01b24")   # červená = kurzor / playhead
+
+
+class PlayheadItem(QGraphicsItem):
+    """Svislý kurzor (playhead) přes celou osu. Táhni myší nebo klikni do pravítka."""
+
+    def __init__(self, editor: "TimelineEditor", total_h: float):
+        super().__init__()
+        self.editor = editor
+        self.total_h = total_h
+        self.setFlags(
+            QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemSendsGeometryChanges
+        )
+        self.setZValue(60)
+        self.setCursor(Qt.SizeHorCursor)
+        self.setToolTip("Kurzor — táhni, nebo klikni do pravítka nahoře")
+        self._sync()
+
+    def _sync(self) -> None:
+        self.setPos(HEADER_W + self.editor.playhead_s * self.editor.pps, 0)
+
+    def boundingRect(self) -> QRectF:
+        return QRectF(-7, 0, 14, self.total_h)
+
+    def paint(self, p: QPainter, opt, widget=None):
+        from PySide6.QtGui import QPolygonF
+        p.setPen(QPen(PLAYHEAD_COLOR, 1.5))
+        p.drawLine(QPointF(0, RULER_H), QPointF(0, self.total_h))
+        p.setPen(QPen(PLAYHEAD_COLOR))
+        p.setBrush(QBrush(PLAYHEAD_COLOR))
+        p.drawPolygon(QPolygonF([QPointF(-6, 0), QPointF(6, 0), QPointF(0, 11)]))
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionChange:
+            x = max(HEADER_W, value.x())
+            t = round((x - HEADER_W) / self.editor.pps, 3)
+            self.editor.playhead_s = t
+            self.editor._update_playhead_label()
+            return QPointF(HEADER_W + t * self.editor.pps, 0)
+        return super().itemChange(change, value)
+
+
+class DisplayClipItem(QGraphicsRectItem):
+    """Klip master 'Displej' stopy (Vegas program).
+
+    Definuje: v čase [start_s, end_s) ukaž obsah zdrojové stopy (source_track)
+    v režimu (mode). Lze posouvat po ose i táhnout OBA okraje (změna délky).
+    """
+
+    def __init__(self, editor: "TimelineEditor", clip: dict, lane_y: float, height: float):
+        super().__init__()
+        self.editor = editor
+        self.clip = clip
+        self.lane_y = lane_y
+        self.h = height
+        self._resizing = ""          # "" | "left" | "right"
+        self.setFlags(
+            QGraphicsItem.ItemIsMovable
+            | QGraphicsItem.ItemIsSelectable
+            | QGraphicsItem.ItemSendsGeometryChanges
+        )
+        self.setAcceptHoverEvents(True)
+        self.setZValue(12)
+        self._sync_from_clip()
+
+    def _sync_from_clip(self) -> None:
+        pps = self.editor.pps
+        t = float(self.clip.get("start_s", 0.0))
+        end = float(self.clip.get("end_s", t + 1.0))
+        w = max(BLOCK_MIN_W, (end - t) * pps)
+        self.setRect(0, 0, w, self.h)
+        self.setPos(HEADER_W + t * pps, self.lane_y)
+
+    def _mode(self) -> str:
+        m = self.clip.get("mode", "lyrics_chords")
+        return m if m in MODE_LABELS else "lyrics_chords"
+
+    def paint(self, p: QPainter, opt, widget=None):
+        base = MODE_COLORS.get(self._mode(), LINE_COLOR)
+        if self.isSelected():
+            base = SEL_COLOR
+        r = self.rect()
+        p.setBrush(QBrush(base.lighter(160)))
+        p.setPen(QPen(base, 2))
+        p.drawRoundedRect(r, 5, 5)
+        # svislé úchyty na okrajích
+        p.setPen(QPen(base.darker(130), 1))
+        p.drawLine(r.left() + 3, r.top() + 4, r.left() + 3, r.bottom() - 4)
+        p.drawLine(r.right() - 3, r.top() + 4, r.right() - 3, r.bottom() - 4)
+        # popisky
+        names = self.editor._track_names()
+        ti = self.clip.get("source_track", 1)
+        label = self.clip.get("label", "") or ""
+        line1 = label if label else names.get(ti, f"Stopa {ti}")
+        line2 = f"{MODE_LABELS[self._mode()]} · {names.get(ti, f'Stopa {ti}')}"
+        p.setPen(QPen(QColor("#1a1a1a")))
+        f = QFont("Segoe UI", 9, QFont.Bold)
+        p.setFont(f)
+        p.drawText(r.adjusted(8, 2, -4, -int(self.h / 2)),
+                   Qt.AlignVCenter | Qt.AlignLeft, line1)
+        f2 = QFont("Segoe UI", 8)
+        p.setFont(f2)
+        p.setPen(QPen(base.darker(140)))
+        p.drawText(r.adjusted(8, int(self.h / 2) - 2, -4, -2),
+                   Qt.AlignVCenter | Qt.AlignLeft, line2)
+
+    # --- interakce ---
+    def hoverMoveEvent(self, ev):
+        x = ev.pos().x()
+        near = x <= EDGE or x >= self.rect().width() - EDGE
+        self.setCursor(Qt.SizeHorCursor if near else Qt.OpenHandCursor)
+        super().hoverMoveEvent(ev)
+
+    def mousePressEvent(self, ev):
+        if ev.button() == Qt.LeftButton:
+            x = ev.pos().x()
+            if x <= EDGE:
+                self._resizing = "left"
+                ev.accept()
+                return
+            if x >= self.rect().width() - EDGE:
+                self._resizing = "right"
+                ev.accept()
+                return
+        super().mousePressEvent(ev)
+
+    def mouseMoveEvent(self, ev):
+        pps = self.editor.pps
+        if self._resizing == "right":
+            w = max(BLOCK_MIN_W, ev.pos().x())
+            self.prepareGeometryChange()
+            self.setRect(0, 0, w, self.h)
+            start = float(self.clip.get("start_s", 0.0))
+            self.clip["end_s"] = round(start + w / pps, 3)
+            ev.accept()
+            return
+        if self._resizing == "left":
+            old_left = self.pos().x()
+            right = old_left + self.rect().width()
+            new_left = old_left + ev.pos().x()
+            new_left = max(HEADER_W, min(new_left, right - BLOCK_MIN_W))
+            w = right - new_left
+            self.setPos(new_left, self.lane_y)
+            self.prepareGeometryChange()
+            self.setRect(0, 0, w, self.h)
+            self.clip["start_s"] = round((new_left - HEADER_W) / pps, 3)
+            ev.accept()
+            return
+        super().mouseMoveEvent(ev)
+
+    def mouseReleaseEvent(self, ev):
+        if self._resizing:
+            self._resizing = ""
+            ev.accept()
+            return
+        super().mouseReleaseEvent(ev)
+
+    def mouseDoubleClickEvent(self, ev):
+        self.editor.edit_clip(self)
+        ev.accept()
+
+    def contextMenuEvent(self, ev):
+        from PySide6.QtWidgets import QMenu
+        menu = QMenu()
+        sub = menu.addMenu("Režim zobrazení")
+        for key in MODE_ORDER:
+            act = sub.addAction(("● " if key == self._mode() else "   ") + MODE_LABELS[key])
+            act.setData(key)
+        menu.addSeparator()
+        edit_act = menu.addAction("✎ Upravit klip…")
+        split_act = menu.addAction("✂ Rozdělit v kurzoru")
+        del_act = menu.addAction("🗑 Smazat klip")
+        chosen = menu.exec(ev.screenPos())
+        if chosen is None:
+            ev.accept()
+            return
+        if chosen is del_act:
+            self.editor.delete_clip(self)
+        elif chosen is edit_act:
+            self.editor.edit_clip(self)
+        elif chosen is split_act:
+            self.editor.split_at_playhead(self)
+        elif chosen.data() in MODE_LABELS:
+            self.clip["mode"] = chosen.data()
+            self.update()
+        ev.accept()
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionChange:
+            new: QPointF = value
+            if self._resizing:
+                return QPointF(new.x(), self.lane_y)   # při resize jen zamkni Y
+            x = max(HEADER_W, new.x())
+            t = self.editor.snap_time((x - HEADER_W) / self.editor.pps)
+            dur = float(self.clip.get("end_s", 0.0)) - float(self.clip.get("start_s", 0.0))
+            dur = max(0.05, dur)
+            self.clip["start_s"] = round(t, 3)
+            self.clip["end_s"] = round(t + dur, 3)
+            return QPointF(HEADER_W + t * self.editor.pps, self.lane_y)
+        return super().itemChange(change, value)
 
 
 class BlockItem(QGraphicsRectItem):
@@ -245,9 +465,22 @@ class TimelineView(QGraphicsView):
             return
         super().wheelEvent(ev)
 
+    def mousePressEvent(self, ev):
+        # klik do horního pravítka → přesun kurzoru (playhead)
+        sp = self.mapToScene(ev.position().toPoint())
+        if ev.button() == Qt.LeftButton and sp.y() <= RULER_H and sp.x() >= HEADER_W:
+            self.editor.set_playhead((sp.x() - HEADER_W) / self.editor.pps)
+            ev.accept()
+            return
+        super().mousePressEvent(ev)
+
     def keyPressEvent(self, ev):
         if ev.key() in (Qt.Key_Delete, Qt.Key_Backspace):
             self.editor.delete_selected()
+            ev.accept()
+            return
+        if ev.key() == Qt.Key_S:              # žiletka — rozdělit klip v kurzoru
+            self.editor.split_at_playhead()
             ev.accept()
             return
         super().keyPressEvent(ev)
@@ -263,7 +496,11 @@ class TimelineEditor(QWidget):
         self.pps: float = 60.0                # px za sekundu (zoom)
         self.snap_s: float = 0.0              # 0 = bez přichycení
         self.default_chord_dur: float = 1.0
+        self.playhead_s: float = 0.0             # pozice kurzoru (s)
+        self._playhead: Optional[PlayheadItem] = None
         self.blocks: list[BlockItem] = []
+        self.clips: list[DisplayClipItem] = []   # klipy master "Displej" stopy
+        self._display_lane_y: float = RULER_H + 4
         self._track_lane: dict[int, dict] = {}   # track_index → {'chord_y','lyric_y'}
         self.export_callback = None              # nastaví hlavní okno: fn(dict)
         self._setup_ui()
@@ -291,6 +528,29 @@ class TimelineEditor(QWidget):
         bar.addWidget(self.snap_combo)
 
         bar.addSpacing(12)
+        self.time_lbl = QLabel("⏱ 0,00 s")
+        self.time_lbl.setStyleSheet(
+            "color:#e01b24; font-weight:bold; font-family:Consolas; "
+            "padding:2px 6px; border:1px solid #e0a0a0; border-radius:3px;")
+        self.time_lbl.setToolTip("Pozice kurzoru — klikni do pravítka nebo táhni červený kurzor")
+        bar.addWidget(self.time_lbl)
+
+        bar.addSpacing(12)
+        add_clip = QPushButton("＋ Klip displeje")
+        add_clip.setStyleSheet(
+            "QPushButton{background:#9141ac;color:white;padding:5px 10px;"
+            "border-radius:4px;font-weight:bold;}QPushButton:hover{background:#a55bbf;}")
+        add_clip.clicked.connect(self.add_clip)
+        split_btn = QPushButton("✂ Rozdělit (S)")
+        split_btn.setToolTip("Rozdělí vybraný klip v pozici kurzoru (klávesa S)")
+        split_btn.clicked.connect(lambda: self.split_at_playhead())
+        autotime_btn = QPushButton("⏱ Auto-časování")
+        autotime_btn.setToolTip("Automaticky přerovná časy slabik "
+                                "(rovnoměrně v řádcích / do oken / na beat)")
+        autotime_btn.clicked.connect(self.auto_time_dialog)
+        bar.addWidget(add_clip)
+        bar.addWidget(split_btn)
+        bar.addWidget(autotime_btn)
         add_lyric = QPushButton("＋ Text")
         add_lyric.clicked.connect(lambda: self.add_block("lyric"))
         add_chord = QPushButton("＋ Akord")
@@ -308,8 +568,8 @@ class TimelineEditor(QWidget):
         bar.addWidget(exp_btn)
 
         bar.addStretch()
-        self.info_lbl = QLabel("Oranžová hranice = táhni konec řádku · dvojklik = editace · "
-                               "pravý klik na slovo = zalomit řádek · Ctrl+kolečko = zoom")
+        self.info_lbl = QLabel("Displej = master stopa (co uvidí karaoke) · dvojklik klip = zdroj+režim · "
+                               "táhni okraje = délka · pravý klik = režim/smazat · Ctrl+kolečko = zoom")
         self.info_lbl.setStyleSheet("color:#777;")
         bar.addWidget(self.info_lbl)
         root.addLayout(bar)
@@ -334,7 +594,84 @@ class TimelineEditor(QWidget):
         bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
         self.default_chord_dur = round(60.0 / bpm, 3)
         self._seed_line_starts()
+        self._seed_display()
         self._relayout(full=True)
+
+    # --- master "Displej" stopa (Vegas program) ---
+
+    def _track_names(self) -> dict[int, str]:
+        names = {t.get("index", i + 1): (t.get("name") or f"Stopa {i + 1}")
+                 for i, t in enumerate(self.tracks)}
+        for ti in self._track_order():
+            names.setdefault(ti, f"Stopa {ti}")
+        return names
+
+    def _song_end(self) -> float:
+        max_t = 1.0
+        for ev in self.data.get("lyrics_timeline", []) + self.data.get("chords_timeline", []):
+            max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 1)))
+        for t in self.tracks:
+            for b in t.get("beats", []) or []:
+                max_t = max(max_t, float(b.get("time_s", 0)) + float(b.get("duration_s", 0)))
+        return round(max_t, 3)
+
+    def _seed_display(self) -> None:
+        """Poprvé sestaví klipy master stopy: řádky zpěvu (text+akordy) a sóla
+        (tab+akordy). Když už display_timeline existuje, nechá ho být."""
+        data = self.data
+        if data.get("display_timeline"):
+            return
+        clips: list[dict] = []
+        n = 0
+        solo_idx = {t.get("index") for t in self.tracks if t.get("type") == "solo_guitar"}
+        # jedno "okno" (klip) na každý karaoke řádek zpěvních stop
+        for ti in self._track_order():
+            if ti in solo_idx:
+                continue
+            for line in self._group_lines(ti):
+                if not line:
+                    continue
+                n += 1
+                start = min(float(e["time_s"]) for e in line)
+                end = max(float(e["time_s"]) + float(e.get("duration_s", 0.5)) for e in line)
+                label = " ".join(e.get("text", "") for e in line).strip()
+                clips.append({
+                    "id": f"clip-{n}",
+                    "start_s": round(start, 3),
+                    "end_s": round(end, 3),
+                    "source_track": ti,
+                    "mode": "lyrics_chords",
+                    "label": label[:24],
+                })
+        # sólo stopy → tab + akordy přes svůj rozsah
+        for t in self.tracks:
+            if t.get("type") != "solo_guitar":
+                continue
+            ti = t.get("index")
+            times = [float(b["time_s"]) for b in (t.get("beats") or []) if b.get("time_s") is not None]
+            if not times:
+                times = [float(e["time_s"]) for e in data.get("chords_timeline", [])
+                         if e.get("track_index") == ti]
+            if not times:
+                continue
+            n += 1
+            clips.append({
+                "id": f"clip-{n}",
+                "start_s": round(min(times), 3),
+                "end_s": round(max(times) + 2.0, 3),
+                "source_track": ti,
+                "mode": "tab_chords",
+                "label": (t.get("name") or "Sólo")[:24],
+            })
+        if not clips:
+            order = self._track_order()
+            clips.append({
+                "id": "clip-1", "start_s": 0.0, "end_s": self._song_end(),
+                "source_track": order[0] if order else 1,
+                "mode": "lyrics_chords", "label": "Displej",
+            })
+        clips.sort(key=lambda c: c["start_s"])
+        data["display_timeline"] = clips
 
     # --- karaoke řádky: seskupení slov, hranice ---
 
@@ -354,16 +691,35 @@ class TimelineEditor(QWidget):
             return None
         return min(evs, key=lambda e: abs(e["time_s"] - t))
 
-    def _seed_line_starts(self, gap: float = 2.0) -> None:
-        """Poprvé rozdělí slova do řádků podle pauzy a označí začátky (line_start)."""
+    def _seed_line_starts(self, gap: float = 1.5, max_words: int = 7,
+                          max_span: float = 5.0) -> None:
+        """Poprvé rozdělí slova do řádků a označí začátky (line_start).
+
+        Zalomí se při: pauze > gap, nebo po max_words slovech, nebo když řádek
+        přesáhne max_span sekund. Díky tomu vzniknou čitelná karaoke „okna"
+        i u skladeb bez velkých pauz (jinak by byl celý text jeden řádek).
+        """
         for ti in self._track_order():
             evs = self._lyrics_of(ti)
             if any("line_start" in e for e in evs):
                 continue   # už rozděleno (uživatel editoval)
             prev_end = None
+            line_t0 = None
+            count = 0
             for i, e in enumerate(evs):
-                e["line_start"] = bool(i > 0 and prev_end is not None
-                                       and (e["time_s"] - prev_end) > gap)
+                brk = False
+                if i > 0:
+                    if prev_end is not None and (e["time_s"] - prev_end) > gap:
+                        brk = True
+                    elif count >= max_words:
+                        brk = True
+                    elif line_t0 is not None and (e["time_s"] - line_t0) > max_span:
+                        brk = True
+                e["line_start"] = brk
+                if brk or i == 0:
+                    line_t0 = e["time_s"]
+                    count = 0
+                count += 1
                 prev_end = e["time_s"] + e.get("duration_s", 0.5)
 
     def _group_lines(self, ti: int) -> list[list[dict]]:
@@ -391,24 +747,35 @@ class TimelineEditor(QWidget):
     def _relayout(self, full: bool = False) -> None:
         self.scene.clear()
         self.blocks.clear()
+        self.clips.clear()
         self._track_lane.clear()
 
         order = self._track_order()
-        names = {t.get("index", i + 1): t.get("name", f"Stopa {i+1}")
-                 for i, t in enumerate(self.tracks)}
+        names = self._track_names()
 
         # celková délka pro šířku scény
         max_t = 1.0
         for ev in self.data.get("lyrics_timeline", []) + self.data.get("chords_timeline", []):
             max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 1)))
-        total_h = RULER_H + len(order) * PER_TRACK + 20
+        for c in self.data.get("display_timeline", []):
+            max_t = max(max_t, float(c.get("end_s", 0)))
+        total_h = RULER_H + DISPLAY_ROW_H + len(order) * PER_TRACK + 20
         total_w = HEADER_W + max_t * self.pps + 200
         self.scene.setSceneRect(0, 0, total_w, total_h)
 
         # pozadí pruhů + názvy + pravítko
         self._draw_ruler(max_t, total_h)
+
+        # master "Displej" stopa navrchu
+        self._display_lane_y = RULER_H + 4
+        self._draw_display_bg(total_w)
+        for clip in self.data.get("display_timeline", []):
+            self._add_clip_item(clip)
+
+        # zdrojové stopy (posunuté pod master stopu)
+        base_top = RULER_H + DISPLAY_ROW_H
         for row, ti in enumerate(order):
-            top = RULER_H + row * PER_TRACK
+            top = base_top + row * PER_TRACK
             line_y = top + 2
             chord_y = line_y + LINE_H
             lyric_y = chord_y + CHORD_H
@@ -424,6 +791,44 @@ class TimelineEditor(QWidget):
         # karaoke řádky: spany + tažné hranice
         for ti in order:
             self._add_line_items(ti)
+
+        # kurzor (playhead) navrchu všeho
+        self._playhead = PlayheadItem(self, total_h)
+        self.scene.addItem(self._playhead)
+        self._update_playhead_label()
+
+    def set_playhead(self, t: float) -> None:
+        self.playhead_s = max(0.0, round(t, 3))
+        if self._playhead is not None:
+            self._playhead._sync()
+        self._update_playhead_label()
+
+    def _update_playhead_label(self) -> None:
+        if hasattr(self, "time_lbl"):
+            self.time_lbl.setText(f"⏱ {self.playhead_s:.2f} s".replace(".", ","))
+
+    def _draw_display_bg(self, total_w: float) -> None:
+        y = self._display_lane_y
+        w = total_w - HEADER_W
+        # pruh master stopy
+        self.scene.addRect(HEADER_W, y, w, DISPLAY_H,
+                           QPen(Qt.NoPen), QBrush(QColor("#f3e9fb")))
+        # hlavička master stopy
+        self.scene.addRect(0, y - 4, HEADER_W, DISPLAY_ROW_H - 6,
+                           QPen(QColor("#c9a3e0")), QBrush(QColor("#ece0f6")))
+        nm = self.scene.addSimpleText("🖥 DISPLEJ")
+        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm.setPos(8, y + 2)
+        nm.setBrush(QBrush(QColor("#7a2a9a")))
+        sub = self.scene.addSimpleText("výstup na karaoke")
+        sub.setFont(QFont("Segoe UI", 7))
+        sub.setPos(8, y + 20)
+        sub.setBrush(QBrush(QColor("#9a6cb5")))
+
+    def _add_clip_item(self, clip: dict) -> None:
+        item = DisplayClipItem(self, clip, self._display_lane_y, DISPLAY_H)
+        self.scene.addItem(item)
+        self.clips.append(item)
 
     def _draw_ruler(self, max_t: float, total_h: float) -> None:
         pen = QPen(QColor("#cccccc"))
@@ -533,18 +938,222 @@ class TimelineEditor(QWidget):
             self.data.setdefault("lyrics_timeline", []).append(ev)
         self._add_block_item(ev, kind)
 
-    def delete_selected(self) -> None:
-        for block in list(self.scene.selectedItems()):
-            if not isinstance(block, BlockItem):
+    # --- klipy master "Displej" stopy ---
+
+    def add_clip(self) -> None:
+        order = self._track_order()
+        ti = order[0] if order else 1
+        clips = self.data.setdefault("display_timeline", [])
+        start = max((float(c.get("end_s", 0.0)) for c in clips), default=0.0)
+        clip = {
+            "id": f"clip-{len(clips) + 1}",
+            "start_s": round(start, 3),
+            "end_s": round(start + 3.0, 3),
+            "source_track": ti,
+            "mode": "lyrics_chords",
+            "label": "Nový klip",
+        }
+        clips.append(clip)
+        self._add_clip_item(clip)
+
+    def edit_clip(self, item: DisplayClipItem) -> None:
+        from PySide6.QtWidgets import (
+            QDialog, QFormLayout, QDialogButtonBox, QComboBox, QLineEdit,
+        )
+        clip = item.clip
+        order = self._track_order()
+        names = self._track_names()
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Klip displeje — co a odkud se zobrazí")
+        form = QFormLayout(dlg)
+
+        src = QComboBox()
+        for ti in order:
+            src.addItem(f"{ti}. {names.get(ti, f'Stopa {ti}')}", ti)
+        cur_ti = clip.get("source_track", order[0] if order else 1)
+        src.setCurrentIndex(order.index(cur_ti) if cur_ti in order else 0)
+
+        mode = QComboBox()
+        for key in MODE_ORDER:
+            mode.addItem(MODE_LABELS[key], key)
+        cur_mode = clip.get("mode", "lyrics_chords")
+        mode.setCurrentIndex(MODE_ORDER.index(cur_mode) if cur_mode in MODE_ORDER else 0)
+
+        label = QLineEdit(clip.get("label", ""))
+
+        form.addRow("Zdrojová stopa:", src)
+        form.addRow("Režim zobrazení:", mode)
+        form.addRow("Popisek:", label)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        form.addRow(bb)
+
+        if dlg.exec():
+            clip["source_track"] = src.currentData()
+            clip["mode"] = mode.currentData()
+            clip["label"] = label.text().strip()
+            item.update()
+
+    def delete_clip(self, item: DisplayClipItem) -> None:
+        try:
+            self.data.get("display_timeline", []).remove(item.clip)
+        except ValueError:
+            pass
+        self.scene.removeItem(item)
+        if item in self.clips:
+            self.clips.remove(item)
+
+    def split_at_playhead(self, item: Optional[DisplayClipItem] = None) -> None:
+        """Žiletka: rozdělí klip na dva v pozici kurzoru (playhead)."""
+        t = self.playhead_s
+        target = item
+        if target is None:                      # vybraný klip, jinak klip pod kurzorem
+            for it in self.scene.selectedItems():
+                if isinstance(it, DisplayClipItem):
+                    target = it
+                    break
+        if target is None:
+            for it in self.clips:
+                if float(it.clip["start_s"]) < t < float(it.clip["end_s"]):
+                    target = it
+                    break
+        if target is None:
+            return
+        c = target.clip
+        if not (float(c["start_s"]) < t < float(c["end_s"])):
+            return   # kurzor musí být uvnitř klipu
+        clips = self.data.setdefault("display_timeline", [])
+        right = dict(c)
+        right["id"] = f"clip-{len(clips) + 1}"
+        right["start_s"] = round(t, 3)
+        c["end_s"] = round(t, 3)
+        clips.append(right)
+        self._relayout()
+
+    # --- automatické časování slabik ---
+
+    def auto_time_dialog(self) -> None:
+        from PySide6.QtWidgets import (
+            QDialog, QFormLayout, QComboBox, QDialogButtonBox, QLabel,
+        )
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Automatické časování slabik")
+        form = QFormLayout(dlg)
+        info = QLabel(
+            "Přerovná časy slabik podle zvolené strategie — orientace dle slabik.\n"
+            "Tip: nejdřív nastav délky „oken\" (klipů Displeje), pak zvol\n"
+            "„Rozprostřít do oken\"."
+        )
+        info.setStyleSheet("color:#555;")
+        form.addRow(info)
+
+        mode = QComboBox()
+        mode.addItem("Rovnoměrně v řádcích (dle délky slabik)", "line_even")
+        mode.addItem("Rozprostřít do oken Displeje (klipů)", "fit_clips")
+        mode.addItem("Přichytit slabiky na beat (tempo)", "beat_snap")
+        form.addRow("Strategie:", mode)
+
+        sub = QComboBox()
+        for lbl, v in [("1 beat", 1), ("1/2 beatu", 2), ("1/4 beatu", 4)]:
+            sub.addItem(lbl, v)
+        sub.setCurrentIndex(1)
+        form.addRow("Mřížka (jen „na beat\"):", sub)
+
+        bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
+        form.addRow(QLabel(f"Tempo: {bpm} BPM  →  1 beat = {60.0 / bpm:.3f} s"))
+
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        form.addRow(bb)
+
+        if not dlg.exec():
+            return
+        m = mode.currentData()
+        if m == "line_even":
+            self._auto_time_line_even()
+        elif m == "fit_clips":
+            self._auto_time_fit_clips()
+        else:
+            self._auto_time_beat_snap(int(sub.currentData()))
+        self._relayout()
+
+    @staticmethod
+    def _syllable_weight(e: dict) -> int:
+        """Váha slabiky ~ počet znaků (delší slova znějí déle). Min. 1."""
+        return max(1, len((e.get("text") or "").strip()))
+
+    def _distribute(self, evs: list[dict], t0: float, t1: float) -> None:
+        """Rozprostře slabiky evs do intervalu [t0, t1] vážené délkou textu."""
+        if not evs:
+            return
+        span = max(0.1, t1 - t0)
+        if len(evs) == 1:
+            evs[0]["time_s"] = round(t0, 3)
+            evs[0]["duration_s"] = round(span, 3)
+            return
+        weights = [self._syllable_weight(e) for e in evs]
+        total = sum(weights)
+        acc = t0
+        for e, w in zip(evs, weights):
+            d = span * w / total
+            e["time_s"] = round(acc, 3)
+            e["duration_s"] = round(d, 3)
+            acc += d
+
+    def _auto_time_line_even(self) -> None:
+        """Každý karaoke řádek: slabiky rovnoměrně (dle délky) přes jeho rozsah."""
+        for ti in self._track_order():
+            for line in self._group_lines(ti):
+                if len(line) < 2:
+                    continue
+                t0 = float(line[0]["time_s"])
+                t1 = max(float(e["time_s"]) + float(e.get("duration_s", 0.5)) for e in line)
+                self._distribute(line, t0, t1)
+
+    def _auto_time_fit_clips(self) -> None:
+        """Slabiky zdrojové stopy nacpe do časového okna každého klipu Displeje."""
+        for c in self.data.get("display_timeline", []):
+            if c.get("mode") in ("tab", "chords"):
                 continue
-            key = "chords_timeline" if block.kind == "chord" else "lyrics_timeline"
+            ti = c.get("source_track")
+            start, end = float(c["start_s"]), float(c["end_s"])
+            evs = [e for e in self._lyrics_of(ti)
+                   if start <= float(e["time_s"]) < end]
+            if evs:
+                self._distribute(evs, start, end)
+
+    def _auto_time_beat_snap(self, subdiv: int) -> None:
+        """Přichytí začátky slabik na mřížku beatu (tempo/subdiv) a dopočítá délky."""
+        bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
+        grid = (60.0 / bpm) / max(1, subdiv)
+        for ti in self._track_order():
+            evs = self._lyrics_of(ti)
+            for e in evs:
+                e["time_s"] = round(round(float(e["time_s"]) / grid) * grid, 3)
+            # délka = do začátku další slabiky (poslední drží svou)
+            for i, e in enumerate(evs):
+                if i + 1 < len(evs):
+                    nxt = float(evs[i + 1]["time_s"])
+                    e["duration_s"] = round(max(0.05, nxt - float(e["time_s"])), 3)
+
+    def delete_selected(self) -> None:
+        for it in list(self.scene.selectedItems()):
+            if isinstance(it, DisplayClipItem):
+                self.delete_clip(it)
+                continue
+            if not isinstance(it, BlockItem):
+                continue
+            key = "chords_timeline" if it.kind == "chord" else "lyrics_timeline"
             try:
-                self.data.get(key, []).remove(block.event)
+                self.data.get(key, []).remove(it.event)
             except ValueError:
                 pass
-            self.scene.removeItem(block)
-            if block in self.blocks:
-                self.blocks.remove(block)
+            self.scene.removeItem(it)
+            if it in self.blocks:
+                self.blocks.remove(it)
 
     # ------------------------------------------------------------------
     # Výstup
@@ -572,6 +1181,10 @@ class TimelineEditor(QWidget):
                 })
         karaoke.sort(key=lambda l: l["start_s"])
         data["karaoke_lines"] = karaoke
+        # master "Displej" stopa (co a kdy uvidí karaoke) — setříděné dle času
+        display = sorted(data.get("display_timeline", []),
+                         key=lambda c: float(c.get("start_s", 0.0)))
+        data["display_timeline"] = display
         meta = data.setdefault("meta", {})
         meta["edited_in_timeline"] = True
         return data

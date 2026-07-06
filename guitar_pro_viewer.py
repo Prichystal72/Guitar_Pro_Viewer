@@ -16,11 +16,11 @@ from timeline_editor import TimelineEditor
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QSplitter, QTreeWidget, QTreeWidgetItem, QLabel, QTextEdit,
+    QTreeWidget, QTreeWidgetItem, QLabel, QTextEdit,
     QPushButton, QFileDialog, QTabWidget, QTableWidget, QTableWidgetItem,
-    QGroupBox, QScrollArea, QStatusBar, QHeaderView, QMessageBox,
+    QScrollArea, QStatusBar, QHeaderView, QMessageBox,
     QCheckBox, QFrame, QLineEdit, QComboBox, QToolBar, QSizePolicy,
-    QTextBrowser,
+    QTextBrowser, QDockWidget,
 )
 from PySide6.QtCore import Qt, QSize, QThread, Signal
 from PySide6.QtGui import QFont, QColor, QAction, QIcon, QBrush, QPalette
@@ -381,17 +381,18 @@ class GuitarProViewer(QMainWindow):
         tb.addSeparator()
         tb.addAction(act_web)
 
-        # Central
+        # ===== CENTRÁLNÍ PLOCHA OKNA = ČASOVÁ OSA (Sony Vegas styl) =====
         central = QWidget()
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
         root.setContentsMargins(6, 6, 6, 6)
+        root.setSpacing(4)
 
-        # Info pruh
+        # Info pruh (tenký, nad osou)
         info_frame = QFrame()
         info_frame.setFrameShape(QFrame.StyledPanel)
         info_layout = QHBoxLayout(info_frame)
-        info_layout.setContentsMargins(8, 4, 8, 4)
+        info_layout.setContentsMargins(8, 3, 8, 3)
         self.lbl_title = QLabel("—")
         self.lbl_title.setStyleSheet("font-weight: bold; font-size: 15px;")
         self.lbl_artist = QLabel("")
@@ -405,27 +406,23 @@ class GuitarProViewer(QMainWindow):
         info_layout.addWidget(self.lbl_meta)
         root.addWidget(info_frame)
 
-        # Splitter: levý panel + pravý obsah
-        splitter = QSplitter(Qt.Horizontal)
-        root.addWidget(splitter)
+        # Časová osa vyplní celé centrum
+        self.timeline = TimelineEditor()
+        self.timeline.export_callback = self._export_timeline_json
+        root.addWidget(self.timeline, 1)
 
-        # ---- Levý panel: seznam stop ----
-        left = QGroupBox("Stopy")
-        left.setMinimumWidth(200)
-        left.setMaximumWidth(320)
+        # ---- Levý DOCK: seznam stop ----
+        left = QWidget()
         left_layout = QVBoxLayout(left)
-
+        left_layout.setContentsMargins(6, 6, 6, 6)
         self.track_tree = QTreeWidget()
         self.track_tree.setHeaderLabels(["Název", "Typ"])
-        self.track_tree.setColumnWidth(0, 160)
+        self.track_tree.setColumnWidth(0, 150)
         self.track_tree.itemClicked.connect(self._on_track_selected)
         left_layout.addWidget(self.track_tree)
-
-        # Checkboxy pro export
         self.chk_export_all = QCheckBox("Exportovat všechny stopy")
         self.chk_export_all.setChecked(True)
         left_layout.addWidget(self.chk_export_all)
-
         export_btn = QPushButton("💾  Export Karaoke JSON")
         export_btn.setStyleSheet(
             "QPushButton { background: #2d7d2d; color: white; padding: 7px 12px; "
@@ -435,26 +432,28 @@ class GuitarProViewer(QMainWindow):
         export_btn.clicked.connect(self.export_json)
         left_layout.addWidget(export_btn)
 
-        splitter.addWidget(left)
+        self.dock_tracks = QDockWidget("Stopy", self)
+        self.dock_tracks.setWidget(left)
+        self.dock_tracks.setMinimumWidth(200)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.dock_tracks)
 
-        # ---- Pravá strana: nahoře HLAVNÍ editor časové osy, dole detailní pohledy ----
-        right_split = QSplitter(Qt.Vertical)
-        splitter.addWidget(right_split)
-        splitter.setSizes([230, 1070])
-
-        # HLAVNÍ plocha okna — editor časové osy
-        tl_box = QGroupBox("🎚️  Editor časové osy — stopy, text a akordy")
-        tl_layout = QVBoxLayout(tl_box)
-        tl_layout.setContentsMargins(4, 4, 4, 4)
-        self.timeline = TimelineEditor()
-        self.timeline.export_callback = self._export_timeline_json
-        tl_layout.addWidget(self.timeline)
-        right_split.addWidget(tl_box)
-
-        # Doplňkové pohledy (menší panel pod editorem)
+        # ---- Spodní DOCK: náhledy (výchozí SKRYTÝ, ať má osa celé okno) ----
         self.tabs = QTabWidget()
-        right_split.addWidget(self.tabs)
-        right_split.setSizes([580, 260])
+        self.dock_previews = QDockWidget("Náhledy — Chord Chart, Noty, JSON…", self)
+        self.dock_previews.setWidget(self.tabs)
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.dock_previews)
+        self.dock_previews.hide()
+
+        # View menu + přepínače v toolbaru
+        view_menu = menubar.addMenu("Zobrazit")
+        act_tracks = self.dock_tracks.toggleViewAction()
+        act_tracks.setText("Panel stop")
+        act_previews = self.dock_previews.toggleViewAction()
+        act_previews.setText("Panel náhledů (Chord Chart, JSON…)")
+        view_menu.addAction(act_tracks)
+        view_menu.addAction(act_previews)
+        tb.addSeparator()
+        tb.addAction(act_previews)
 
         # Záložka 1: Chord Chart (text + akordy nad ním)
         chord_chart_widget = QWidget()
