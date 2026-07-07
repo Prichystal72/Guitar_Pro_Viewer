@@ -10,8 +10,9 @@ stažení celého interpreta**.
 ## Funkce
 
 - 📖 **Prohlížeč GP souborů** — stopy, ladění, takty, tabulatury, text, akordy.
-- 💾 **Export do JSON** — text + akordy + tabulatury v časové ose. Formát viz
-  [JSON_FORMAT.md](JSON_FORMAT.md).
+- 💾 **Export do JSON** — text + akordy + tabulatury v časové ose, s **režií
+  displeje** (`display_timeline`) a explicitním **seskupením do řádků** (klíč
+  `line` u každého slova). Formát viz [JSON_FORMAT.md](JSON_FORMAT.md).
 - 🎚️ **Editor časové osy (Sony Vegas styl)** — hlavní pracovní plocha okna.
   Nahoře **master „Displej" stopa** = režie karaoke (co/kdy/jak se ukáže na
   displeji) skládaná z **klipů**; pod ní zdrojové stopy s bloky textu a akordů.
@@ -29,7 +30,11 @@ stažení celého interpreta**.
   sóla se poznají podle `type: "solo_guitar"` a míří do klipů `tab+akordy`.
 - 🌐 **Import z webu** — rozpozná chord chart (akordy nad textem) a uloží jako
   GP4 + karaoke JSON. Optimalizováno pro [pisnicky-akordy.cz](https://pisnicky-akordy.cz),
-  s obecným fallbackem.
+  s obecným fallbackem. Karaoke JSON **respektuje řádkovou strukturu** webu (1:1,
+  s markerem `line` u slov) a časuje **po slabikách** (delší slovo trvá déle);
+  intro/mezihry v bar-line zápisu (`|Ami G|E| 2x`) pozná jako **řádek jen akordů**;
+  **akordy z první sloky se doplní** do dalších slok/refrénů. Do editoru otevři
+  přímo tento **JSON (Ctrl+J)**, ne GP4.
 - 📚 **Stažení celého interpreta** — zadáš stránku interpreta a všechny jeho
   písně se stáhnou do složky jako GP4 + JSON.
 - 🇨🇿 **České značení akordů** — `H` (= B) a `mi` pro moll (`Ami`, `Hmi`, `Cmi`…).
@@ -61,7 +66,10 @@ python guitar_pro_viewer.py
 ```
 
 ### Prohlížení, editace a export
-1. **Otevřít** GP soubor (`.gp3/.gp4/.gp5`).
+1. **Otevřít** GP soubor (`.gp3/.gp4/.gp5`), nebo **Otevřít Karaoke JSON**
+   (`Ctrl+J`) — např. výstup z web importu. **Pozor:** pro karaoke editaci se
+   správnými řádky a slabikovým časováním otevírej **JSON**, ne GP4 (GP4 nese
+   jen noty v taktech, řádková struktura se do něj neuloží).
 2. V **časové ose** (hlavní plocha) uprav režii displeje — klipy master „Displej"
    stopy, časování slabik (**⏱ Auto-časování**), zalomení řádků. Detailní náhledy
    (stopy, text, akordy, JSON) jsou v docku **Zobrazit → Panel náhledů**.

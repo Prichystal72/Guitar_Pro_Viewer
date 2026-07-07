@@ -122,17 +122,22 @@ lze vzít první záznam.
 ### 3.4 `lyrics_timeline[]` — sloučená časová osa textu
 
 Slova ze **všech** stop, seřazená podle `time_s`. Zdroj identifikuje
-`track_index`.
+`track_index`. Nepovinné **`line`** = index karaoke řádku, do kterého slovo patří
+(seskupení do řádků přímo v ploché ose — viz §6). Slova se stejným `line` tvoří
+jeden řádek.
 
 ```jsonc
 { "time_s": 18.0, "duration_s": 0.5, "text": "Nemohu,", "measure": 10,
-  "tick": 35520, "track_index": 1 }
+  "tick": 35520, "line": 3, "track_index": 1 }
 ```
 
 ### 3.5 `chords_timeline[]` — sloučená časová osa akordů
 
+Nepovinné **`line`** = index řádku, do kterého akord časově spadá (nebo `null`).
+
 ```jsonc
-{ "time_s": 16.0, "chord": "Am", "measure": 9, "tick": 31680, "track_index": 1 }
+{ "time_s": 16.0, "chord": "Am", "measure": 9, "tick": 31680,
+  "line": 3, "track_index": 1 }
 ```
 
 ### 3.6 `karaoke_lines[]` — text seskupený do řádků
@@ -141,12 +146,19 @@ Slova rozdělená do řádků podle pauz > 2 s. Hotový podklad pro karaoke disp
 
 ```jsonc
 {
+  "line": 4,
   "start_s": 15.0,
   "end_s": 19.5,
-  "words": [ { "time_s": 15.0, "duration_s": 0.5, "text": "tam", "track_index": 1 } ]
+  "words": [ { "time_s": 15.0, "duration_s": 0.5, "text": "tam", "line": 4, "track_index": 1 } ]
 }
 ```
-> U web importu má řádek navíc `"chords": ["Am","G"]` a `"text": "celý řádek"`.
+> `line` je index řádku (0-based), shodný s `line` u slov v `lyrics_timeline`.
+> **Web import**: řádek má navíc `"chords": ["Am","G"]`, `"text": "celý řádek"`,
+> `"end_s"` a `"track_index"`. Zachovává **řádkovou strukturu z webu** (1 řádek =
+> 1 karaoke řádek) a používá **slabikové časování**: řádek zabere celý počet 4/4
+> taktů podle počtu slabik, slova jsou rozmístěná po slabikách (1 slabika ≈ 1 beat,
+> delší slovo → delší `duration_s`), akord se váže na začátek svého slova. Doplnění
+> akordů do dalších slok / refrénu (z první sloky) zůstává zachováno.
 
 ### 3.7 `display_timeline[]` — režie karaoke displeje (Vegas program)
 
@@ -212,6 +224,10 @@ Verze zůstává **2** — jde o nepovinné klíče, které starší parser igno
 - **`display_timeline[]`** (§3.7) — režie karaoke displeje (klipy: co/kdy/jak).
   Produkuje ji editor časové osy. Když chybí, parser si obsah skládá z
   `karaoke_lines` / `lyrics_timeline` / `chords_timeline`.
+- **`line` (int)** na `lyrics_timeline[]`, `chords_timeline[]` a `karaoke_lines[]`
+  — **explicitní seskupení do řádků** i v ploché ose: slova se stejným `line`
+  patří do jednoho karaoke řádku. Parser tak nemusí odvozovat řádky z pauz —
+  přečte je přímo. Doprovází ho **`meta.has_line_structure: true`**.
 - **`meta.edited_in_timeline: true`** — příznak, že JSON prošel editorem časové
   osy (přerovnané časy slabik, ruční zalomení řádků, klipy Displeje).
 - Časy slabik (`lyrics_timeline[].time_s/duration_s`) mohou být **přerovnané**

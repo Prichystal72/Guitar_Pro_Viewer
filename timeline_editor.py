@@ -623,6 +623,33 @@ class TimelineEditor(QWidget):
             return
         clips: list[dict] = []
         n = 0
+
+        # A) EXPLICITNÍ řádky (web import) → klip na každý karaoke řádek 1:1.
+        #    Řádek bez slov (intro / mezihra) = klip „jen akordy".
+        meta = data.get("meta", {}) or {}
+        klines = data.get("karaoke_lines") or []
+        explicit = bool(meta.get("has_line_structure")) or any("chords" in l for l in klines)
+        if explicit and klines:
+            for l in klines:
+                words = l.get("words") or []
+                has_words = bool(words)
+                ti = words[0].get("track_index", 1) if has_words else 1
+                start = float(l.get("start_s", words[0]["time_s"] if has_words else 0.0))
+                end = float(l.get("end_s", start + 2.0))
+                label = (l.get("text") or " ".join(l.get("chords", []))).strip()
+                n += 1
+                clips.append({
+                    "id": f"clip-{n}",
+                    "start_s": round(start, 3),
+                    "end_s": round(end, 3),
+                    "source_track": ti,
+                    "mode": "lyrics_chords" if has_words else "chords",
+                    "label": label[:24],
+                })
+            clips.sort(key=lambda c: c["start_s"])
+            data["display_timeline"] = clips
+            return
+
         solo_idx = {t.get("index") for t in self.tracks if t.get("type") == "solo_guitar"}
         # jedno "okno" (klip) na každý karaoke řádek zpěvních stop
         for ti in self._track_order():
@@ -695,10 +722,49 @@ class TimelineEditor(QWidget):
                           max_span: float = 5.0) -> None:
         """Poprvé rozdělí slova do řádků a označí začátky (line_start).
 
-        Zalomí se při: pauze > gap, nebo po max_words slovech, nebo když řádek
-        přesáhne max_span sekund. Díky tomu vzniknou čitelná karaoke „okna"
-        i u skladeb bez velkých pauz (jinak by byl celý text jeden řádek).
+        1) Když data nesou EXPLICITNÍ řádkovou strukturu (`karaoke_lines`
+           z web importu — pozná se podle klíče `chords` nebo `meta.has_line_structure`),
+           řádky se převezmou 1:1 — přesně jak jsou na webu.
+        2) Jinak fallback: zalomí se při pauze > gap / po max_words slovech /
+           když řádek přesáhne max_span s (čitelná „okna" i bez velkých pauz).
         """
+        meta = self.data.get("meta", {}) or {}
+        klines = self.data.get("karaoke_lines") or []
+        lyr = self.data.get("lyrics_timeline", [])
+        has_line_field = any("line" in e for e in lyr)
+        explicit = (bool(meta.get("has_line_structure")) or has_line_field
+                    or any("chords" in l for l in klines))
+
+        if explicit:
+            # 1) Nejspolehlivější: každé slovo nese index řádku `line`
+            if has_line_field:
+                for ti in self._track_order():
+                    evs = self._lyrics_of(ti)
+                    if any("line_start" in e for e in evs):
+                        continue
+                    prev = None
+                    for idx, e in enumerate(evs):
+                        e["line_start"] = bool(idx > 0 and e.get("line") != prev)
+                        prev = e.get("line")
+                return
+            # 2) Fallback: začátky řádků z karaoke_lines podle času prvního slova
+            starts: dict[int, set] = {}
+            for l in klines:
+                words = l.get("words") or []
+                if not words:
+                    continue
+                ti = words[0].get("track_index", 1)
+                starts.setdefault(ti, set()).add(round(float(words[0]["time_s"]), 3))
+            for ti in self._track_order():
+                evs = self._lyrics_of(ti)
+                if any("line_start" in e for e in evs):
+                    continue
+                sset = starts.get(ti, set())
+                for idx, e in enumerate(evs):
+                    e["line_start"] = bool(idx > 0 and
+                                           round(float(e["time_s"]), 3) in sset)
+            return
+
         for ti in self._track_order():
             evs = self._lyrics_of(ti)
             if any("line_start" in e for e in evs):
@@ -1166,25 +1232,47 @@ class TimelineEditor(QWidget):
         chords = sorted(data.get("chords_timeline", []), key=lambda e: e["time_s"])
         data["lyrics_timeline"] = lyr
         data["chords_timeline"] = chords
-        # karaoke řádky dle uživatelských zalomení (line_start), po stopách
-        karaoke: list[dict] = []
+        # karaoke řádky dle uživatelských zalomení (line_start), po stopách.
+        # Přidáme GLOBÁLNÍ index řádku `line` na řádek, slova i lyrics_timeline —
+        # aby seskupení do řádků bylo v JSONu explicitní (ne jen v karaoke_lines).
+        grouped: list[tuple[int, list[dict]]] = []
         for ti in self._track_order():
             for line in self._group_lines(ti):
-                words = [{"time_s": e["time_s"], "duration_s": e.get("duration_s", 0.5),
-                          "text": e.get("text", ""), "track_index": ti} for e in line]
-                karaoke.append({
-                    "start_s": words[0]["time_s"],
-                    "end_s": max(w["time_s"] + w["duration_s"] for w in words),
-                    "track_index": ti,
-                    "text": " ".join(w["text"] for w in words),
-                    "words": words,
-                })
-        karaoke.sort(key=lambda l: l["start_s"])
+                if line:
+                    grouped.append((ti, line))
+        grouped.sort(key=lambda g: g[1][0]["time_s"])
+
+        karaoke: list[dict] = []
+        line_ranges: list[tuple[float, float, int]] = []
+        for line_idx, (ti, line) in enumerate(grouped):
+            for e in line:
+                e["line"] = line_idx           # obtaguj skutečné lyrics_timeline eventy
+            words = [{"time_s": e["time_s"], "duration_s": e.get("duration_s", 0.5),
+                      "text": e.get("text", ""), "line": line_idx, "track_index": ti}
+                     for e in line]
+            start = words[0]["time_s"]
+            end = max(w["time_s"] + w["duration_s"] for w in words)
+            line_ranges.append((start, end, line_idx))
+            karaoke.append({
+                "line": line_idx,
+                "start_s": start,
+                "end_s": end,
+                "track_index": ti,
+                "text": " ".join(w["text"] for w in words),
+                "words": words,
+            })
         data["karaoke_lines"] = karaoke
+
+        # akordy dostanou index řádku podle časového překryvu s řádkem
+        for c in chords:
+            t = float(c.get("time_s", 0.0))
+            c["line"] = next((li for s, e, li in line_ranges if s <= t < e), None)
+
         # master "Displej" stopa (co a kdy uvidí karaoke) — setříděné dle času
         display = sorted(data.get("display_timeline", []),
                          key=lambda c: float(c.get("start_s", 0.0)))
         data["display_timeline"] = display
         meta = data.setdefault("meta", {})
         meta["edited_in_timeline"] = True
+        meta["has_line_structure"] = True   # slova nesou index řádku `line`
         return data

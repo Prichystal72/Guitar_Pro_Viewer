@@ -76,8 +76,37 @@ def is_chord(token: str) -> bool:
     return bool(_CHORD_RE.match(token.strip()))
 
 
+# Samohláskové skupiny pro odhad počtu slabik (čeština + běžné akcenty).
+# Skupina souvislých samohlásek = 1 slabika (dvojhlásky ou/au/eu → 1).
+_VOWEL_GROUP_RE = re.compile(r'[aeiouyáéíóúůýěäëïöüàèìòù]+', re.IGNORECASE)
+
+
+def count_syllables(word: str) -> int:
+    """Odhad počtu slabik slova = počet samohláskových skupin (min. 1)."""
+    core = re.sub(r'[^0-9A-Za-zÀ-žĀ-ſ]', '', word or '')
+    if not core:
+        return 1
+    return max(1, len(_VOWEL_GROUP_RE.findall(core)))
+
+
+# Opakovací značky v akordových/intro řádcích: 2x, 3x…
+_REPEAT_RE = re.compile(r'^\d+\s*x$', re.IGNORECASE)
+
+
+def _chord_tokens(line: str) -> list[str]:
+    """Tokeny pro detekci/extrakci akordů: bar-line '|' oddělují akordy,
+    opakovací značky (2x) a bar-line znaky se vynechají."""
+    out = []
+    for tok in line.replace('|', ' ').split():
+        tok = tok.strip(':')
+        if not tok or _REPEAT_RE.match(tok):
+            continue
+        out.append(tok)
+    return out
+
+
 def is_chord_line(line: str) -> bool:
-    tokens = line.split()
+    tokens = _chord_tokens(line)
     if not tokens:
         return False
     return sum(1 for t in tokens if is_chord(t)) >= max(1, len(tokens) * 0.6)
@@ -345,6 +374,33 @@ def chart_to_gp_song(detected: list[dict], title: str, artist: str, tempo: int) 
 # Karaoke JSON builder
 # ---------------------------------------------------------------------------
 
+def _line_units(items: list[dict]):
+    """Projde detekované řádky a vydává jednotky řádků při zachování struktury:
+      ('lyric', [(word, chord), …])  — textový řádek (s navázanými akordy)
+      ('chords', [chord, …])         — samostatný akordový řádek (např. intro)
+    Párování akord+text ani doplnění akordů (apply_chord_templates) NEMĚNÍ.
+    """
+    i = 0
+    while i < len(items):
+        it = items[i]
+        if it['type'] == 'section':
+            i += 1
+            continue
+        if it['type'] == 'chord':
+            chord_line = it['text']
+            if i + 1 < len(items) and items[i + 1]['type'] == 'lyric':
+                pairs = align_chords_to_words(chord_line, items[i + 1]['text'])
+                i += 2
+                yield ('lyric', pairs)
+            else:
+                chords = [tok for tok in _chord_tokens(chord_line) if is_chord(tok)]
+                i += 1
+                yield ('chords', chords)
+        else:   # samotný text bez akordů
+            i += 1
+            yield ('lyric', [(w, '') for w in it['text'].split()])
+
+
 def build_karaoke_json(
     detected: list[dict],
     title: str = '',
@@ -352,73 +408,112 @@ def build_karaoke_json(
     tempo: int = 120,
     source_url: str = '',
 ) -> dict:
+    """Sestaví karaoke JSON s respektováním řádků a slabikovým časováním.
+
+    Model: každý řádek zabere celý počet 4/4 taktů podle počtu slabik, slova
+    jsou rozmístěna po slabikách (1 slabika ≈ 1 beat, delší slovo trvá déle),
+    akord se váže na začátek svého slova. Řádková struktura z webu zůstává
+    zachovaná (1 karaoke řádek = 1 řádek z webu).
+    """
     lyrics_timeline: list[dict] = []
     chords_timeline: list[dict] = []
     karaoke_lines: list[dict] = []
 
+    beat_s = 60.0 / tempo
     tick = TICKS_PER_BEAT
-    measure_num = 1
     active_chord = ''
 
     def ticks_to_s(t: int) -> float:
-        return round((t - TICKS_PER_BEAT) / TICKS_PER_BEAT * (60.0 / tempo), 3)
+        return round((t - TICKS_PER_BEAT) / TICKS_PER_BEAT * beat_s, 3)
+
+    def measure_at(t: int) -> int:
+        return 1 + (t - TICKS_PER_BEAT) // MEASURE_4_4
+
+    def measures_for(beats: int) -> int:
+        return max(1, -(-beats // 4))   # ceil(beats/4)
 
     items = [d for d in detected if d['type'] not in ('blank', 'ignore')]
-    i = 0
-    while i < len(items):
-        item = items[i]
-        if item['type'] == 'section':
-            i += 1
+
+    for kind, payload in _line_units(items):
+        line_tick = tick
+        line_idx = len(karaoke_lines)   # index řádku, který se právě tvoří
+
+        if kind == 'chords':
+            chords = payload
+            if not chords:
+                continue
+            kline_chords: list[str] = []
+            for j, chord in enumerate(chords):
+                onset = line_tick + j * TICKS_PER_BEAT
+                if chord != active_chord:
+                    chords_timeline.append({'time_s': ticks_to_s(onset), 'chord': chord,
+                                            'measure': measure_at(onset), 'line': line_idx,
+                                            'track_index': 1})
+                    active_chord = chord
+                if chord not in kline_chords:
+                    kline_chords.append(chord)
+            span_ticks = measures_for(len(chords)) * MEASURE_4_4
+            karaoke_lines.append({
+                'line': line_idx,
+                'start_s': ticks_to_s(line_tick),
+                'end_s': ticks_to_s(line_tick + span_ticks),
+                'chords': kline_chords,
+                'text': '',
+                'words': [],
+                'track_index': 1,
+            })
+            tick = line_tick + span_ticks
             continue
 
-        if item['type'] == 'chord':
-            chord_line = item['text']
-            lyric_line = ''
-            if i + 1 < len(items) and items[i + 1]['type'] == 'lyric':
-                lyric_line = items[i + 1]['text']
-                i += 2
-            else:
-                i += 1
-            pairs = align_chords_to_words(chord_line, lyric_line)
-        else:
-            pairs = [(w, '') for w in item['text'].split()]
-            i += 1
-
-        if not pairs:
-            tick += MEASURE_4_4
-            measure_num += 1
+        # kind == 'lyric'
+        pairs = payload
+        words = [w for w, _ in pairs if w.strip()]
+        if not words and not any(c for _, c in pairs):
             continue
+
+        syls = [count_syllables(w) for w, _ in pairs]
+        total_syl = sum(s for (w, _), s in zip(pairs, syls) if w.strip()) or len(pairs)
+        span_ticks = measures_for(total_syl) * MEASURE_4_4
 
         kline_words: list[dict] = []
-        kline_chords: list[str] = []
-        line_tick = tick
-        # Přidáme aktivní akord na začátek řádku (i bez změny — karaoke potřebuje vědět akord)
+        kline_chords = []
         if active_chord:
-            kline_chords.append(active_chord)
+            kline_chords.append(active_chord)   # znějící akord na začátku řádku
 
-        for grp in pairs_to_measures(pairs):
-            for word, chord in grp:
-                if chord and chord != active_chord:
-                    chords_timeline.append({'time_s': ticks_to_s(tick), 'chord': chord, 'measure': measure_num, 'track_index': 1})
-                    active_chord = chord
-                    if chord not in kline_chords:
-                        kline_chords.append(chord)
-                if word and word.strip():
-                    ts = ticks_to_s(tick)
-                    dur_s = round(TICKS_PER_BEAT / TICKS_PER_BEAT * (60.0 / tempo), 3)
-                    lyrics_timeline.append({'time_s': ts, 'duration_s': dur_s, 'text': word.strip(), 'measure': measure_num, 'track_index': 1})
-                    kline_words.append({'time_s': ts, 'text': word.strip(), 'track_index': 1})
-                tick += TICKS_PER_BEAT
-            measure_num += 1
+        cum = 0   # kumulativní slabiky = pozice v beatech uvnitř řádku
+        for (word, chord), s in zip(pairs, syls):
+            onset = line_tick + cum * TICKS_PER_BEAT
+            ts = ticks_to_s(onset)
+            if chord and chord != active_chord:
+                chords_timeline.append({'time_s': ts, 'chord': chord,
+                                        'measure': measure_at(onset), 'line': line_idx,
+                                        'track_index': 1})
+                active_chord = chord
+                if chord not in kline_chords:
+                    kline_chords.append(chord)
+            if word.strip():
+                dur_s = round(s * beat_s, 3)
+                lyrics_timeline.append({'time_s': ts, 'duration_s': dur_s,
+                                        'text': word.strip(), 'measure': measure_at(onset),
+                                        'line': line_idx, 'track_index': 1})
+                kline_words.append({'time_s': ts, 'duration_s': dur_s,
+                                    'text': word.strip(), 'line': line_idx, 'track_index': 1})
+                cum += s
 
-        lyric_text = ' '.join(w for w, _ in pairs if w.strip())
+        lyric_text = ' '.join(words)
         if lyric_text or kline_chords:
             karaoke_lines.append({
+                'line': line_idx,
                 'start_s': ticks_to_s(line_tick),
+                'end_s': ticks_to_s(line_tick + span_ticks),
                 'chords': kline_chords,
                 'text': lyric_text,
                 'words': kline_words,
+                'track_index': 1,
             })
+        tick = line_tick + span_ticks
+
+    measure_num = measure_at(tick)
 
     return {
         'meta': {
@@ -431,6 +526,7 @@ def build_karaoke_json(
             'duration_seconds': round(ticks_to_s(tick), 1),
             'total_measures': measure_num - 1,
             'track_count': 1,
+            'has_line_structure': True,   # řádky = přesně jako na webu (respektuj je)
         },
         'tempo_map': [{'tick': TICKS_PER_BEAT, 'bpm': tempo}],
         'tracks': [{

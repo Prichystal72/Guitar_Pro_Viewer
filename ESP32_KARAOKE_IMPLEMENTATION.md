@@ -140,6 +140,11 @@ Slova klipu = položky `lyrics_timeline` (nebo `karaoke_lines[].words`) se
 `track_index == source_track` a `start_s <= time_s < end_s`. Předpočítej si
 při načtení pro každý klip rozsah indexů (žádné hledání za běhu).
 
+> **Seskupení do řádků napřímo:** když má JSON `meta.has_line_structure: true`,
+> nese každé slovo v `lyrics_timeline` klíč **`line`** (index řádku). Slova se
+> stejným `line` = jeden řádek — nemusíš řádky odvozovat z pauz ani z klipů.
+> Bez tohoto klíče vezmi řádky z `karaoke_lines[].words`.
+
 Text řádku slož mezerami: `"napadů, aú, co podporujou…"`. Pozor: slovo už často
 obsahuje interpunkci/mezeru — **nepřidávej mezeru navíc**, pokud slovo končí
 mezerou/pomlčkou.

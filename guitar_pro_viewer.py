@@ -339,6 +339,7 @@ class GuitarProViewer(QMainWindow):
         self.current_file: Optional[str] = None
         self.tempo_map: list = []
         self._worker: Optional[LoadWorker] = None
+        self._loaded_json: Optional[dict] = None
         self._setup_ui()
 
     # ------------------------------------------------------------------
@@ -356,6 +357,12 @@ class GuitarProViewer(QMainWindow):
         act_open.setShortcut("Ctrl+O")
         act_open.triggered.connect(self.open_file)
         file_menu.addAction(act_open)
+        act_open_json = QAction("Otevřít Karaoke JSON…", self)
+        act_open_json.setShortcut("Ctrl+J")
+        act_open_json.setToolTip("Načte karaoke JSON (např. z web importu) rovnou "
+                                 "do editoru — se správnými řádky a časováním.")
+        act_open_json.triggered.connect(self.open_json)
+        file_menu.addAction(act_open_json)
         act_export = QAction("Exportovat Karaoke JSON…", self)
         act_export.setShortcut("Ctrl+E")
         act_export.triggered.connect(self.export_json)
@@ -376,6 +383,7 @@ class GuitarProViewer(QMainWindow):
         tb.setMovable(False)
         self.addToolBar(tb)
         tb.addAction(act_open)
+        tb.addAction(act_open_json)
         tb.addSeparator()
         tb.addAction(act_export)
         tb.addSeparator()
@@ -532,6 +540,63 @@ class GuitarProViewer(QMainWindow):
         self._worker.done.connect(self._on_loaded)
         self._worker.error.connect(self._on_load_error)
         self._worker.start()
+
+    # ------------------------------------------------------------------
+    # Načtení karaoke JSON přímo do editoru (např. z web importu)
+    # ------------------------------------------------------------------
+
+    def open_json(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Otevřít Karaoke JSON", "",
+            "Karaoke JSON (*.json);;Všechny soubory (*)"
+        )
+        if path:
+            self._load_karaoke_json(path)
+
+    def _load_karaoke_json(self, path: str):
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as ex:
+            QMessageBox.critical(self, "Chyba", f"Nelze načíst JSON:\n\n{ex}")
+            self.status.showMessage("Chyba načítání JSON.")
+            return
+
+        # JSON nemá GP song (tabulatury/detaily), pracujeme jen s karaoke daty
+        self.song = None
+        self.tempo_map = []
+        self.current_file = path
+        self._loaded_json = data
+
+        meta = data.get("meta", {}) or {}
+        self.lbl_title.setText(meta.get("title") or Path(path).stem)
+        self.lbl_artist.setText(meta.get("artist") or "")
+        self.lbl_meta.setText(
+            f"Tempo: {meta.get('tempo_bpm', '?')} BPM  |  "
+            f"{len(data.get('tracks', []))} stop  |  "
+            f"{len(data.get('karaoke_lines', []))} řádků  |  (načteno z JSON)"
+        )
+
+        # Strom stop z JSON
+        self.track_tree.clear()
+        for t in data.get("tracks", []):
+            item = QTreeWidgetItem([f"{t.get('index', '?')}. {t.get('name', '')}",
+                                    t.get("type", "")])
+            self.track_tree.addTopLevelItem(item)
+
+        # Náhledy, které potřebují GP song, nejsou k dispozici → jen JSON náhled
+        note = "(Načteno z JSON — tabulatury a detaily stop nejsou k dispozici.)"
+        for w in (self.overview_text, self.lyrics_text, self.chords_text):
+            w.setPlainText(note)
+        self.chord_chart_browser.setHtml(f"<p style='color:#888'>{note}</p>")
+        self.json_preview.setText(json.dumps(data, indent=2, ensure_ascii=False))
+
+        # HLAVNÍ věc — nakrmit editor časové osy (řádky + časování z JSONu)
+        self.timeline.load_data(data)
+
+        n_lines = len(self.timeline.data.get("karaoke_lines", []))
+        self.status.showMessage(
+            f"Načteno z JSON: {path}  ({n_lines} karaoke řádků)")
 
     def _on_loaded(self, song):
         self.song = song
@@ -1059,7 +1124,11 @@ class GuitarProViewer(QMainWindow):
 
     def export_json(self):
         if not self.song:
-            QMessageBox.warning(self, "Varování", "Nejprve otevřete Guitar Pro soubor.")
+            # Načteno z JSON → exportuj upravená data z editoru časové osy
+            if self._loaded_json is not None:
+                self._export_timeline_json(self.timeline.to_json())
+                return
+            QMessageBox.warning(self, "Varování", "Nejprve otevřete Guitar Pro soubor nebo JSON.")
             return
 
         default_name = ""
