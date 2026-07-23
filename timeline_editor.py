@@ -64,6 +64,18 @@ MODE_COLORS = {
 
 PLAYHEAD_COLOR = QColor("#e01b24")   # červená = kurzor / playhead
 
+import re as _re
+_SEC_NUM_RE = _re.compile(r'^\s*(\d+)\.')
+_SEC_REF_RE = _re.compile(r'^\s*(R[:.]|Ref|Refr|Chorus)', _re.IGNORECASE)
+
+
+def _section_of(text: str):
+    """Označení sloky/refrénu z markeru na začátku řádku (nebo None)."""
+    m = _SEC_NUM_RE.match(text or "")
+    if m:
+        return f"Sloka {m.group(1)}"
+    return "Refrén" if _SEC_REF_RE.match(text or "") else None
+
 
 class PlayheadItem(QGraphicsItem):
     """Svislý kurzor (playhead) přes celou osu. Táhni myší nebo klikni do pravítka."""
@@ -125,6 +137,11 @@ class DisplayClipItem(QGraphicsRectItem):
         )
         self.setAcceptHoverEvents(True)
         self.setZValue(12)
+        self.setToolTip(
+            "Táhni okraj = posuň ZAČÁTEK/KONEC řádku na displeji "
+            "(nezávisle na tom, kdy doznívá poslední slabika). "
+            "Táhni střed = posuň celý klip po ose."
+        )
         self._sync_from_clip()
 
     def _sync_from_clip(self) -> None:
@@ -616,21 +633,23 @@ class TimelineEditor(QWidget):
         return round(max_t, 3)
 
     def _seed_display(self) -> None:
-        """Poprvé sestaví klipy master stopy: řádky zpěvu (text+akordy) a sóla
-        (tab+akordy). Když už display_timeline existuje, nechá ho být."""
+        """Poprvé sestaví klipy master stopy: jedno okno (text+akordy) na
+        každý karaoke řádek. Když už display_timeline existuje, nechá ho být."""
         data = self.data
         if data.get("display_timeline"):
             return
         clips: list[dict] = []
         n = 0
 
-        # A) EXPLICITNÍ řádky (web import) → klip na každý karaoke řádek 1:1.
-        #    Řádek bez slov (intro / mezihra) = klip „jen akordy".
+        # A) EXPLICITNÍ řádky (z JSONu) → klip na každý karaoke řádek 1:1.
+        #    Řádek bez slov (intro / mezihra) = klip „jen akordy". Klip nese
+        #    `line` = index řádku, díky čemuž `to_json()` pozná, že jde o TENTO
+        #    řádek, i když se s ním později hne (přetažení konce, viz níže).
         meta = data.get("meta", {}) or {}
         klines = data.get("karaoke_lines") or []
         explicit = bool(meta.get("has_line_structure")) or any("chords" in l for l in klines)
         if explicit and klines:
-            for l in klines:
+            for idx, l in enumerate(klines):
                 words = l.get("words") or []
                 has_words = bool(words)
                 ti = words[0].get("track_index", 1) if has_words else 1
@@ -645,16 +664,15 @@ class TimelineEditor(QWidget):
                     "source_track": ti,
                     "mode": "lyrics_chords" if has_words else "chords",
                     "label": label[:24],
+                    "line": l.get("line", idx),
                 })
             clips.sort(key=lambda c: c["start_s"])
             data["display_timeline"] = clips
             return
 
-        solo_idx = {t.get("index") for t in self.tracks if t.get("type") == "solo_guitar"}
-        # jedno "okno" (klip) na každý karaoke řádek zpěvních stop
+        # B) fallback bez explicitní struktury: jedno okno na každý řádek
+        #    odvozený z pauz mezi slovy.
         for ti in self._track_order():
-            if ti in solo_idx:
-                continue
             for line in self._group_lines(ti):
                 if not line:
                     continue
@@ -670,26 +688,6 @@ class TimelineEditor(QWidget):
                     "mode": "lyrics_chords",
                     "label": label[:24],
                 })
-        # sólo stopy → tab + akordy přes svůj rozsah
-        for t in self.tracks:
-            if t.get("type") != "solo_guitar":
-                continue
-            ti = t.get("index")
-            times = [float(b["time_s"]) for b in (t.get("beats") or []) if b.get("time_s") is not None]
-            if not times:
-                times = [float(e["time_s"]) for e in data.get("chords_timeline", [])
-                         if e.get("track_index") == ti]
-            if not times:
-                continue
-            n += 1
-            clips.append({
-                "id": f"clip-{n}",
-                "start_s": round(min(times), 3),
-                "end_s": round(max(times) + 2.0, 3),
-                "source_track": ti,
-                "mode": "tab_chords",
-                "label": (t.get("name") or "Sólo")[:24],
-            })
         if not clips:
             order = self._track_order()
             clips.append({
@@ -825,6 +823,8 @@ class TimelineEditor(QWidget):
             max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 1)))
         for c in self.data.get("display_timeline", []):
             max_t = max(max_t, float(c.get("end_s", 0)))
+        for ev in self.data.get("drums_timeline", []):
+            max_t = max(max_t, float(ev.get("time_s", 0)))
         total_h = RULER_H + DISPLAY_ROW_H + len(order) * PER_TRACK + 20
         total_w = HEADER_W + max_t * self.pps + 200
         self.scene.setSceneRect(0, 0, total_w, total_h)
@@ -842,6 +842,9 @@ class TimelineEditor(QWidget):
         base_top = RULER_H + DISPLAY_ROW_H
         for row, ti in enumerate(order):
             top = base_top + row * PER_TRACK
+            if self._track_is_drums(ti):
+                self._draw_drums_lane(ti, top, names.get(ti, f"Stopa {ti}"), total_w)
+                continue
             line_y = top + 2
             chord_y = line_y + LINE_H
             lyric_y = chord_y + CHORD_H
@@ -941,6 +944,64 @@ class TimelineEditor(QWidget):
             it = self.scene.addSimpleText(txt)
             it.setPos(12, y); it.setBrush(QBrush(QColor(col)))
 
+    def _track_is_drums(self, ti: int) -> bool:
+        for t in self.tracks:
+            if t.get("index") == ti:
+                return bool(t.get("is_drums") or t.get("type") == "drums")
+        return False
+
+    @staticmethod
+    def _drum_family(name: str):
+        """Vrátí (řada 0-2, barva) podle jména bubnu. Řada 0=nahoře (činely/hi-hat),
+        1=uprostřed (snare/tom), 2=dole (kick)."""
+        n = (name or "").lower()
+        if "kick" in n or "bass drum" in n:
+            return 2, QColor("#3a3a3a")
+        if "snare" in n:
+            return 1, QColor("#c01c28")
+        if "tom" in n:
+            return 1, QColor("#2d7d2d")
+        if "hi-hat" in n or "hihat" in n or "hi hat" in n:
+            return 0, QColor("#1a5fb4")
+        if any(k in n for k in ("crash", "ride", "cymbal", "splash", "china", "bell")):
+            return 0, QColor("#e08a00")
+        return 1, QColor("#888888")
+
+    def _draw_drums_lane(self, ti: int, top: float, name: str, total_w: float) -> None:
+        """Vykreslí stopu bicích: úhozy jako svislé značky ve 3 řadách
+        (činely/hi-hat, snare/tom, kick), barevně dle bubnu. Jen zobrazení."""
+        h = PER_TRACK - TRACK_GAP
+        y = top + 2
+        w = total_w - HEADER_W
+        self.scene.addRect(HEADER_W, y, w, h - 2,
+                           QPen(Qt.NoPen), QBrush(QColor("#fff4e6")))
+        # hlavička
+        self.scene.addRect(0, top, HEADER_W, h + 2,
+                           QPen(QColor("#e6c9a3")), QBrush(QColor("#fbf0e0")))
+        nm = self.scene.addSimpleText("🥁 " + name)
+        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm.setPos(6, top + 3)
+        nm.setBrush(QBrush(QColor("#b56b1e")))
+
+        rows_h = (h - 8) / 3.0
+        for r, lab in enumerate(("činely/hi-hat", "snare/tom", "kick")):
+            ry = y + 4 + r * rows_h
+            it = self.scene.addSimpleText(lab)
+            it.setFont(QFont("Segoe UI", 7))
+            it.setPos(12, ry - 2)
+            it.setBrush(QBrush(QColor("#b56b1e")))
+            # jemná vodicí linka řady
+            self.scene.addLine(HEADER_W, ry + rows_h / 2, HEADER_W + w, ry + rows_h / 2,
+                               QPen(QColor("#f0e0cc"), 1))
+
+        for ev in self.data.get("drums_timeline", []):
+            if ev.get("track_index") != ti:
+                continue
+            r, col = self._drum_family(ev.get("drum", ""))
+            x = HEADER_W + float(ev.get("time_s", 0)) * self.pps
+            ry = y + 4 + r * rows_h
+            self.scene.addLine(x, ry + 1, x, ry + rows_h - 3, QPen(col, 1.4))
+
     def _add_line_items(self, ti: int) -> None:
         lane = self._track_lane.get(ti)
         if lane is None:
@@ -996,11 +1057,11 @@ class TimelineEditor(QWidget):
         ti = order[0] if order else 1
         if kind == "chord":
             ev = {"time_s": 0.0, "duration_s": self.default_chord_dur,
-                  "chord": "C", "measure": 1, "tick": 960, "track_index": ti}
+                  "chord": "C", "measure": 1, "track_index": ti}
             self.data.setdefault("chords_timeline", []).append(ev)
         else:
             ev = {"time_s": 0.0, "duration_s": 0.5, "text": "text",
-                  "measure": 1, "tick": 960, "track_index": ti}
+                  "measure": 1, "track_index": ti}
             self.data.setdefault("lyrics_timeline", []).append(ev)
         self._add_block_item(ev, kind)
 
@@ -1226,15 +1287,21 @@ class TimelineEditor(QWidget):
     # ------------------------------------------------------------------
 
     def to_json(self) -> dict:
-        """Vrátí upravený JSON slovník (setříděné osy + přepočtené karaoke_lines)."""
+        """Vrátí upravený JSON slovník (setříděné osy + přepočtené karaoke_lines).
+
+        Zobrazovaný rozsah řádku (`karaoke_lines[].start_s/end_s`) může
+        uživatel přetáhnout přes odpovídající klip na master "Displej" stopě
+        — nezávisle na tom, kdy doznívá poslední slovo. To je potřeba u
+        rytmických skladeb, kde má řádek zůstat na displeji déle/kratčeji,
+        než trvá poslední slabika. Klip se s řádkem páruje přes `line`
+        (viz `_seed_display`); starší klipy bez tohoto tagu se dohledají
+        podle stopy + blízkého startu a tag jim dopíšeme."""
         data = self.data
         lyr = sorted(data.get("lyrics_timeline", []), key=lambda e: e["time_s"])
         chords = sorted(data.get("chords_timeline", []), key=lambda e: e["time_s"])
         data["lyrics_timeline"] = lyr
         data["chords_timeline"] = chords
-        # karaoke řádky dle uživatelských zalomení (line_start), po stopách.
-        # Přidáme GLOBÁLNÍ index řádku `line` na řádek, slova i lyrics_timeline —
-        # aby seskupení do řádků bylo v JSONu explicitní (ne jen v karaoke_lines).
+
         grouped: list[tuple[int, list[dict]]] = []
         for ti in self._track_order():
             for line in self._group_lines(ti):
@@ -1242,36 +1309,81 @@ class TimelineEditor(QWidget):
                     grouped.append((ti, line))
         grouped.sort(key=lambda g: g[1][0]["time_s"])
 
-        karaoke: list[dict] = []
-        line_ranges: list[tuple[float, float, int]] = []
+        # Pass 1: přiřaď GLOBÁLNÍ index řádku `line` slovům a spočítej
+        # přirozený (ze slov odvozený) rozsah — používá se pro přiřazení
+        # akordů k řádku (nemění se přetažením zobrazovaného konce).
+        line_words: list[list[dict]] = []
+        line_ranges: list[tuple[float, float]] = []
         for line_idx, (ti, line) in enumerate(grouped):
             for e in line:
-                e["line"] = line_idx           # obtaguj skutečné lyrics_timeline eventy
+                e["line"] = line_idx
             words = [{"time_s": e["time_s"], "duration_s": e.get("duration_s", 0.5),
                       "text": e.get("text", ""), "line": line_idx, "track_index": ti}
                      for e in line]
-            start = words[0]["time_s"]
-            end = max(w["time_s"] + w["duration_s"] for w in words)
-            line_ranges.append((start, end, line_idx))
-            karaoke.append({
-                "line": line_idx,
-                "start_s": start,
-                "end_s": end,
-                "track_index": ti,
-                "text": " ".join(w["text"] for w in words),
-                "words": words,
-            })
-        data["karaoke_lines"] = karaoke
+            line_words.append(words)
+            line_ranges.append((words[0]["time_s"],
+                                max(w["time_s"] + w["duration_s"] for w in words)))
 
-        # akordy dostanou index řádku podle časového překryvu s řádkem
         for c in chords:
             t = float(c.get("time_s", 0.0))
-            c["line"] = next((li for s, e, li in line_ranges if s <= t < e), None)
+            c["line"] = next((li for li, (s, e) in enumerate(line_ranges) if s <= t < e), None)
+
+        # Klipy master "Displej" stopy — spáruj s řádky přes `line`, starší
+        # klipy bez tagu dohledej podle stopy a blízkého startu.
+        display_clips = data.get("display_timeline", []) or []
+        clip_by_line: dict[int, dict] = {
+            c["line"]: c for c in display_clips if isinstance(c.get("line"), int)
+        }
+        unlinked = [c for c in display_clips
+                    if not isinstance(c.get("line"), int)
+                    and c.get("mode") in ("lyrics_chords", "lyrics")]
+
+        def _match_unlinked(ti: int, start: float):
+            for c in unlinked:
+                if c.get("source_track") == ti and abs(float(c.get("start_s", -999)) - start) < 0.75:
+                    return c
+            return None
+
+        karaoke: list[dict] = []
+        for line_idx, (ti, _line) in enumerate(grouped):
+            words = line_words[line_idx]
+            start, end = line_ranges[line_idx]
+
+            clip = clip_by_line.get(line_idx)
+            if clip is None:
+                clip = _match_unlinked(ti, start)
+                if clip is not None:
+                    clip["line"] = line_idx
+                    unlinked.remove(clip)
+
+            disp_start, disp_end = start, end
+            if clip is not None:
+                disp_start = float(clip.get("start_s", start))
+                disp_end = max(float(clip.get("end_s", end)), disp_start + 0.05)
+
+            line_chords: list[str] = []
+            for c in chords:
+                if c.get("line") == line_idx and c.get("chord") not in line_chords:
+                    line_chords.append(c["chord"])
+
+            text = " ".join(w["text"] for w in words)
+            kl = {
+                "line": line_idx,
+                "start_s": round(disp_start, 3),
+                "end_s": round(disp_end, 3),
+                "chords": line_chords,
+                "text": text,
+                "words": words,
+                "track_index": ti,
+            }
+            sec = _section_of(text)
+            if sec:
+                kl["section"] = sec
+            karaoke.append(kl)
+        data["karaoke_lines"] = karaoke
 
         # master "Displej" stopa (co a kdy uvidí karaoke) — setříděné dle času
-        display = sorted(data.get("display_timeline", []),
-                         key=lambda c: float(c.get("start_s", 0.0)))
-        data["display_timeline"] = display
+        data["display_timeline"] = sorted(display_clips, key=lambda c: float(c.get("start_s", 0.0)))
         meta = data.setdefault("meta", {})
         meta["edited_in_timeline"] = True
         meta["has_line_structure"] = True   # slova nesou index řádku `line`

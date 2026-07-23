@@ -3,8 +3,9 @@
 > **Účel:** závazný návod pro implementaci **přehrávače karaoke JSONu** na ESP32
 > (nebo libovolném MCU/displeji). Popisuje, jak z JSONu řídit displej: **které
 > řádky ve správný čas**, **zvýrazňování slov**, **akordy nad textem** a
-> **tabulaturu u sól**. Návod je **obecný** — musí fungovat pro *jakoukoli*
-> skladbu v tomto formátu, ne jen pro přiložený test.
+> **přehrávání bicích samplů** (`drums_timeline`). Žádná tabulatura — formát
+> nese jen text, akordy a bicí. Návod je **obecný** — musí fungovat pro
+> *jakoukoli* skladbu v tomto formátu, ne jen pro přiložený test.
 >
 > **Vstup:** **výstup z vieweru** — JSON, který vyprodukuje tlačítko
 > **„💾 Export JSON"** v editoru časové osy (obsahuje `display_timeline`) nebo
@@ -16,15 +17,15 @@
 
 ## 0. TL;DR (co udělat)
 
-1. Načti JSON, drž v paměti jen to, co displej potřebuje (řádky/slova/akordy;
-   tabulaturu jen když ji budeš kreslit).
+1. Načti JSON, drž v paměti jen to, co displej potřebuje (řádky/slova/akordy).
 2. Měj **hodiny přehrávání** `t` v sekundách od začátku skladby.
 3. Renderuj **bezstavově**: každý snímek zavolej `render(t)`, které z dat samo
    spočítá, co má být na displeji. (Umožní to pauzu/přetáčení zdarma.)
 4. **Řídící osa = `display_timeline`.** Najdi klip aktivní v čase `t` → podle
-   jeho `mode` vykresli obsah `source_track` (text / text+akordy / tab+akordy…).
+   jeho `mode` vykresli obsah `source_track` (text / text+akordy).
    Když `display_timeline` chybí, odvoď řádky z `karaoke_lines`.
 5. Zvýrazni **aktuální slovo** podle `time_s`/`duration_s`.
+6. **Paralelně** přehrávej `drums_timeline` — nezávisle na displeji (§6b).
 
 ---
 
@@ -58,8 +59,12 @@
 | `karaoke_lines[]` | řádky textu (fallback, když není `display_timeline`) | ✅* |
 | `lyrics_timeline[]` | slova se `time_s`/`duration_s` (zdroj pro zvýraznění) | ✅ |
 | `chords_timeline[]` | akordy se `time_s` (nad text / samostatně) | – |
-| `tracks[]` (+`beats[]`) | tabulatura pro režim `tab`/`tab_chords` | jen pro tab |
+| `drums_timeline[]` | kdy a jaký buben/sample zahrát | jen máš-li reprák/sampler |
 | `tempo_map[]` | přepočet ticků (obvykle ignoruj) | – |
+
+Formát je **jen text, akordy a bicí** — žádná tabulatura (`tracks[].beats`),
+takže §8 z dřívějška (tab render) odpadá. `tracks[]` obsahuje jen stopy, co
+něco skutečně nesou (text/akord), plus bicí.
 
 \* Potřebuješ **buď** `display_timeline` **nebo** `karaoke_lines`/`lyrics_timeline`.
 
@@ -70,8 +75,9 @@
 - Chybí `display_timeline` → sestav „okna" z `karaoke_lines`
   (`start_s`,`end_s`,`words`).
 - Chybí `duration_s` u slova → odhadni: `next.time_s - time_s`, jinak `0.4 s`.
-- `tracks[].beats` nemusí existovat (`has_tab:false`) → režim `tab*` pak
-  degraduj na `chords`/prázdno.
+- Narazíš-li na starší soubor s `mode: "tab"`/`"tab_chords"` nebo
+  `tracks[].beats`, ber to jako neznámé/chybějící → degraduj na `chords`/
+  `lyrics_chords`, nespadni.
 
 ---
 
@@ -91,11 +97,12 @@ Seřazené, **nepřekrývající se** klipy = „okna" na displeji.
 
 | `mode` | Render |
 |--------|--------|
-| `lyrics_chords` | řádek textu + akordy nad ním (výchozí zpěv) |
+| `lyrics_chords` | řádek textu + akordy nad ním (výchozí) |
 | `lyrics` | jen text |
-| `chords` | jen akordy (velké, doprostřed) |
-| `tab` | tabulatura ze `source_track.beats` |
-| `tab_chords` | tabulatura + akordy nad ní (výchozí **sólo**) |
+| `chords` | jen akordy (velké, doprostřed — intro/mezihra) |
+
+(Starší soubory mohly mít i `tab`/`tab_chords` — žádná aktuální stopa už
+tabulaturu nenese, takže je stačí ošetřit jako fallback na `lyrics_chords`.)
 
 **Algoritmus výběru aktivního klipu** (klipy jsou seřazené dle `start_s`):
 binární hledání posledního klipu s `start_s <= t`; pokud `t < end_s`, je aktivní,
@@ -118,10 +125,6 @@ void loop_frame() {
             break;
         case CHORDS:
             draw_chords_only(c, t);
-            break;
-        case TAB:
-        case TAB_CHORDS:
-            draw_tab(c, t, /*chords=*/ c->mode==TAB_CHORDS);
             break;
     }
 }
@@ -194,6 +197,25 @@ a případně malý náhled dalšího.
 
 ---
 
+## 6b. Bicí samply (`drums_timeline`)
+
+Nezávislé na `display_timeline`/klipech — hraje se **vždy**, i v mezerách mezi
+klipy (bicí jedou dál, i když displej zrovna nic neukazuje).
+
+- Každý záznam = jeden úder: `time_s`, `drum` (jméno z GM Percussion mapy,
+  např. `"Acoustic Snare"`, `"Closed Hi-Hat"`), `midi` (totéž číselně, 35–81).
+- **Naplánuj přehrání samplu v `time_s`**, ne až ho uvidíš v `render(t)` — bicí
+  potřebují nižší latenci než text. Vhodné řešení: fronta budoucích úderů,
+  při postupu `t` vyjmi a přehraj vše s `time_s <= t` od poslední kontroly.
+- Namapuj `midi`/`drum` na soubor samplu předem (načtením do RAM/SD), např.
+  `midi 35/36 → kick.wav`, `38/40 → snare.wav`, `42 → hihat_closed.wav`,
+  `46 → hihat_open.wav`, `49/57 → crash.wav`, `51/59 → ride.wav`. Víc úderů se
+  stejným `time_s` (kick+hi-hat současně) = přehraj oba kanály najednou (mix
+  nebo víc hlasů přehrávače).
+- Bez zvukového výstupu tuhle sekci ignoruj — displej funguje bez ní.
+
+---
+
 ## 7. Idle / mezery / náhled dalšího řádku
 
 - **Mezera mezi klipy** (`active_clip == NULL`): nekresli „zmrzlý" starý řádek.
@@ -206,25 +228,12 @@ a případně malý náhled dalšího.
 
 ---
 
-## 8. Tabulatura pro sóla (`tab` / `tab_chords`)
-
-Jen když `tracks[source_track].has_tab` a existuje `beats[]`.
-
-Každý `beat`: `time_s`, `duration_s`, `notes[]` (`string` 1=nejvyšší, `fret`,
-`note_name`, `effects{hammer_on,pull_off,vibrato,slide,bend}`). Kresli mřížku
-strun (počet = `len(tuning)`), noty umísti podle času do okna `[clip.start,end)`,
-`fret` jako číslo na struně. Aktuální beat (`time_s <= t < time_s+duration_s`)
-zvýrazni. Akordy nad tabulaturou jako v §6. **Paměť:** `beats[]` je velké —
-načítej ho *streamovaně* z SD jen pro právě běžící `tab` klip, ne celé do RAM.
-
----
-
-## 9. Datové struktury (návrh v C)
+## 8. Datové struktury (návrh v C)
 
 ```c
 typedef struct { float time_s, dur_s; const char* text; } Word;      // UTF-8!
 typedef struct { float time_s; const char* name; } Chord;
-typedef enum { M_LYRICS, M_LYRICS_CHORDS, M_CHORDS, M_TAB, M_TAB_CHORDS } Mode;
+typedef enum { M_LYRICS, M_LYRICS_CHORDS, M_CHORDS } Mode;
 
 typedef struct {
     float start_s, end_s;
@@ -252,7 +261,7 @@ už seřazená, ale nespoléhej) → pro každý `Clip` předpočítej `word_lo.
 
 ---
 
-## 10. Diakritika, fonty, displej
+## 9. Diakritika, fonty, displej
 
 - JSON je **UTF-8**; text obsahuje českou diakritiku (`ě š č ř ž á í é ú ů…`)
   přímo. Displej **musí mít glyfy** pro Latin-2 / potřebné znaky. U8g2: použij
@@ -264,7 +273,7 @@ už seřazená, ale nespoléhej) → pro každý `Clip` předpočítej `word_lo.
 
 ---
 
-## 11. Přetáčení / pauza / start
+## 10. Přetáčení / pauza / start
 
 Protože `render(t)` je bezstavové:
 - **Pauza:** zastav růst `t` (drž poslední hodnotu).
@@ -274,16 +283,17 @@ Nedrž „index řádku" napříč snímky jako pravdu; ber ho vždy z `t`.
 
 ---
 
-## 12. Akceptační test (obecný) + konkrétní příklad
+## 11. Akceptační test (obecný) + konkrétní příklad
 
 **Obecné podmínky (musí platit pro každý validní JSON):**
 1. Odmítne `format_version != 2`; neznámé klíče ignoruje; neznámý `mode` → text.
 2. V každém `t` je aktivní ≤ 1 klip (klipy se nepřekrývají).
-3. Řádek se objeví v `start_s` a zmizí v `end_s` odpovídajícího klipu.
+3. Řádek se objeví v `start_s` a zmizí v `end_s` odpovídajícího klipu (i po
+   ručním posunu okraje — viz `JSON_FORMAT.md` §3.6).
 4. Zvýrazněné je právě slovo, jehož `[time_s, time_s+duration_s)` obsahuje `t`.
 5. V mezeře mezi klipy displej „nezamrzne" na starém řádku.
 6. Akord se kreslí nad slovem s nejbližším časem; `chords` režim ukáže aktuální.
-7. `tab*` bez `beats` degraduje, nespadne.
+7. Bicí (`drums_timeline`) hrají nezávisle na displeji, i v mezerách mezi klipy.
 8. Seek na libovolný `t` zobrazí správný řádek+slovo bez „dohánění".
 
 **Konkrétní příklad — JSON vyexportovaný z vieweru** (song „Dej mi víc své
@@ -299,7 +309,7 @@ JSON**. Očekávané chování:
 
 ---
 
-## 13. Doporučené rozšíření (volitelné)
+## 12. Doporučené rozšíření (volitelné)
 - Dvouřádkový režim: aktuální + náhled dalšího řádku (mnoho karaoke to má).
 - Progress bar řádku (`(t-start)/(end-start)`).
 - Odpočet „za 3…2…1" před začátkem řádku po delší mezeře.
@@ -308,6 +318,7 @@ JSON**. Očekávané chování:
 ---
 
 ### Shrnutí filozofie
-> **`display_timeline` říká CO/KDY/JAK, `lyrics/chords/beats` dodávají OBSAH,
-> hodiny dodávají `t`, `render(t)` je bezstavové.** Drž se toho a přehrávač bude
+> **`display_timeline` říká CO/KDY/JAK, `lyrics_timeline`/`chords_timeline`
+> dodávají OBSAH, `drums_timeline` hraje nezávisle na displeji, hodiny
+> dodávají `t`, `render(t)` je bezstavové.** Drž se toho a přehrávač bude
 > fungovat na libovolné skladbě v tomto formátu.

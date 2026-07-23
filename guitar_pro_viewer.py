@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QPushButton, QFileDialog, QTabWidget, QTableWidget, QTableWidgetItem,
     QScrollArea, QStatusBar, QHeaderView, QMessageBox,
     QCheckBox, QFrame, QLineEdit, QComboBox, QToolBar, QSizePolicy,
-    QTextBrowser, QDockWidget,
+    QTextBrowser, QDockWidget, QInputDialog,
 )
 from PySide6.QtCore import Qt, QSize, QThread, Signal
 from PySide6.QtGui import QFont, QColor, QAction, QIcon, QBrush, QPalette
@@ -60,6 +60,30 @@ MIDI_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "
 STANDARD_STRING_NAMES = {
     # MIDI note → note name (bez oktávy)
 }
+
+# General MIDI Percussion Key Map (MIDI kanál 10). GP ukládá u bicí stopy toto
+# číslo přímo do note.value (ladění struny se nepřičítá) — je to identifikátor
+# konkrétního bubnu/sample, ne hudební výška.
+GM_PERCUSSION = {
+    35: "Acoustic Bass Drum", 36: "Bass Drum 1",
+    37: "Side Stick", 38: "Acoustic Snare", 39: "Hand Clap", 40: "Electric Snare",
+    41: "Low Floor Tom", 42: "Closed Hi-Hat", 43: "High Floor Tom",
+    44: "Pedal Hi-Hat", 45: "Low Tom", 46: "Open Hi-Hat", 47: "Low-Mid Tom",
+    48: "Hi-Mid Tom", 49: "Crash Cymbal 1", 50: "High Tom", 51: "Ride Cymbal 1",
+    52: "Chinese Cymbal", 53: "Ride Bell", 54: "Tambourine", 55: "Splash Cymbal",
+    56: "Cowbell", 57: "Crash Cymbal 2", 58: "Vibraslap", 59: "Ride Cymbal 2",
+    60: "Hi Bongo", 61: "Low Bongo", 62: "Mute Hi Conga", 63: "Open Hi Conga",
+    64: "Low Conga", 65: "High Timbale", 66: "Low Timbale", 67: "High Agogo",
+    68: "Low Agogo", 69: "Cabasa", 70: "Maracas", 71: "Short Whistle",
+    72: "Long Whistle", 73: "Short Guiro", 74: "Long Guiro", 75: "Claves",
+    76: "Hi Wood Block", 77: "Low Wood Block", 78: "Mute Cuica", 79: "Open Cuica",
+    80: "Mute Triangle", 81: "Open Triangle",
+}
+
+
+def drum_name(midi: int) -> str:
+    """Jméno bubnu/samplu podle GM percussion mapy, jinak 'Perc <midi>'."""
+    return GM_PERCUSSION.get(midi, f"Perc {midi}" if midi else "?")
 
 
 def midi_to_name(midi: int) -> str:
@@ -116,6 +140,10 @@ def ticks_to_seconds(tick: int, tempo_map: list[tuple[int, int]]) -> float:
 
 
 def note_to_midi(note, track) -> int:
+    if getattr(track, "isPercussionTrack", False):
+        # U bicích je note.value přímo GM percussion číslo (jaký buben/sample zní),
+        # ladění struny se nepřičítá.
+        return note.value
     try:
         string_idx = note.string - 1
         if string_idx < len(track.strings):
@@ -128,6 +156,8 @@ def note_to_midi(note, track) -> int:
 def beat_to_tab_str(beat, track) -> str:
     if not beat.notes:
         return "—"
+    if getattr(track, "isPercussionTrack", False):
+        return "  ".join(drum_name(n.value) for n in sorted(beat.notes, key=lambda n: n.string))
     parts = []
     for note in sorted(beat.notes, key=lambda n: n.string):
         string_idx = note.string - 1
@@ -372,6 +402,13 @@ class GuitarProViewer(QMainWindow):
         act_web.setShortcut("Ctrl+W")
         act_web.triggered.connect(self._open_web_import)
         file_menu.addAction(act_web)
+        act_merge = QAction("🎵➕🥁  Sloučit s webem (text+akordy)…", self)
+        act_merge.setShortcut("Ctrl+M")
+        act_merge.setToolTip("Otevři GP soubor (kvůli bicím), pak sem vlož URL "
+                             "písně z webu — text, řádky, akordy a sloky se vezmou "
+                             "z webu, bicí a časování z GP.")
+        act_merge.triggered.connect(self.merge_with_web)
+        file_menu.addAction(act_merge)
         file_menu.addSeparator()
         act_quit = QAction("Konec", self)
         act_quit.setShortcut("Ctrl+Q")
@@ -388,6 +425,7 @@ class GuitarProViewer(QMainWindow):
         tb.addAction(act_export)
         tb.addSeparator()
         tb.addAction(act_web)
+        tb.addAction(act_merge)
 
         # ===== CENTRÁLNÍ PLOCHA OKNA = ČASOVÁ OSA (Sony Vegas styl) =====
         central = QWidget()
@@ -563,40 +601,89 @@ class GuitarProViewer(QMainWindow):
             return
 
         # JSON nemá GP song (tabulatury/detaily), pracujeme jen s karaoke daty
+        self.current_file = path
+        self._present_karaoke_data(data, source_desc=f"JSON: {path}")
+
+    def _present_karaoke_data(self, data: dict, source_desc: str = "") -> None:
+        """Naplní UI a editor karaoke daty (z JSON souboru nebo ze sloučení
+        s webem). GP song se dál nepoužívá — pracuje se s těmito daty."""
         self.song = None
         self.tempo_map = []
-        self.current_file = path
         self._loaded_json = data
 
         meta = data.get("meta", {}) or {}
-        self.lbl_title.setText(meta.get("title") or Path(path).stem)
+        self.lbl_title.setText(meta.get("title") or (self.current_file and Path(self.current_file).stem) or "")
         self.lbl_artist.setText(meta.get("artist") or "")
         self.lbl_meta.setText(
             f"Tempo: {meta.get('tempo_bpm', '?')} BPM  |  "
             f"{len(data.get('tracks', []))} stop  |  "
-            f"{len(data.get('karaoke_lines', []))} řádků  |  (načteno z JSON)"
+            f"{len(data.get('karaoke_lines', []))} řádků  |  "
+            f"{len(data.get('drums_timeline', []))} úderů bicích"
         )
 
-        # Strom stop z JSON
         self.track_tree.clear()
         for t in data.get("tracks", []):
             item = QTreeWidgetItem([f"{t.get('index', '?')}. {t.get('name', '')}",
                                     t.get("type", "")])
             self.track_tree.addTopLevelItem(item)
 
-        # Náhledy, které potřebují GP song, nejsou k dispozici → jen JSON náhled
-        note = "(Načteno z JSON — tabulatury a detaily stop nejsou k dispozici.)"
+        note = "(Karaoke data — tabulatury a detaily stop nejsou k dispozici.)"
         for w in (self.overview_text, self.lyrics_text, self.chords_text):
             w.setPlainText(note)
         self.chord_chart_browser.setHtml(f"<p style='color:#888'>{note}</p>")
         self.json_preview.setText(json.dumps(data, indent=2, ensure_ascii=False))
 
-        # HLAVNÍ věc — nakrmit editor časové osy (řádky + časování z JSONu)
         self.timeline.load_data(data)
-
         n_lines = len(self.timeline.data.get("karaoke_lines", []))
-        self.status.showMessage(
-            f"Načteno z JSON: {path}  ({n_lines} karaoke řádků)")
+        self.status.showMessage(f"Načteno ({source_desc}) — {n_lines} karaoke řádků")
+
+    def merge_with_web(self):
+        """Sloučí OTEVŘENÝ GP soubor (bicí + časování) s textem/akordy z webu.
+        Web je mistr struktury (řádky, sloky/refrén, akordy); GP dodá bicí a
+        napasuje časy řádků na reálný zpěv."""
+        if not self.song:
+            QMessageBox.warning(
+                self, "Nejdřív Guitar Pro soubor",
+                "Nejprve otevři Guitar Pro soubor (Ctrl+O) — z něj se vezmou "
+                "bicí a časování.\nPak sem vlož URL písně z webu (text + akordy).")
+            return
+        url, ok = QInputDialog.getText(
+            self, "Sloučit s webem",
+            "URL písně (např. pisnicky-akordy.cz/…):", QLineEdit.Normal, "")
+        if not ok or not url.strip():
+            return
+        url = url.strip()
+        self.status.showMessage("Stahuji a slučuji s webem…")
+        try:
+            import web_import as W
+            import requests
+            gp_title, gp_artist = self.song.title, self.song.artist
+            gp_words = self._gp_vocal_words()
+            drums, drum_track = self._gp_drums_for_merge()
+
+            r = requests.get(url, timeout=25, headers=W.BROWSER_HEADERS)
+            r.encoding = W.detect_encoding(r)
+            title, artist, det = W.parse_pisnicky_akordy(r.text, url=url)
+            web = W.build_karaoke_json(det, title or gp_title, artist or gp_artist,
+                                       self.song.tempo, url)
+            W.retime_web_to_gp(web, gp_words)
+            W.attach_drums(web, drums, drum_track)
+            web.setdefault("meta", {})
+            web["meta"]["source_file"] = Path(self.current_file).name if self.current_file else ""
+            web["meta"]["merged_web_gp"] = True
+        except Exception as ex:
+            QMessageBox.critical(self, "Chyba slučování", str(ex))
+            self.status.showMessage("Chyba slučování s webem.")
+            return
+
+        self._present_karaoke_data(web, source_desc=f"GP+web: {url}")
+        QMessageBox.information(
+            self, "Sloučeno",
+            f"Sloučeno s webem:\n\n"
+            f"  Řádků: {len(web.get('karaoke_lines', []))}\n"
+            f"  Akordů: {len(web.get('chords_timeline', []))}\n"
+            f"  Úderů bicích: {len(web.get('drums_timeline', []))}\n\n"
+            f"Uprav řádky/akordy v editoru a exportuj (Ctrl+E).")
 
     def _on_loaded(self, song):
         self.song = song
@@ -941,11 +1028,22 @@ class GuitarProViewer(QMainWindow):
     # ------------------------------------------------------------------
 
     def _build_karaoke_json(self, preview_only: bool = False) -> dict:
+        """Sestaví zjednodušený karaoke JSON — jen **text, akordy a bicí**.
+
+        - **Text** se bere JEN ze zpěvní stopy (detekce podle jména/počtu
+          textů), aby se do něj nemíchaly hráčské poznámky ("pull-off",
+          "let ring") z ostatních stop. Celé řádky na jednom úderu se
+          rozsekají na slova a rozprostřou v čase (word-level karaoke).
+        - **Akordy** se berou z jakékoli stopy s akordovými značkami.
+        - **Bicí** se exportují vždy (do `drums_timeline`).
+        - Do `tracks[]` jde jen zpěv, bicí a stopy nesoucí akordy.
+        """
         song = self.song
         if not song:
             return {}
 
         TICKS_PER_BEAT = 960
+        vocal_ti = self._detect_vocal_track_index(song)
 
         result = {
             "meta": {
@@ -958,35 +1056,38 @@ class GuitarProViewer(QMainWindow):
                 "total_measures": len(song.tracks[0].measures) if song.tracks else 0,
                 "track_count": len(song.tracks),
                 "source_file": Path(self.current_file).name if self.current_file else "",
+                "has_line_structure": True,
             },
             "tempo_map": [{"tick": t, "bpm": v} for t, v in self.tempo_map],
             "tracks": [],
             "lyrics_timeline": [],
             "chords_timeline": [],
+            "drums_timeline": [],
             "karaoke_lines": [],
         }
 
-        all_lyrics_events: list[dict] = []
         all_chord_events: list[dict] = []
+        all_drum_events: list[dict] = []
+        vocal_beats: list[dict] = []   # {time_s, duration_s, text} ze zpěvní stopy
+        contributes: dict[int, bool] = {}
 
         for t_idx, track in enumerate(song.tracks):
+            ti = t_idx + 1
+            track_type = (
+                "drums" if track.isPercussionTrack else
+                "vocal" if ti == vocal_ti else
+                "bass" if len(track.strings) == 4 else
+                "solo_guitar" if is_solo_like(track) else
+                "guitar"
+            )
             track_data = {
-                "index": t_idx + 1,
+                "index": ti,
                 "name": track.name,
-                "type": (
-                    "drums" if track.isPercussionTrack else
-                    "bass" if len(track.strings) == 4 else
-                    "solo_guitar" if is_solo_like(track) else
-                    "guitar"
-                ),
+                "type": track_type,
                 "is_drums": track.isPercussionTrack,
                 "instrument_midi": track.channel.instrument if track.channel else 0,
-                "tuning": [
-                    {"string": i + 1, "midi": s.value, "note": midi_to_name(s.value)}
-                    for i, s in enumerate(track.strings)
-                ],
-                "beats": [],
             }
+            contributes[ti] = track.isPercussionTrack or (ti == vocal_ti)
 
             for m_idx, m in enumerate(track.measures):
                 for v_idx, v in enumerate(m.voices):
@@ -996,127 +1097,216 @@ class GuitarProViewer(QMainWindow):
                         dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
                         if b.duration.isDotted:
                             dur_ticks = int(dur_ticks * 1.5)
-
-                        chord_name = get_chord_name(b)
-
+                        duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / song.tempo), 4)
                         time_s = ticks_to_seconds(b.start, self.tempo_map)
 
-                        beat_data = {
-                            "measure": m_idx + 1,
-                            "tick": b.start,
-                            "time_s": time_s,
-                            "duration": duration_name(b.duration.value),
-                            "duration_ticks": dur_ticks,
-                            "duration_s": round(dur_ticks / TICKS_PER_BEAT * (60.0 / song.tempo), 4),
-                            "text": get_beat_text(b),
-                            "chord": chord_name,
-                            "notes": [
-                                {
-                                    "string": n.string,
-                                    "fret": n.value,
-                                    "midi": note_to_midi(n, track),
-                                    "note_name": midi_to_name(note_to_midi(n, track)),
-                                    "effects": {
-                                        "hammer_on": bool(n.effect and n.effect.hammer),
-                                        "pull_off": bool(n.effect and getattr(n.effect, 'pullOff', False)),
-                                        "vibrato": bool(n.effect and n.effect.vibrato),
-                                        "slide": bool(n.effect and n.effect.slides),
-                                        "bend": bool(n.effect and n.effect.bend and n.effect.bend.points),
-                                    }
-                                }
-                                for n in b.notes
-                            ],
-                        }
+                        if track.isPercussionTrack:
+                            for n in b.notes:
+                                midi = note_to_midi(n, track)
+                                all_drum_events.append({
+                                    "time_s": time_s, "duration_s": duration_s,
+                                    "drum": drum_name(midi), "midi": midi,
+                                    "track_index": ti,
+                                })
+                            continue
 
-                        if not preview_only:
-                            track_data["beats"].append(beat_data)
-
-                        beat_txt = get_beat_text(b)
-                        if beat_txt:
-                            ev = {
-                                "time_s": time_s,
-                                "duration_s": beat_data["duration_s"],
-                                "text": beat_txt,
-                                "measure": m_idx + 1,
-                                "tick": b.start,
-                                "track_index": t_idx + 1,
-                            }
-                            all_lyrics_events.append(ev)
-
+                        chord_name = get_chord_name(b)
                         if chord_name:
-                            ev = {
-                                "time_s": time_s,
-                                "chord": chord_name,
-                                "measure": m_idx + 1,
-                                "tick": b.start,
-                                "track_index": t_idx + 1,
-                            }
-                            all_chord_events.append(ev)
-
-            if preview_only:
-                # V náhledu zobrazíme jen prvních 5 beatů
-                sample_beats = []
-                for m_idx, m in enumerate(track.measures[:3]):
-                    for v in m.voices[:1]:
-                        for b in v.beats:
-                            if len(sample_beats) >= 5:
-                                break
-                            sample_beats.append({
-                                "measure": m_idx + 1,
-                                "time_s": ticks_to_seconds(b.start, self.tempo_map),
-                                "text": get_beat_text(b),
-                                "chord": get_chord_name(b),
-                                "notes_count": len(b.notes),
+                            all_chord_events.append({
+                                "time_s": time_s, "chord": chord_name,
+                                "measure": m_idx + 1, "track_index": ti,
                             })
-                track_data["beats_preview"] = sample_beats
-                track_data["total_beats"] = sum(
-                    len(v.beats)
-                    for m in track.measures
-                    for v in m.voices[:1]
-                )
+                            contributes[ti] = True
 
-            result["tracks"].append(track_data)
+                        if ti == vocal_ti:
+                            beat_txt = get_beat_text(b)
+                            if beat_txt and beat_txt.strip():
+                                vocal_beats.append({
+                                    "time_s": time_s, "duration_s": duration_s,
+                                    "text": beat_txt.strip(),
+                                })
 
-        # Seřadit a deduplikovat
-        all_lyrics_events.sort(key=lambda e: e["time_s"])
+            if contributes[ti]:
+                result["tracks"].append(track_data)
+
         all_chord_events.sort(key=lambda e: e["time_s"])
+        all_drum_events.sort(key=lambda e: e["time_s"])
+        vocal_beats.sort(key=lambda e: e["time_s"])
+
+        all_lyrics_events, line_ranges = self._vocal_beats_to_lines(vocal_beats, vocal_ti)
+
+        def line_for(t: float):
+            """Řádek znějící v čase t — poslední řádek začínající <= t."""
+            li = None
+            for s, _e, idx in line_ranges:
+                if s <= t:
+                    li = idx
+                else:
+                    break
+            return li if li is not None else (line_ranges[0][2] if line_ranges else None)
+
+        for ev in all_chord_events:
+            ev["line"] = line_for(ev["time_s"])
+        for ev in all_drum_events:
+            ev["line"] = line_for(ev["time_s"])
 
         result["lyrics_timeline"] = all_lyrics_events
         result["chords_timeline"] = all_chord_events
+        result["drums_timeline"] = all_drum_events
 
-        # Karaoke řádky — skupiny slov oddělené pauzami > 2s
-        if all_lyrics_events:
-            lines: list[dict] = []
-            current_line: list[dict] = []
-            prev_end = 0.0
-            GAP_THRESHOLD = 2.0
-
-            for ev in all_lyrics_events:
-                if current_line and (ev["time_s"] - prev_end) > GAP_THRESHOLD:
-                    lines.append({
-                        "start_s": current_line[0]["time_s"],
-                        "end_s": prev_end,
-                        "words": current_line,
-                    })
-                    current_line = []
-                current_line.append({
-                    "time_s": ev["time_s"],
-                    "duration_s": ev["duration_s"],
-                    "text": ev["text"],
-                    "track_index": ev["track_index"],
-                })
-                prev_end = ev["time_s"] + ev["duration_s"]
-
-            if current_line:
-                lines.append({
-                    "start_s": current_line[0]["time_s"],
-                    "end_s": prev_end,
-                    "words": current_line,
-                })
-
-            result["karaoke_lines"] = lines
+        # karaoke_lines — jeden záznam na řádek
+        karaoke_lines: list[dict] = []
+        for s, e, li in line_ranges:
+            words = [
+                {"time_s": ev["time_s"], "duration_s": ev["duration_s"], "text": ev["text"],
+                 "line": li, "track_index": ev["track_index"]}
+                for ev in all_lyrics_events if ev["line"] == li
+            ]
+            chords = []
+            for ev in all_chord_events:
+                if ev["line"] == li and ev["chord"] not in chords:
+                    chords.append(ev["chord"])
+            karaoke_lines.append({
+                "line": li,
+                "start_s": s,
+                "end_s": e,
+                "chords": chords,
+                "text": " ".join(w["text"] for w in words),
+                "words": words,
+                "track_index": words[0]["track_index"] if words else (vocal_ti or 1),
+            })
+        result["karaoke_lines"] = karaoke_lines
 
         return result
+
+    @staticmethod
+    def _detect_vocal_track_index(song) -> int | None:
+        """Index (1-based) zpěvní stopy. Nejdřív podle jména, jinak stopa
+        s nejvíce beat-texty (a aspoň jedním)."""
+        NAME_HINTS = ("voice", "vocal", "zpěv", "zpev", "zang", "gesang", "canto")
+        for i, t in enumerate(song.tracks):
+            nm = (t.name or "").lower()
+            if any(h in nm for h in NAME_HINTS):
+                return i + 1
+        best_ti, best_cnt = None, 0
+        for i, t in enumerate(song.tracks):
+            if t.isPercussionTrack:
+                continue
+            cnt = sum(1 for m in t.measures for v in m.voices[:1]
+                      for b in v.beats if get_beat_text(b))
+            if cnt > best_cnt:
+                best_ti, best_cnt = i + 1, cnt
+        return best_ti if best_cnt > 0 else None
+
+    @staticmethod
+    def _vocal_beats_to_lines(vocal_beats: list[dict], vocal_ti):
+        """Z beat-textů zpěvní stopy vyrobí (lyrics_events, line_ranges) —
+        **text po ŘÁDCÍCH** (jeden event = celý řádek, ne rozsekaný na slova).
+
+        GP často ukládá celý řádek na jeden úder → ten úder = jeden řádek.
+        Když jsou beaty po jednotlivých slovech, seskupí se do řádků dle pauz."""
+        GAP = 2.0
+        events: list[dict] = []
+        line_ranges: list[tuple] = []
+        if not vocal_beats:
+            return events, line_ranges
+
+        multiword = sum(1 for b in vocal_beats if len(b["text"].split()) > 1)
+        line_mode = multiword >= max(1, len(vocal_beats) * 0.3)
+
+        if line_mode:
+            for bi, b in enumerate(vocal_beats):
+                text = b["text"].strip()
+                if not text:
+                    continue
+                li = len(line_ranges)
+                t0 = b["time_s"]
+                next_t = vocal_beats[bi + 1]["time_s"] if bi + 1 < len(vocal_beats) \
+                    else t0 + 2.0
+                end = next_t if (next_t - t0) < 8 else round(t0 + 2.0, 3)
+                end = max(end, t0 + 0.3)
+                events.append({"time_s": round(t0, 3), "duration_s": round(end - t0, 3),
+                               "text": text, "line": li, "track_index": vocal_ti})
+                line_ranges.append((round(t0, 3), round(end, 3), li))
+        else:
+            groups: list[list[dict]] = []
+            prev_end = None
+            for b in vocal_beats:
+                if not groups or (prev_end is not None and b["time_s"] - prev_end > GAP):
+                    groups.append([])
+                groups[-1].append(b)
+                prev_end = b["time_s"] + b["duration_s"]
+            for li, g in enumerate(groups):
+                t0 = g[0]["time_s"]
+                end = g[-1]["time_s"] + g[-1]["duration_s"]
+                events.append({"time_s": round(t0, 3), "duration_s": round(max(0.3, end - t0), 3),
+                               "text": " ".join(b["text"] for b in g),
+                               "line": li, "track_index": vocal_ti})
+                line_ranges.append((round(t0, 3), round(end, 3), li))
+
+        return events, line_ranges
+
+    def _gp_vocal_words(self) -> list[dict]:
+        """Slova zpěvní stopy GP jako [{time_s, text}] — jen pro ZAROVNÁNÍ webu
+        na reálné časy (rozsekání celého řádku na slova rozprostřená v čase)."""
+        song = self.song
+        if not song:
+            return []
+        vocal_ti = self._detect_vocal_track_index(song)
+        if vocal_ti is None:
+            return []
+        beats = []
+        track = song.tracks[vocal_ti - 1]
+        for m in track.measures:
+            for v in m.voices[:1]:
+                for b in v.beats:
+                    txt = get_beat_text(b)
+                    if txt and txt.strip():
+                        beats.append((ticks_to_seconds(b.start, self.tempo_map), txt.strip()))
+        beats.sort()
+        words: list[dict] = []
+        for bi, (t0, txt) in enumerate(beats):
+            parts = txt.split()
+            if not parts:
+                continue
+            next_t = beats[bi + 1][0] if bi + 1 < len(beats) else t0 + len(parts) * 0.4
+            span = min(len(parts) * 0.4, max(0.3, (next_t - t0) * 0.9))
+            step = span / len(parts)
+            for wi, w in enumerate(parts):
+                words.append({"time_s": round(t0 + wi * step, 3), "text": w})
+        return words
+
+    def _gp_drums_for_merge(self):
+        """Vrátí (drums_timeline, drum_track_dict) z aktuálního GP songu."""
+        song = self.song
+        if not song:
+            return [], None
+        TICKS_PER_BEAT = 960
+        drums: list[dict] = []
+        drum_track = None
+        for t_idx, track in enumerate(song.tracks):
+            if not track.isPercussionTrack:
+                continue
+            ti = t_idx + 1
+            drum_track = {"index": ti, "name": track.name, "type": "drums",
+                          "is_drums": True,
+                          "instrument_midi": track.channel.instrument if track.channel else 0}
+            for m in track.measures:
+                for v in m.voices[:1]:
+                    for b in v.beats:
+                        dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
+                        if b.duration.isDotted:
+                            dur_ticks = int(dur_ticks * 1.5)
+                        duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / song.tempo), 4)
+                        time_s = ticks_to_seconds(b.start, self.tempo_map)
+                        for n in b.notes:
+                            midi = note_to_midi(n, track)
+                            drums.append({"time_s": time_s, "duration_s": duration_s,
+                                          "drum": drum_name(midi), "midi": midi,
+                                          "track_index": ti})
+            break
+        drums.sort(key=lambda e: e["time_s"])
+        return drums, drum_track
 
     # ------------------------------------------------------------------
     # Export
@@ -1151,15 +1341,15 @@ class GuitarProViewer(QMainWindow):
             n_tracks = len(data["tracks"])
             n_lyrics = len(data["lyrics_timeline"])
             n_chords = len(data["chords_timeline"])
+            n_drums = len(data["drums_timeline"])
             n_lines = len(data["karaoke_lines"])
-            total_beats = sum(len(t.get("beats", [])) for t in data["tracks"])
 
             msg = (
                 f"Exportováno: {out_path}\n\n"
-                f"  Stopy: {n_tracks}\n"
-                f"  Celkem beatů/not: {total_beats}\n"
+                f"  Stopy (text/akordy/bicí): {n_tracks}\n"
                 f"  Lyrics events: {n_lyrics}\n"
                 f"  Chord events: {n_chords}\n"
+                f"  Drum hitů: {n_drums}\n"
                 f"  Karaoke řádků: {n_lines}"
             )
             QMessageBox.information(self, "Export hotov", msg)

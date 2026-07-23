@@ -77,7 +77,7 @@ def is_chord(token: str) -> bool:
 
 
 # Samohláskové skupiny pro odhad počtu slabik (čeština + běžné akcenty).
-# Skupina souvislých samohlásek = 1 slabika (dvojhlásky ou/au/eu → 1).
+# Používá se k ODHADU pozice akordu v čase v rámci řádku (ne k časování slov).
 _VOWEL_GROUP_RE = re.compile(r'[aeiouyáéíóúůýěäëïöüàèìòù]+', re.IGNORECASE)
 
 
@@ -408,12 +408,14 @@ def build_karaoke_json(
     tempo: int = 120,
     source_url: str = '',
 ) -> dict:
-    """Sestaví karaoke JSON s respektováním řádků a slabikovým časováním.
+    """Sestaví karaoke JSON: **text po řádcích**, akordy s časovým razítkem
+    umístěné v rámci řádku podle **slabik**.
 
-    Model: každý řádek zabere celý počet 4/4 taktů podle počtu slabik, slova
-    jsou rozmístěna po slabikách (1 slabika ≈ 1 beat, delší slovo trvá déle),
-    akord se váže na začátek svého slova. Řádková struktura z webu zůstává
-    zachovaná (1 karaoke řádek = 1 řádek z webu).
+    Model: 1 řádek z webu = 1 karaoke řádek (jeden text, ne rozsekaný na slova).
+    Řádek zabere dobu ~ počet slabik × beat. Akord nad slovem dostane čas
+    odhadnutý ze slabikové pozice toho slova v řádku (řádek trvá X s → akord
+    v i-tém slově sedí na `start + slabiky_před/celkem × X`). V editoru se dají
+    akordy tažením přemístit a konce řádků upravit.
     """
     lyrics_timeline: list[dict] = []
     chords_timeline: list[dict] = []
@@ -471,46 +473,51 @@ def build_karaoke_json(
         if not words and not any(c for _, c in pairs):
             continue
 
-        syls = [count_syllables(w) for w, _ in pairs]
-        total_syl = sum(s for (w, _), s in zip(pairs, syls) if w.strip()) or len(pairs)
+        # délka řádku ~ počet slabik × beat (řádek = jedna textová jednotka)
+        syls = [count_syllables(w) for w, _ in pairs if w.strip()]
+        total_syl = sum(syls) or 1
         span_ticks = measures_for(total_syl) * MEASURE_4_4
+        line_start_s = ticks_to_s(line_tick)
+        line_end_s = ticks_to_s(line_tick + span_ticks)
+        line_dur = max(0.1, line_end_s - line_start_s)
+        lyric_text = ' '.join(words)
 
-        kline_words: list[dict] = []
-        kline_chords = []
-        if active_chord:
-            kline_chords.append(active_chord)   # znějící akord na začátku řádku
+        # jeden text na celý řádek (ne po slovech)
+        lyrics_timeline.append({'time_s': line_start_s, 'duration_s': round(line_dur, 3),
+                                'text': lyric_text, 'measure': measure_at(line_tick),
+                                'line': line_idx, 'track_index': 1})
 
-        cum = 0   # kumulativní slabiky = pozice v beatech uvnitř řádku
-        for (word, chord), s in zip(pairs, syls):
-            onset = line_tick + cum * TICKS_PER_BEAT
-            ts = ticks_to_s(onset)
-            if chord and chord != active_chord:
+        # akordy: čas dle slabikové pozice slova v řádku (jen akordy TOHOTO
+        # řádku — bez přenášení z předchozího, aby to sedělo s webem)
+        kline_chords: list[str] = []
+        prev = None
+        cum_syl = 0
+        wi = 0
+        for (word, chord) in pairs:
+            if chord and chord != prev:
+                frac = cum_syl / total_syl
+                ts = round(line_start_s + frac * line_dur, 3)
                 chords_timeline.append({'time_s': ts, 'chord': chord,
-                                        'measure': measure_at(onset), 'line': line_idx,
+                                        'measure': measure_at(line_tick), 'line': line_idx,
                                         'track_index': 1})
+                prev = chord
                 active_chord = chord
                 if chord not in kline_chords:
                     kline_chords.append(chord)
             if word.strip():
-                dur_s = round(s * beat_s, 3)
-                lyrics_timeline.append({'time_s': ts, 'duration_s': dur_s,
-                                        'text': word.strip(), 'measure': measure_at(onset),
-                                        'line': line_idx, 'track_index': 1})
-                kline_words.append({'time_s': ts, 'duration_s': dur_s,
-                                    'text': word.strip(), 'line': line_idx, 'track_index': 1})
-                cum += s
+                cum_syl += syls[wi]
+                wi += 1
 
-        lyric_text = ' '.join(words)
-        if lyric_text or kline_chords:
-            karaoke_lines.append({
-                'line': line_idx,
-                'start_s': ticks_to_s(line_tick),
-                'end_s': ticks_to_s(line_tick + span_ticks),
-                'chords': kline_chords,
-                'text': lyric_text,
-                'words': kline_words,
-                'track_index': 1,
-            })
+        karaoke_lines.append({
+            'line': line_idx,
+            'start_s': line_start_s,
+            'end_s': line_end_s,
+            'chords': kline_chords,
+            'text': lyric_text,
+            'words': [{'time_s': line_start_s, 'duration_s': round(line_dur, 3),
+                       'text': lyric_text, 'line': line_idx, 'track_index': 1}],
+            'track_index': 1,
+        })
         tick = line_tick + span_ticks
 
     measure_num = measure_at(tick)
@@ -531,16 +538,124 @@ def build_karaoke_json(
         'tempo_map': [{'tick': TICKS_PER_BEAT, 'bpm': tempo}],
         'tracks': [{
             'index': 1,
-            'name': title[:28] or 'Track 1',
-            'type': 'guitar',
+            'name': 'Voice',
+            'type': 'vocal',
             'is_drums': False,
             'instrument_midi': 25,
-            'has_tab': False,   # web import nese jen akordy + text, ne tabulatury
         }],
         'lyrics_timeline': lyrics_timeline,
         'chords_timeline': chords_timeline,
-        'karaoke_lines': karaoke_lines,
+        'karaoke_lines': tag_sections(karaoke_lines),
     }
+
+
+# --- označení slok / refrénu z markerů v textu ---
+_SEC_NUM = re.compile(r'^\s*(\d+)\.')
+_SEC_REF = re.compile(r'^\s*(R[:.]|Ref|Refr|Chorus)', re.IGNORECASE)
+
+
+def tag_sections(karaoke_lines: list[dict]) -> list[dict]:
+    """Doplní `section` ('Sloka 1' / 'Refrén') dle markeru na začátku řádku."""
+    for kl in karaoke_lines:
+        txt = kl.get('text', '')
+        m = _SEC_NUM.match(txt)
+        if m:
+            kl['section'] = f'Sloka {m.group(1)}'
+        elif _SEC_REF.match(txt):
+            kl['section'] = 'Refrén'
+    return karaoke_lines
+
+
+def retime_web_to_gp(web: dict, gp_words: list[dict]) -> dict:
+    """Napasuje časy WEBOVÝCH řádků na reálné časy zpěvu z GP (aby seděly bicí).
+
+    `gp_words` = [{'time_s', 'text'}] slova zpěvní stopy z GP. Zarovná se
+    sekvence webových slov na GP slova (difflib), z toho se vezme START každého
+    řádku; konec = start dalšího řádku. Akordy i délky se v rámci řádku
+    přeškálují (zachová se slabiková pozice akordu). Text zůstává po řádcích."""
+    import difflib
+    norm = lambda s: re.sub(r'[^a-z0-9]', '', (s or '').lower())
+
+    lines = sorted(web.get('karaoke_lines', []), key=lambda k: k.get('line', 0))
+    web_flat = [(kl.get('line', 0), w) for kl in lines for w in kl.get('text', '').split()]
+    if not web_flat or not gp_words:
+        return web
+
+    sm = difflib.SequenceMatcher(a=[norm(w) for _, w in web_flat],
+                                 b=[norm(g['text']) for g in gp_words], autojunk=False)
+    times: list = [None] * len(web_flat)
+    for blk in sm.get_matching_blocks():
+        for k in range(blk.size):
+            times[blk.a + k] = gp_words[blk.b + k]['time_s']
+
+    anchors = [i for i, x in enumerate(times) if x is not None]
+    STEP = 0.4
+    if anchors:
+        for i in range(anchors[0]):
+            times[i] = round(times[anchors[0]] - (anchors[0] - i) * STEP, 3)
+        for a, b in zip(anchors, anchors[1:]):
+            if b - a > 1:
+                t0, t1 = times[a], times[b]
+                for i in range(a + 1, b):
+                    times[i] = round(t0 + (t1 - t0) * (i - a) / (b - a), 3)
+        for i in range(anchors[-1] + 1, len(times)):
+            times[i] = round(times[anchors[-1]] + (i - anchors[-1]) * STEP, 3)
+    else:
+        times = [round(i * STEP, 3) for i in range(len(web_flat))]
+
+    # start řádku = čas prvního slova řádku
+    line_start: dict[int, float] = {}
+    for (li, _), t in zip(web_flat, times):
+        line_start.setdefault(li, t)
+
+    ordered = sorted(lines, key=lambda k: line_start.get(k.get('line', 0), k.get('start_s', 0)))
+    chords = web.get('chords_timeline', [])
+    lyr = web.get('lyrics_timeline', [])
+    for i, kl in enumerate(ordered):
+        li = kl.get('line', 0)
+        s = line_start.get(li, kl.get('start_s', 0.0))
+        if i + 1 < len(ordered):
+            e = line_start.get(ordered[i + 1].get('line', 0), s + 2.0)
+        else:
+            e = s + (kl.get('end_s', 0) - kl.get('start_s', 0) or 2.0)
+        if e - s > 12 or e <= s:      # ořízni dlouhé mezihry / degeneraci
+            e = s + max(0.5, kl.get('end_s', 0) - kl.get('start_s', 0))
+        os, oe = kl.get('start_s', 0.0), max(kl.get('end_s', 0.0), kl.get('start_s', 0.0) + 0.1)
+
+        def resc(t, s=s, e=e, os=os, oe=oe):
+            return round(s + (float(t) - os) / (oe - os) * (e - s), 3)
+
+        for c in chords:
+            if c.get('line') == li:
+                c['time_s'] = resc(c['time_s'])
+        for lv in lyr:
+            if lv.get('line') == li:
+                lv['time_s'] = round(s, 3)
+                lv['duration_s'] = round(max(0.1, e - s), 3)
+        kl['start_s'] = round(s, 3)
+        kl['end_s'] = round(e, 3)
+        for w in kl.get('words', []):
+            w['time_s'] = round(s, 3)
+            w['duration_s'] = round(max(0.1, e - s), 3)
+
+    lyr.sort(key=lambda e: e['time_s'])
+    chords.sort(key=lambda e: e['time_s'])
+    web['karaoke_lines'].sort(key=lambda k: k['start_s'])
+    return web
+
+
+def attach_drums(web: dict, gp_drums: list[dict], drum_track: dict | None) -> dict:
+    """Přidá bicí (z GP) do webového JSONu + stopu bicích do tracks."""
+    web['drums_timeline'] = gp_drums or []
+    if drum_track and not any(t.get('is_drums') for t in web.get('tracks', [])):
+        # přečísluj index tak, aby nekolidoval se zpěvní stopou
+        dt = dict(drum_track)
+        dt['index'] = max([t.get('index', 0) for t in web.get('tracks', [])] + [0]) + 1
+        # přesměruj drum eventy na nový index
+        for ev in web['drums_timeline']:
+            ev['track_index'] = dt['index']
+        web.setdefault('tracks', []).append(dt)
+    return web
 
 
 def save_gp_and_json(

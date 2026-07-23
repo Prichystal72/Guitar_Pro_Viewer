@@ -24,14 +24,21 @@ desktopová aplikace zobrazující text + akordy + tabulatury).
 
 ## 2. Dva producenti, jedno schéma
 
+Formát je **jen karaoke text + akordy + bicí** — žádná tabulatura, žádné
+struny/pražce/efekty, žádná basa/klávesy/jiné doprovodné nástroje. `tracks[]`
+obsahuje **pouze** stopy, které něco skutečně přispívají: co má text nebo
+akord (typicky zpěv/kytara nesoucí chord chart), a bicí (kvůli přehrávání
+samplů) — i když bicí nemají žádný text ani akord. Basa, klávesy nebo
+doprovodná kytara bez vlastního textu/akordu se do souboru vůbec nedostanou.
+
 | Sekce | GP viewer (`guitar_pro_viewer.py`) | Web import (`web_import.py`) |
 |-------|-----------------------------------|------------------------------|
-| `meta`, `tempo_map`, `tracks` | ✅ | ✅ |
-| `tracks[].beats[]` (tabulatury) | ✅ plné (struny/pražce/efekty) | ❌ (`has_tab: false`) |
+| `meta`, `tempo_map`, `tracks` | ✅ (jen přispívající stopy + bicí) | ✅ (1 stopa) |
 | `lyrics_timeline`, `chords_timeline`, `karaoke_lines` | ✅ | ✅ |
+| `drums_timeline` | ✅ (má-li song bicí stopu) | ❌ (chybí = žádné bicí) |
 
-Parser tedy **nesmí předpokládat**, že `tracks[].beats[]` existuje — musí
-zkontrolovat `tracks[].has_tab` (u web importu chybí a je `false`).
+Žádný producent už negeneruje `tracks[].beats[]`/tabulaturu — pokud narazíš
+na starší soubor, který je má, ignoruj je (dopředná kompatibilita).
 
 ---
 
@@ -44,6 +51,7 @@ zkontrolovat `tracks[].has_tab` (u web importu chybí a je `false`).
   "tracks": [ { ... } ],
   "lyrics_timeline": [ { ... } ],
   "chords_timeline": [ { ... } ],
+  "drums_timeline": [ { ... } ],
   "karaoke_lines":  [ { ... } ]
 }
 ```
@@ -75,90 +83,95 @@ Pole změn tempa, seřazené podle `tick`. Minimálně jeden záznam.
 Parser počítá `time_s` po úsecích mezi změnami. Pokud stačí konstantní tempo,
 lze vzít první záznam.
 
-### 3.3 `tracks[]` — stopy (a tabulatury)
+### 3.3 `tracks[]` — stopy (jen přispívající + bicí)
 
 ```jsonc
 {
   "index": 1,                     // 1-based, cíl pro track_index
   "name": "Pták Rosomák",
-  "type": "guitar",               // guitar | solo_guitar | bass | drums
+  "type": "guitar",               // vocal | guitar | solo_guitar | bass | drums
   "is_drums": false,
-  "instrument_midi": 25,
-  "tuning": [ { "string": 1, "midi": 64, "note": "E" }, ... ],  // GP viewer
-  "has_tab": true,                // web import: false, bez "beats"
-  "beats": [ { ... } ]            // jen když has_tab / GP viewer
+  "instrument_midi": 25
 }
 ```
 
-- **Sóla**: stopa se `"type": "solo_guitar"` (heuristika `is_solo_like`).
-  Aplikace zobrazující tabulatury sól bere právě tyto stopy.
-- `tuning[i].string` je 1 = nejvyšší struna (E4 u kytary).
+To je **celý** záznam — žádná tabulatura, žádné `beats`/`tuning`. Obsah stopy
+je v plochých osách (`lyrics_timeline`/`chords_timeline`/`drums_timeline`),
+propojený přes `track_index`. `type` je jen informační štítek (`solo_guitar`
+= heuristika „tahle stopa je asi sólo/lead", bez vlivu na to, co se
+exportuje).
 
-#### `tracks[].beats[]` — jeden úder (nota/akord/slabika)
+### 3.4 `lyrics_timeline[]` — časová osa textu (PO ŘÁDCÍCH)
 
-```jsonc
-{
-  "measure": 1,
-  "tick": 960,
-  "time_s": 0.0,
-  "duration": "quarter",          // whole|half|quarter|eighth|sixteenth|...
-  "duration_ticks": 960,
-  "duration_s": 0.9375,
-  "text": "",                     // slabika textu na tomto beatu (může být "")
-  "chord": "G5",                  // název akordu nebo "" 
-  "notes": [ {                    // tabulatura — 0..N strun znějících na beatu
-      "string": 2,                // číslo struny (1 = nejvyšší)
-      "fret": 3,                  // pražec
-      "midi": 62,
-      "note_name": "D",
-      "effects": {
-        "hammer_on": false, "pull_off": false,
-        "vibrato": false, "slide": false, "bend": false
-      }
-  } ]
-}
-```
-
-### 3.4 `lyrics_timeline[]` — sloučená časová osa textu
-
-Slova ze **všech** stop, seřazená podle `time_s`. Zdroj identifikuje
-`track_index`. Nepovinné **`line`** = index karaoke řádku, do kterého slovo patří
-(seskupení do řádků přímo v ploché ose — viz §6). Slova se stejným `line` tvoří
-jeden řádek.
+**Jeden záznam = jeden celý řádek** (ne po slovech). `text` je celý řádek,
+`time_s` jeho začátek, `duration_s` délka. **`line`** = index řádku (shodný
+s `karaoke_lines`). Text jen ze zpěvní stopy (`type: "vocal"`).
 
 ```jsonc
-{ "time_s": 18.0, "duration_s": 0.5, "text": "Nemohu,", "measure": 10,
-  "tick": 35520, "line": 3, "track_index": 1 }
-```
-
-### 3.5 `chords_timeline[]` — sloučená časová osa akordů
-
-Nepovinné **`line`** = index řádku, do kterého akord časově spadá (nebo `null`).
-
-```jsonc
-{ "time_s": 16.0, "chord": "Am", "measure": 9, "tick": 31680,
+{ "time_s": 18.0, "duration_s": 3.6, "text": "Mother Mary comes to me",
   "line": 3, "track_index": 1 }
 ```
 
+### 3.5 `chords_timeline[]` — časová osa akordů
+
+Akord má **časové razítko** = kdy/kde v řádku zní. Počáteční pozice se odhaduje
+ze **slabik** (řádek trvá X s → akord u i-tého slova sedí na
+`start + slabiky_před/celkem × X`); v editoru se dá tažením přemístit.
+Displej umístí akord vodorovně nad text dle času:
+`x = (chord.time_s − line.start_s) / (line.end_s − line.start_s)`.
+**`line`** = index řádku, do kterého akord spadá.
+
+```jsonc
+{ "time_s": 16.0, "chord": "Am", "line": 3, "track_index": 1 }
+```
+
+### 3.5b `drums_timeline[]` — kdy a jaký buben/sample zní
+
+Jeden záznam = jeden úder jednoho bubnu (více bubnů najednou = více záznamů se
+stejným `time_s`, např. kick + hi-hat). `drum` je jméno z **GM Percussion Key
+Map** (MIDI kanál 10, čísla 35–81 → `GM_PERCUSSION` v `guitar_pro_viewer.py`);
+`midi` je totéž číselně, pro přímé mapování na sample bez porovnávání řetězců.
+
+```jsonc
+{ "time_s": 13.12, "duration_s": 0.24, "drum": "Acoustic Snare", "midi": 38,
+  "line": 3, "track_index": 5 }
+```
+
+Časté hodnoty `drum`: `"Acoustic Bass Drum"`, `"Acoustic Snare"`,
+`"Closed Hi-Hat"`, `"Open Hi-Hat"`, `"Low/Mid/High Tom"`, `"Crash Cymbal 1/2"`,
+`"Ride Cymbal 1/2"`. Přehrávač jen vezme `drum`/`midi`, dohledá odpovídající
+sample a spustí ho v `time_s`.
+
 ### 3.6 `karaoke_lines[]` — text seskupený do řádků
 
-Slova rozdělená do řádků podle pauz > 2 s. Hotový podklad pro karaoke displej.
+Jeden záznam na řádek — hotový podklad pro karaoke displej, nemusíš nic dál
+odvozovat z plochých os.
 
 ```jsonc
 {
   "line": 4,
   "start_s": 15.0,
   "end_s": 19.5,
-  "words": [ { "time_s": 15.0, "duration_s": 0.5, "text": "tam", "line": 4, "track_index": 1 } ]
+  "chords": ["Am", "G"],
+  "text": "tam, kde nikdo neuvidí",
+  "words": [ { "time_s": 15.0, "duration_s": 0.5, "text": "tam,", "line": 4, "track_index": 1 } ],
+  "track_index": 1
 }
 ```
-> `line` je index řádku (0-based), shodný s `line` u slov v `lyrics_timeline`.
-> **Web import**: řádek má navíc `"chords": ["Am","G"]`, `"text": "celý řádek"`,
-> `"end_s"` a `"track_index"`. Zachovává **řádkovou strukturu z webu** (1 řádek =
-> 1 karaoke řádek) a používá **slabikové časování**: řádek zabere celý počet 4/4
-> taktů podle počtu slabik, slova jsou rozmístěná po slabikách (1 slabika ≈ 1 beat,
-> delší slovo → delší `duration_s`), akord se váže na začátek svého slova. Doplnění
-> akordů do dalších slok / refrénu (z první sloky) zůstává zachováno.
+- `line` je index řádku (0-based), shodný s `line` u slov v `lyrics_timeline`
+  a u akordů/bicích v `chords_timeline`/`drums_timeline`.
+- `chords` = akordy znějící v tomto řádku (bez duplicit, v pořadí výskytu).
+- **Web import** navíc časuje **po slabikách**: řádek zabere celý počet 4/4
+  taktů podle počtu slabik, slova jsou rozmístěná po slabikách (1 slabika ≈
+  1 beat, delší slovo → delší `duration_s`), akord se váže na začátek svého
+  slova. Doplnění akordů do dalších slok/refrénu (z první sloky) zůstává
+  zachováno. **GP viewer** řádky odvozuje z pauz > 2 s mezi slovy.
+- **`start_s`/`end_s` nemusí přesně sedět s prvním/posledním slovem.** V
+  editoru časové osy jde přetáhnout okraj odpovídajícího klipu na master
+  „Displej" stopě (§3.7) — řádek pak zůstane na displeji déle/kratčeji, než
+  trvá poslední slabika. Užitečné u rytmických skladeb, kde má text „doznít"
+  přes doprovod. Parser to nemusí řešit — prostě vezme `start_s`/`end_s` tak,
+  jak jsou.
 
 ### 3.7 `display_timeline[]` — režie karaoke displeje (Vegas program)
 
@@ -183,14 +196,19 @@ přes `source_track` a čas.
 
 | `mode` | Význam pro displej |
 |--------|--------------------|
-| `lyrics_chords` | text zpěvu s akordy nad ním (výchozí pro sloky) |
+| `lyrics_chords` | text zpěvu s akordy nad ním (výchozí) |
 | `lyrics` | jen text |
-| `chords` | jen akordy |
-| `tab` | tabulatura zdrojové stopy (`tracks[].beats`) |
-| `tab_chords` | tabulatura s akordy nad ní (výchozí pro **sóla**) |
+| `chords` | jen akordy (intro/mezihra bez textu) |
 
-Parser vezme `mode` + `source_track`, dohledá odpovídající eventy/beaty v daném
+(Módy `tab`/`tab_chords` z dřívějška se už negenerují — žádná stopa nenese
+tabulaturu. Parser je pro jistotu nechá jako fallback na `lyrics_chords`,
+kdyby na ně narazil ve starším souboru.)
+
+Parser vezme `mode` + `source_track`, dohledá odpovídající eventy v daném
 časovém okně a vykreslí je. Neznámý `mode` → fallback `lyrics_chords`.
+Nepřekrývající se klipy 1:1 odpovídají řádkům z `karaoke_lines` — `clip.start_s`/
+`end_s` **jsou** to, co se má na displeji zobrazit (viz poznámka v §3.6 o ručním
+posunu konce řádku).
 
 ---
 
@@ -198,14 +216,14 @@ Parser vezme `mode` + `source_track`, dohledá odpovídající eventy/beaty v da
 
 | Účel | Potřebné sekce | Lze ignorovat |
 |------|----------------|---------------|
-| **Řízený karaoke displej** (co+kdy) | `meta`, `tempo_map`, `display_timeline` → dle `mode` sáhni do `lyrics_timeline`/`chords_timeline`/`tracks[].beats` | — |
-| **Karaoke text + akordy** (ESP) | `meta`, `tempo_map`, `karaoke_lines` **nebo** `lyrics_timeline`+`chords_timeline` | celé `tracks[].beats[]`, `display_timeline` |
-| **Zobrazení tabulatur / sól** | `tracks[]` (kde `has_tab`), `type == "solo_guitar"` | `karaoke_lines` |
+| **Řízený karaoke displej** (co+kdy) | `meta`, `tempo_map`, `display_timeline` → dle `mode` sáhni do `lyrics_timeline`/`chords_timeline` | — |
+| **Karaoke text + akordy** (ESP) | `meta`, `tempo_map`, `karaoke_lines` **nebo** `lyrics_timeline`+`chords_timeline` | `display_timeline`, `drums_timeline` |
+| **Přehrávání bicích samplů** | `meta`, `tempo_map`, `drums_timeline` | vše ostatní |
 | **Sync více nástrojů** | timeline eventy + `track_index` → `tracks[].name/type` | — |
 
-**Paměťová poznámka pro ESP32:** `tracks[].beats[]` je 80–90 % velikosti
-souboru. Pro pouhé karaoke ho parser přeskočí (streamované čtení), nebo se
-exportuje samostatný „slim" soubor bez `tracks[].beats[]`.
+Celý soubor jsou jen tenké ploché osy — žádná velká binární/tabulaturní
+sekce ke stahování. Bicí `drums_timeline` bývá objemově největší (jeden
+záznam na úder), ale pořád jde jen o pár čísel na řádek.
 
 ---
 
@@ -223,11 +241,25 @@ Verze zůstává **2** — jde o nepovinné klíče, které starší parser igno
 
 - **`display_timeline[]`** (§3.7) — režie karaoke displeje (klipy: co/kdy/jak).
   Produkuje ji editor časové osy. Když chybí, parser si obsah skládá z
-  `karaoke_lines` / `lyrics_timeline` / `chords_timeline`.
-- **`line` (int)** na `lyrics_timeline[]`, `chords_timeline[]` a `karaoke_lines[]`
-  — **explicitní seskupení do řádků** i v ploché ose: slova se stejným `line`
-  patří do jednoho karaoke řádku. Parser tak nemusí odvozovat řádky z pauz —
-  přečte je přímo. Doprovází ho **`meta.has_line_structure: true`**.
+  `karaoke_lines` / `lyrics_timeline` / `chords_timeline`. Klip nese i **`line`**
+  (index karaoke řádku, který reprezentuje) — díky tomu editor pozná, kam
+  patří, i po ručním posunu okrajů.
+- **`drums_timeline[]`** (§3.5b) — kdy a jaký buben/sample zní. Chybí, pokud
+  song nemá bicí stopu.
+- **`line` (int)** na `lyrics_timeline[]`, `chords_timeline[]`, `drums_timeline[]`,
+  `karaoke_lines[]` a `display_timeline[]` — **explicitní seskupení do řádků**:
+  eventy se stejným `line` patří do jednoho karaoke řádku. Parser tak nemusí
+  odvozovat řádky z pauz — přečte je přímo. Doprovází ho
+  **`meta.has_line_structure: true`** (u obou producentů vždy).
+- **Žádná tabulatura**: `tracks[]` už negeneruje `beats`/`tuning`/`has_tab` u
+  žádné stopy (ani u sóla) — export je jen text, akordy a bicí. Basa, klávesy
+  a jiné doprovodné nástroje bez vlastního textu/akordu se do `tracks[]`
+  vůbec nedostanou (vyjma bicí, ty jsou v exportu vždy).
+- **`karaoke_lines[].section` (str, nepovinné)** — označení sloky/refrénu
+  (`"Sloka 1"`, `"Refrén"`…), odvozené z markerů `1.`/`R:` v textu. Slouží
+  displeji k oddělovačům sekcí; klipy `display_timeline` ho mají i v `label`.
+- **`karaoke_lines[].start_s/end_s` může být ruční** (§3.6) — přetažené přes
+  klip na master „Displej" stopě, nezávisle na časování posledního slova.
 - **`meta.edited_in_timeline: true`** — příznak, že JSON prošel editorem časové
   osy (přerovnané časy slabik, ruční zalomení řádků, klipy Displeje).
 - Časy slabik (`lyrics_timeline[].time_s/duration_s`) mohou být **přerovnané**

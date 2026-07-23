@@ -1,24 +1,38 @@
 # Guitar Pro Viewer & Karaoke Exporter
 
 Desktopová aplikace (PySide6) pro procházení souborů **Guitar Pro** (`.gp3/.gp4/.gp5`)
-a jejich export do **JSON** pro karaoke / tab systémy (např. přehrávač textu a akordů
-na ESP32 ze SD karty). Součástí je i **import akordů a textu z webu** a **dávkové
-stažení celého interpreta**.
+a jejich export do **JSON** pro karaoke systémy — text, akordy a bicí (např.
+přehrávač na ESP32 ze SD karty). Součástí je i **import akordů a textu z webu**
+a **dávkové stažení celého interpreta**.
 
 ---
 
 ## Funkce
 
 - 📖 **Prohlížeč GP souborů** — stopy, ladění, takty, tabulatury, text, akordy.
-- 💾 **Export do JSON** — text + akordy + tabulatury v časové ose, s **režií
-  displeje** (`display_timeline`) a explicitním **seskupením do řádků** (klíč
-  `line` u každého slova). Formát viz [JSON_FORMAT.md](JSON_FORMAT.md).
+- 💾 **Export do JSON** — jen **karaoke text (po řádcích) + akordy + bicí**,
+  žádná tabulatura. Text je **jedna jednotka na řádek** (ne po slovech); akordy
+  mají **časová razítka umístěná dle slabik** v rámci řádku (v editoru tažné).
+  Do `tracks[]` jde jen zpěv + bicí. Ploché osy `lyrics_timeline`/
+  `chords_timeline`/`drums_timeline`, **režie displeje** (`display_timeline`),
+  **označení slok/refrénu** (`section`) a **seskupení do řádků** (`line`).
+  Formát viz [JSON_FORMAT.md](JSON_FORMAT.md).
+- 🎵➕🥁 **Sloučit s webem** (Ctrl+M) — otevři GP soubor (kvůli **bicím** a
+  časování), pak vlož URL písně z webu: **text, řádky, akordy a sloky/refrén se
+  vezmou z webu**, napasují se na reálné časy zpěvu z GP a přidají se **bicí**.
+  Ideální, když GP nemá akordy (jen noty) a web nemá bicí. Vše pak upravíš
+  v editoru a exportuješ.
+- 🥁 **Bicí** — detekce perkusní stopy a export `drums_timeline`: kdy a jaký
+  buben/sample má znít, se jménem z GM Percussion mapy (`Acoustic Snare`,
+  `Closed Hi-Hat`, `Crash Cymbal`…) i MIDI číslem pro přímé mapování na sample.
 - 🎚️ **Editor časové osy (Sony Vegas styl)** — hlavní pracovní plocha okna.
   Nahoře **master „Displej" stopa** = režie karaoke (co/kdy/jak se ukáže na
   displeji) skládaná z **klipů**; pod ní zdrojové stopy s bloky textu a akordů.
   - **Klipy Displeje** — dvojklik vybere zdrojovou stopu + režim
-    (`text+akordy`, `tab+akordy`, `text`, `akordy`, `tabulatura`), tažení okrajů
-    mění délku, pravý klik = rychlá změna režimu / smazání.
+    (`text+akordy`, `text`, `akordy`), **tažení kteréhokoli okraje posune
+    ZAČÁTEK/KONEC řádku na displeji nezávisle na tom, kdy doznívá poslední
+    slabika** — důležité u rytmických skladeb, kde má text zůstat/zmizet
+    přesně na beat. Pravý klik = rychlá změna režimu / smazání.
   - **Kurzor (playhead)** — červená čára, táhni ji nebo klikni do pravítka;
     readout času v liště.
   - **✂ Rozdělení klipu** v pozici kurzoru (tlačítko / klávesa **S** / pravý klik).
@@ -26,8 +40,7 @@ stažení celého interpreta**.
     délky / do oken klipů / přichycení na beat podle tempa).
   - Posun bloků, editace dvojklikem, zalomení řádků pravým klikem, zoom
     (Ctrl+kolečko). Náhledy (Chord Chart, Noty, JSON…) jsou ve sbalitelném docku.
-- 🎸 **Podpora více stop** — každý event nese `track_index` (odkaz na stopu),
-  sóla se poznají podle `type: "solo_guitar"` a míří do klipů `tab+akordy`.
+- 🎸 **Podpora více stop** — každý event nese `track_index` (odkaz na stopu).
 - 🌐 **Import z webu** — rozpozná chord chart (akordy nad textem) a uloží jako
   GP4 + karaoke JSON. Optimalizováno pro [pisnicky-akordy.cz](https://pisnicky-akordy.cz),
   s obecným fallbackem. Karaoke JSON **respektuje řádkovou strukturu** webu (1:1,
