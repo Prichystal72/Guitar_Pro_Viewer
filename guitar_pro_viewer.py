@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QPushButton, QFileDialog, QTabWidget, QTableWidget, QTableWidgetItem,
     QScrollArea, QStatusBar, QHeaderView, QMessageBox,
     QCheckBox, QFrame, QLineEdit, QComboBox, QToolBar, QSizePolicy,
-    QTextBrowser, QDockWidget, QInputDialog,
+    QTextBrowser, QDockWidget, QInputDialog, QDialog,
 )
 from PySide6.QtCore import Qt, QSize, QThread, Signal
 from PySide6.QtGui import QFont, QColor, QAction, QIcon, QBrush, QPalette
@@ -383,6 +383,26 @@ class GuitarProViewer(QMainWindow):
         # Menu
         menubar = self.menuBar()
         file_menu = menubar.addMenu("Soubor")
+
+        # --- Kompletní postup pro NOVOU píseň (nejdůležitější akce, proto první) ---
+        act_web = QAction("📝  Nová píseň — z webu / vlastní text…", self)
+        act_web.setShortcut("Ctrl+N")
+        act_web.setToolTip(
+            "Kompletní postup: načti text z webu NEBO ho vlož/napiš ručně → uprav "
+            "řádky a akordy v dialogu → OK ('Použít v editoru') → píseň se rovnou "
+            "zobrazí na časové ose v aktuálním tempu (řádek = jeden časový úsek)."
+        )
+        act_web.triggered.connect(self._open_web_import)
+        file_menu.addAction(act_web)
+        act_merge = QAction("🎵➕🥁  Sloučit s webem (text+akordy) + bicí z GP…", self)
+        act_merge.setShortcut("Ctrl+M")
+        act_merge.setToolTip("Otevři GP soubor (kvůli bicím), pak sem vlož URL "
+                             "písně z webu — text, řádky, akordy a sloky se vezmou "
+                             "z webu, bicí a časování z GP.")
+        act_merge.triggered.connect(self.merge_with_web)
+        file_menu.addAction(act_merge)
+        file_menu.addSeparator()
+
         act_open = QAction("Otevřít Guitar Pro soubor…", self)
         act_open.setShortcut("Ctrl+O")
         act_open.triggered.connect(self.open_file)
@@ -398,34 +418,22 @@ class GuitarProViewer(QMainWindow):
         act_export.triggered.connect(self.export_json)
         file_menu.addAction(act_export)
         file_menu.addSeparator()
-        act_web = QAction("🌐  Import z webu…", self)
-        act_web.setShortcut("Ctrl+W")
-        act_web.triggered.connect(self._open_web_import)
-        file_menu.addAction(act_web)
-        act_merge = QAction("🎵➕🥁  Sloučit s webem (text+akordy)…", self)
-        act_merge.setShortcut("Ctrl+M")
-        act_merge.setToolTip("Otevři GP soubor (kvůli bicím), pak sem vlož URL "
-                             "písně z webu — text, řádky, akordy a sloky se vezmou "
-                             "z webu, bicí a časování z GP.")
-        act_merge.triggered.connect(self.merge_with_web)
-        file_menu.addAction(act_merge)
-        file_menu.addSeparator()
         act_quit = QAction("Konec", self)
         act_quit.setShortcut("Ctrl+Q")
         act_quit.triggered.connect(self.close)
         file_menu.addAction(act_quit)
 
-        # Toolbar
+        # Toolbar — postup nové písně první a zvýrazněný, ať je hned vidět
         tb = QToolBar("Hlavní panel")
         tb.setMovable(False)
         self.addToolBar(tb)
+        tb.addAction(act_web)
+        tb.addAction(act_merge)
+        tb.addSeparator()
         tb.addAction(act_open)
         tb.addAction(act_open_json)
         tb.addSeparator()
         tb.addAction(act_export)
-        tb.addSeparator()
-        tb.addAction(act_web)
-        tb.addAction(act_merge)
 
         # ===== CENTRÁLNÍ PLOCHA OKNA = ČASOVÁ OSA (Sony Vegas styl) =====
         central = QWidget()
@@ -561,8 +569,14 @@ class GuitarProViewer(QMainWindow):
     # ------------------------------------------------------------------
 
     def _open_web_import(self) -> None:
+        """Kompletní postup pro novou píseň: web/vlastní text → úprava v dialogu
+        → OK ('Použít v editoru') → rovnou na časovou osu (aktuální tempo, řádek
+        = jeden časový úsek). Uložení GP4+JSON na disk zůstává volitelné, uvnitř
+        dialogu, dialog se tím nezavírá."""
         dlg = WebImportDialog(self)
-        dlg.exec()
+        if dlg.exec() == QDialog.Accepted and dlg.result_json:
+            self.current_file = None
+            self._present_karaoke_data(dlg.result_json, source_desc="Nová píseň (web/text)")
 
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(

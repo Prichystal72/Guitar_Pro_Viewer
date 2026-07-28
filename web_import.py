@@ -15,13 +15,13 @@ import guitarpro
 import guitarpro.models as gpm
 from bs4 import BeautifulSoup
 
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal, QTimer
 from PySide6.QtGui import QFont, QColor, QBrush
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
     QLabel, QLineEdit, QPushButton, QTextEdit,
     QFileDialog, QMessageBox, QTableWidget, QTableWidgetItem,
-    QComboBox, QHeaderView, QAbstractItemView,
+    QComboBox, QHeaderView, QAbstractItemView, QTabWidget, QCheckBox, QSpinBox,
 )
 
 # Typy řádků chord chartu + jejich popisky v editoru
@@ -74,19 +74,6 @@ def sanitize_cp1250(text: str) -> str:
 
 def is_chord(token: str) -> bool:
     return bool(_CHORD_RE.match(token.strip()))
-
-
-# Samohláskové skupiny pro odhad počtu slabik (čeština + běžné akcenty).
-# Používá se k ODHADU pozice akordu v čase v rámci řádku (ne k časování slov).
-_VOWEL_GROUP_RE = re.compile(r'[aeiouyáéíóúůýěäëïöüàèìòù]+', re.IGNORECASE)
-
-
-def count_syllables(word: str) -> int:
-    """Odhad počtu slabik slova = počet samohláskových skupin (min. 1)."""
-    core = re.sub(r'[^0-9A-Za-zÀ-žĀ-ſ]', '', word or '')
-    if not core:
-        return 1
-    return max(1, len(_VOWEL_GROUP_RE.findall(core)))
 
 
 # Opakovací značky v akordových/intro řádcích: 2x, 3x…
@@ -401,28 +388,39 @@ def _line_units(items: list[dict]):
             yield ('lyric', [(w, '') for w in it['text'].split()])
 
 
+BEATS_PER_MEASURE = 4   # zatím jen 4/4 — jediný takt, který app podporuje
+
+
 def build_karaoke_json(
     detected: list[dict],
     title: str = '',
     artist: str = '',
     tempo: int = 120,
     source_url: str = '',
+    bars_per_line: int = 2,
+    count_in_bars: int = 1,
 ) -> dict:
-    """Sestaví karaoke JSON: **text po řádcích**, akordy s časovým razítkem
-    umístěné v rámci řádku podle **slabik**.
+    """Sestaví karaoke JSON na **pravidelné mřížce** podle tempa (žádné odhady
+    ze slabik/délky slov — to je nespolehlivé a neodpovídá hudební teorii).
 
-    Model: 1 řádek z webu = 1 karaoke řádek (jeden text, ne rozsekaný na slova).
-    Řádek zabere dobu ~ počet slabik × beat. Akord nad slovem dostane čas
-    odhadnutý ze slabikové pozice toho slova v řádku (řádek trvá X s → akord
-    v i-tém slově sedí na `start + slabiky_před/celkem × X`). V editoru se dají
-    akordy tažením přemístit a konce řádků upravit.
+    Model: 1 řádek z webu = 1 karaoke řádek = přesně `bars_per_line` taktů
+    (pevně, stejně pro každý řádek — timeline je tak dokonale pravidelná,
+    beat = 60/tempo sekund, takt = 4 beaty). Akord se umístí na nejbližší BEAT
+    v rámci řádku podle pořadí slova, ke kterému patří (ne podle slabik).
+    Před první notu se vloží **count_in_bars taktů ticha** (mezera na
+    odklikání metronomu). V editoru se dají akordy/řádky tažením posunout
+    a přichytit na mřížku (viz `TimelineEditor`).
     """
     lyrics_timeline: list[dict] = []
     chords_timeline: list[dict] = []
     karaoke_lines: list[dict] = []
 
+    bars_per_line = max(1, int(bars_per_line))
+    count_in_bars = max(0, int(count_in_bars))
     beat_s = 60.0 / tempo
-    tick = TICKS_PER_BEAT
+    beats_per_line = bars_per_line * BEATS_PER_MEASURE
+    line_span_ticks = bars_per_line * MEASURE_4_4
+    tick = TICKS_PER_BEAT + count_in_bars * MEASURE_4_4   # start AŽ po count-in
     active_chord = ''
 
     def ticks_to_s(t: int) -> float:
@@ -431,8 +429,12 @@ def build_karaoke_json(
     def measure_at(t: int) -> int:
         return 1 + (t - TICKS_PER_BEAT) // MEASURE_4_4
 
-    def measures_for(beats: int) -> int:
-        return max(1, -(-beats // 4))   # ceil(beats/4)
+    def beat_tick_for_index(line_tick: int, word_idx: int, n_words: int) -> int:
+        """Tick nejbližšího BEATU v řádku pro slovo `word_idx` z `n_words` —
+        rovnoměrně rozmístí slova/akordy po beatech řádku (žádné slabiky)."""
+        beat_idx = (word_idx * beats_per_line) // max(1, n_words)
+        beat_idx = min(beat_idx, beats_per_line - 1)
+        return line_tick + beat_idx * TICKS_PER_BEAT
 
     items = [d for d in detected if d['type'] not in ('blank', 'ignore')]
 
@@ -446,7 +448,7 @@ def build_karaoke_json(
                 continue
             kline_chords: list[str] = []
             for j, chord in enumerate(chords):
-                onset = line_tick + j * TICKS_PER_BEAT
+                onset = beat_tick_for_index(line_tick, j, len(chords))
                 if chord != active_chord:
                     chords_timeline.append({'time_s': ticks_to_s(onset), 'chord': chord,
                                             'measure': measure_at(onset), 'line': line_idx,
@@ -454,17 +456,16 @@ def build_karaoke_json(
                     active_chord = chord
                 if chord not in kline_chords:
                     kline_chords.append(chord)
-            span_ticks = measures_for(len(chords)) * MEASURE_4_4
             karaoke_lines.append({
                 'line': line_idx,
                 'start_s': ticks_to_s(line_tick),
-                'end_s': ticks_to_s(line_tick + span_ticks),
+                'end_s': ticks_to_s(line_tick + line_span_ticks),
                 'chords': kline_chords,
                 'text': '',
                 'words': [],
                 'track_index': 1,
             })
-            tick = line_tick + span_ticks
+            tick = line_tick + line_span_ticks
             continue
 
         # kind == 'lyric'
@@ -473,30 +474,27 @@ def build_karaoke_json(
         if not words and not any(c for _, c in pairs):
             continue
 
-        # délka řádku ~ počet slabik × beat (řádek = jedna textová jednotka)
-        syls = [count_syllables(w) for w, _ in pairs if w.strip()]
-        total_syl = sum(syls) or 1
-        span_ticks = measures_for(total_syl) * MEASURE_4_4
+        # délka řádku = PEVNĚ bars_per_line taktů (regulérní mřížka, ne odhad)
         line_start_s = ticks_to_s(line_tick)
-        line_end_s = ticks_to_s(line_tick + span_ticks)
+        line_end_s = ticks_to_s(line_tick + line_span_ticks)
         line_dur = max(0.1, line_end_s - line_start_s)
         lyric_text = ' '.join(words)
+        n_words = len(words)
 
         # jeden text na celý řádek (ne po slovech)
         lyrics_timeline.append({'time_s': line_start_s, 'duration_s': round(line_dur, 3),
                                 'text': lyric_text, 'measure': measure_at(line_tick),
                                 'line': line_idx, 'track_index': 1})
 
-        # akordy: čas dle slabikové pozice slova v řádku (jen akordy TOHOTO
+        # akordy: na beat odpovídající pořadí slova v řádku (jen akordy TOHOTO
         # řádku — bez přenášení z předchozího, aby to sedělo s webem)
         kline_chords: list[str] = []
         prev = None
-        cum_syl = 0
         wi = 0
         for (word, chord) in pairs:
             if chord and chord != prev:
-                frac = cum_syl / total_syl
-                ts = round(line_start_s + frac * line_dur, 3)
+                onset = beat_tick_for_index(line_tick, wi, n_words)
+                ts = ticks_to_s(onset)
                 chords_timeline.append({'time_s': ts, 'chord': chord,
                                         'measure': measure_at(line_tick), 'line': line_idx,
                                         'track_index': 1})
@@ -505,7 +503,6 @@ def build_karaoke_json(
                 if chord not in kline_chords:
                     kline_chords.append(chord)
             if word.strip():
-                cum_syl += syls[wi]
                 wi += 1
 
         karaoke_lines.append({
@@ -518,7 +515,7 @@ def build_karaoke_json(
                        'text': lyric_text, 'line': line_idx, 'track_index': 1}],
             'track_index': 1,
         })
-        tick = line_tick + span_ticks
+        tick = line_tick + line_span_ticks
 
     measure_num = measure_at(tick)
 
@@ -529,6 +526,11 @@ def build_karaoke_json(
             'artist': artist,
             'tempo_bpm': tempo,
             'ticks_per_beat': TICKS_PER_BEAT,
+            'beats_per_measure': BEATS_PER_MEASURE,
+            'time_signature': f'{BEATS_PER_MEASURE}/4',
+            'bars_per_line': bars_per_line,
+            'count_in_bars': count_in_bars,
+            'count_in_s': round(count_in_bars * MEASURE_4_4 / TICKS_PER_BEAT * beat_s, 3),
             'source': source_url or 'web_import',
             'duration_seconds': round(ticks_to_s(tick), 1),
             'total_measures': measure_num - 1,
@@ -666,6 +668,8 @@ def save_gp_and_json(
     tempo: int,
     base_path: str,
     source_url: str = '',
+    bars_per_line: int = 2,
+    count_in_bars: int = 1,
 ) -> tuple[str, str]:
     """Uloží GP4 soubor a karaoke JSON. Vrátí (gp_path, json_path)."""
     stem = Path(base_path).with_suffix('').as_posix().split('/')[-1]
@@ -677,7 +681,9 @@ def save_gp_and_json(
     song.versionTuple = (4, 0, 6)
     guitarpro.write(song, gp_path, encoding='cp1250')
 
-    data = build_karaoke_json(detected, title=title, artist=artist, tempo=tempo, source_url=source_url)
+    data = build_karaoke_json(detected, title=title, artist=artist, tempo=tempo,
+                              source_url=source_url, bars_per_line=bars_per_line,
+                              count_in_bars=count_in_bars)
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -944,25 +950,52 @@ class ArtistDownloadWorker(QThread):
 # ---------------------------------------------------------------------------
 
 class WebImportDialog(QDialog):
+    """Import z webu se **živou** obousměrnou editací.
+
+    Tři panely, které se drží v synchronizaci:
+      1. surový text (levý)  — píšeš/vkládáš chord chart,
+      2. rozpoznané řádky (prostřední) — typ řádku i obsah lze editovat,
+      3. náhled JSON (pravý) — přesně to, co se uloží (karaoke řádky + JSON).
+    Změna v kterémkoli panelu se hned promítne do zbylých dvou.
+    """
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Import z webu — GP4 + Karaoke JSON")
-        self.setMinimumSize(1200, 720)
+        self.setWindowTitle("Nová píseň — text z webu nebo vlastní")
+        self.setMinimumSize(1360, 760)
         self._worker: FetchWorker | None = None
         self._artist_worker: ArtistDownloadWorker | None = None
         self._detected: list[dict] = []
+        self._row_map: list[int] = []     # řádek tabulky → index v self._detected
+        self._syncing = False             # ochrana proti zacyklení signálů
+        self._preview_json: dict = {}     # poslední spočítaný náhled
+        self.result_json: dict | None = None   # nastaví se po „Použít v editoru" (OK)
         self._setup_ui()
 
     def _setup_ui(self) -> None:
         root = QVBoxLayout(self)
 
-        # URL
+        steps_lbl = QLabel(
+            "<b>Kompletní postup:</b> 1) načti text z webu (URL) <b>nebo</b> ho rovnou vlož/napiš "
+            "vlevo dole &nbsp;→&nbsp; 2) uprav řádky/akordy (typ i obsah jde editovat) "
+            "&nbsp;→&nbsp; 3) zkontroluj náhled JSONu vpravo &nbsp;→&nbsp; "
+            "<b>✅ Použít v editoru</b> — píseň se rovnou zobrazí na časové ose "
+            "v aktuálním tempu, řádek = jeden časový úsek (takt)."
+        )
+        steps_lbl.setWordWrap(True)
+        steps_lbl.setStyleSheet(
+            "background:#eef3fb; border:1px solid #c9dcf0; border-radius:4px; "
+            "padding:6px 10px; color:#1a3a5c;"
+        )
+        root.addWidget(steps_lbl)
+
+        # URL (nepovinné — krok 1a: web)
         url_row = QHBoxLayout()
-        url_row.addWidget(QLabel("URL:"))
+        url_row.addWidget(QLabel("1a) URL (volitelně):"))
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText("https://  (stránka s akordy — ultimate-guitar, supermusic, …)")
         self.url_input.returnPressed.connect(self._fetch)
-        self.fetch_btn = QPushButton("🔄  Načíst")
+        self.fetch_btn = QPushButton("🔄  Načíst z webu")
         self.fetch_btn.clicked.connect(self._fetch)
         url_row.addWidget(self.url_input, 1)
         url_row.addWidget(self.fetch_btn)
@@ -976,16 +1009,39 @@ class WebImportDialog(QDialog):
         meta_row.addWidget(QLabel("Interpret:"))
         self.artist_input = QLineEdit()
         meta_row.addWidget(self.artist_input, 2)
-        meta_row.addWidget(QLabel("Tempo:"))
+        meta_row.addWidget(QLabel("Tempo (BPM):"))
         self.tempo_input = QLineEdit("120")
         self.tempo_input.setMaximumWidth(60)
+        self.tempo_input.setToolTip("Úderů za minutu — timeline je z toho pravidelná "
+                                    "mřížka: 1 beat = 60/tempo s, 1 takt (4/4) = 4 beaty.")
         meta_row.addWidget(self.tempo_input)
+
+        meta_row.addSpacing(12)
+        meta_row.addWidget(QLabel("Taktů/řádek:"))
+        self.bars_per_line_spin = QSpinBox()
+        self.bars_per_line_spin.setRange(1, 8)
+        self.bars_per_line_spin.setValue(2)
+        self.bars_per_line_spin.setToolTip(
+            "Kolik taktů (4/4) zabere KAŽDÝ textový řádek — pevně, stejně pro "
+            "celou píseň, žádný odhad ze slabik. U pravidelných písní (Let It "
+            "Be…) nastav podle reálné délky řádku.")
+        meta_row.addWidget(self.bars_per_line_spin)
+
+        meta_row.addSpacing(12)
+        meta_row.addWidget(QLabel("Úvodní takty (metronom):"))
+        self.count_in_spin = QSpinBox()
+        self.count_in_spin.setRange(0, 8)
+        self.count_in_spin.setValue(1)
+        self.count_in_spin.setToolTip(
+            "Kolik taktů ticha se vloží na ÚPLNÝ začátek — mezera na odklikání "
+            "metronomu před prvním řádkem.")
+        meta_row.addWidget(self.count_in_spin)
         root.addLayout(meta_row)
 
-        # Splitter
+        # Splitter — tři živě propojené panely
         splitter = QSplitter(Qt.Horizontal)
 
-        left_box = QGroupBox("Text z webu  (lze editovat před rozpoznáním)")
+        left_box = QGroupBox("1b) Text  (nebo přímo sem piš/vkládej vlastní — mění se živě)")
         ll = QVBoxLayout(left_box)
         self.raw_text = QTextEdit()
         self.raw_text.setFont(QFont("Courier New", 11))
@@ -996,36 +1052,67 @@ class WebImportDialog(QDialog):
             "D            A7\n"
             "přes zelenou louku,\n"
         )
+        self.raw_text.textChanged.connect(self._on_raw_text_changed)
         ll.addWidget(self.raw_text)
         splitter.addWidget(left_box)
 
-        right_box = QGroupBox("Rozpoznané řádky  (uprav typ v prvním sloupci)")
-        rl = QVBoxLayout(right_box)
+        mid_box = QGroupBox("2) Rozpoznané řádky  (typ i obsah lze editovat)")
+        ml = QVBoxLayout(mid_box)
         self.line_table = QTableWidget(0, 2)
         self.line_table.setHorizontalHeaderLabels(["Typ", "Obsah řádku"])
         self.line_table.verticalHeader().setVisible(False)
-        self.line_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # obsah jen ke čtení
-        self.line_table.setSelectionMode(QAbstractItemView.NoSelection)
+        # obsah je editovatelný (dvojklik / Enter / psaní) — změna jde hned do JSONu
+        self.line_table.setEditTriggers(
+            QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed
+            | QAbstractItemView.AnyKeyPressed
+        )
+        self.line_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.line_table.itemChanged.connect(self._on_cell_edited)
         hh = self.line_table.horizontalHeader()
         hh.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         hh.setSectionResizeMode(1, QHeaderView.Stretch)
-        rl.addWidget(self.line_table)
+        ml.addWidget(self.line_table)
+        splitter.addWidget(mid_box)
+
+        right_box = QGroupBox("3) Co půjde do JSONu  (živý náhled)")
+        rl = QVBoxLayout(right_box)
+        self.preview_tabs = QTabWidget()
+        self.preview_lines = QTextEdit()
+        self.preview_lines.setReadOnly(True)
+        self.preview_lines.setFont(QFont("Consolas", 10))
+        self.preview_lines.setLineWrapMode(QTextEdit.NoWrap)
+        self.preview_tabs.addTab(self.preview_lines, "🎤 Karaoke řádky")
+        self.preview_raw = QTextEdit()
+        self.preview_raw.setReadOnly(True)
+        self.preview_raw.setFont(QFont("Consolas", 9))
+        self.preview_raw.setLineWrapMode(QTextEdit.NoWrap)
+        self.preview_tabs.addTab(self.preview_raw, "{ } JSON")
+        rl.addWidget(self.preview_tabs)
+        self.preview_info = QLabel("—")
+        self.preview_info.setStyleSheet("color:#555;")
+        rl.addWidget(self.preview_info)
         splitter.addWidget(right_box)
 
-        splitter.setSizes([560, 600])
+        splitter.setSizes([440, 460, 460])
         root.addWidget(splitter, 1)
+
+        # Debounce: přepočet náhledu až po dopsání (ať to při psaní neseká)
+        self._refresh_timer = QTimer(self)
+        self._refresh_timer.setSingleShot(True)
+        self._refresh_timer.setInterval(350)
+        self._refresh_timer.timeout.connect(self._refresh_from_text)
+
+        # Meta ovlivňují časování v JSONu → taky přepočítat náhled
+        for w in (self.title_input, self.artist_input, self.tempo_input):
+            w.textChanged.connect(self._schedule_preview)
+        for w in (self.bars_per_line_spin, self.count_in_spin):
+            w.valueChanged.connect(self._schedule_preview)
 
         # Buttons
         btn_row = QHBoxLayout()
         parse_btn = QPushButton("🔍  Rozpoznat")
+        parse_btn.setToolTip("Okamžité přeparsování textu (jinak se to děje automaticky za chodu).")
         parse_btn.clicked.connect(self._parse)
-        save_btn = QPushButton("💾  Uložit GP4 + JSON")
-        save_btn.setStyleSheet(
-            "QPushButton{background:#2d7d2d;color:white;padding:6px 16px;"
-            "border-radius:4px;font-weight:bold;font-size:13px;}"
-            "QPushButton:hover{background:#3a9e3a;}"
-        )
-        save_btn.clicked.connect(self._save)
 
         self.artist_btn = QPushButton("📚  Stáhnout celého interpreta")
         self.artist_btn.setToolTip(
@@ -1034,13 +1121,35 @@ class WebImportDialog(QDialog):
         )
         self.artist_btn.clicked.connect(self._download_artist)
 
+        save_btn = QPushButton("💾  Uložit GP4 + JSON…")
+        save_btn.setToolTip("Volitelně navíc ulož GP4 + JSON na disk (dialog zůstane otevřený).")
+        save_btn.clicked.connect(self._save)
+
+        cancel_btn = QPushButton("Zavřít")
+        cancel_btn.clicked.connect(self.reject)
+
+        self.ok_btn = QPushButton("✅  Použít v editoru")
+        self.ok_btn.setToolTip(
+            "Zavře dialog a rovnou nahraje píseň do časové osy (aktuální tempo, "
+            "řádek = jeden časový úsek)."
+        )
+        self.ok_btn.setStyleSheet(
+            "QPushButton{background:#2d7d2d;color:white;padding:6px 16px;"
+            "border-radius:4px;font-weight:bold;font-size:13px;}"
+            "QPushButton:hover{background:#3a9e3a;}"
+            "QPushButton:disabled{background:#aaa;}"
+        )
+        self.ok_btn.clicked.connect(self._use_in_editor)
+
         btn_row.addWidget(parse_btn)
         btn_row.addWidget(self.artist_btn)
         btn_row.addStretch()
         btn_row.addWidget(save_btn)
+        btn_row.addWidget(cancel_btn)
+        btn_row.addWidget(self.ok_btn)
         root.addLayout(btn_row)
 
-        self.status_lbl = QLabel("Zadejte URL nebo vložte text ručně, pak klikněte na Rozpoznat.")
+        self.status_lbl = QLabel("Zadejte URL a načtěte z webu, nebo vložte/napište text vlevo dole ručně.")
         root.addWidget(self.status_lbl)
 
     def _fetch(self) -> None:
@@ -1074,20 +1183,133 @@ class WebImportDialog(QDialog):
         if artist and not self.artist_input.text():
             self.artist_input.setText(artist[:60])
 
-        # Zobraz čistý text v levém panelu (chord + lyric řádky)
+        # Zobraz čistý text v levém panelu (chord + lyric řádky) — bez
+        # spuštění debounce re-parse (obsah už MÁME rozpoznaný v self._detected)
         clean_lines = [d['text'] for d in self._detected]
-        self.raw_text.setPlainText('\n'.join(clean_lines))
+        self._syncing = True
+        try:
+            self.raw_text.setPlainText('\n'.join(clean_lines))
+        finally:
+            self._syncing = False
 
         self._fill_table(self._detected)
         self._update_counts("Načteno")
+        self._update_json_preview()
 
     def _parse(self) -> None:
-        text = self.raw_text.toPlainText()
-        if not text.strip():
+        """Tlačítko „Rozpoznat" — okamžité (bez čekání na debounce)."""
+        self._refresh_timer.stop()
+        self._refresh_from_text()
+
+    # ------------------------------------------------------------------
+    # Živá synchronizace: text (1) ↔ tabulka (2) ↔ JSON náhled (3)
+    # ------------------------------------------------------------------
+
+    def _on_raw_text_changed(self) -> None:
+        """Text v panelu 1 se změnil (psaní/vložení) → za chvíli přeparsovat."""
+        if self._syncing:
             return
-        self._detected = apply_chord_templates(detect_chord_chart(text.splitlines()))
+        self._refresh_timer.start()   # debounce, ať to při psaní neseká
+
+    def _refresh_from_text(self) -> None:
+        """Znovu rozpozná chord chart z textu a promítne do tabulky i JSONu."""
+        if self._syncing:
+            return
+        text = self.raw_text.toPlainText()
+        self._detected = (apply_chord_templates(detect_chord_chart(text.splitlines()))
+                          if text.strip() else [])
         self._fill_table(self._detected)
-        self._update_counts("Rozpoznáno")
+        self._update_counts("Živě rozpoznáno")
+        self._update_json_preview()
+
+    def _schedule_preview(self) -> None:
+        """Jen přepočítá JSON náhled (bez re-parsování textu) — pro tempo/meta."""
+        if self._syncing:
+            return
+        self._update_json_preview()
+
+    def _on_cell_edited(self, item: QTableWidgetItem) -> None:
+        """Obsah řádku upraven přímo v tabulce (panel 2) → zpátky do textu (1) a JSONu (3)."""
+        if self._syncing or item.column() != 1:
+            return
+        self._recolor_row(item.row())
+        self._detected = self._table_to_detected()
+        self._sync_raw_text_from_detected()
+        self._update_counts("Upraveno")
+        self._update_json_preview()
+
+    def _sync_raw_text_from_detected(self) -> None:
+        """Přepíše panel 1 (text) podle aktuálního self._detected, beze smyčky."""
+        self._syncing = True
+        try:
+            lines = [d.get('text', '') for d in self._detected]
+            self.raw_text.setPlainText('\n'.join(lines))
+        finally:
+            self._syncing = False
+
+    def _update_json_preview(self) -> None:
+        """Sestaví karaoke JSON z aktuálního self._detected a ukáže ho v panelu 3
+        — přesně to, co se uloží tlačítkem „Uložit GP4 + JSON"."""
+        detected = self._detected
+        title = self.title_input.text().strip() or "Unknown"
+        artist = self.artist_input.text().strip()
+        try:
+            tempo = int(self.tempo_input.text())
+        except ValueError:
+            tempo = 120
+
+        if not detected or not any(d['type'] in ('chord', 'lyric') for d in detected):
+            self.preview_lines.setPlainText("(zatím nic k zobrazení — vlož/uprav text vlevo)")
+            self.preview_raw.setPlainText("{}")
+            self.preview_info.setText("—")
+            self._preview_json = {}
+            return
+
+        try:
+            data = build_karaoke_json(detected, title, artist, tempo,
+                                      self.url_input.text().strip(),
+                                      bars_per_line=self.bars_per_line_spin.value(),
+                                      count_in_bars=self.count_in_spin.value())
+        except Exception as ex:
+            self.preview_lines.setPlainText(f"(chyba náhledu: {ex})")
+            self.preview_raw.setPlainText("{}")
+            self.preview_info.setText("—")
+            return
+
+        self._preview_json = data
+
+        rows = []
+        for kl in data.get('karaoke_lines', []):
+            chords = ' '.join(kl.get('chords', []))
+            sec = f"[{kl['section']}] " if kl.get('section') else ""
+            t0, t1 = kl.get('start_s', 0.0), kl.get('end_s', 0.0)
+            txt = kl.get('text', '') or '(jen akordy)'
+            rows.append(f"{t0:6.2f}–{t1:6.2f}s  {sec}{chords:<14} {txt}")
+        self.preview_lines.setPlainText('\n'.join(rows) or "(žádné řádky)")
+        self.preview_raw.setPlainText(json.dumps(data, indent=2, ensure_ascii=False))
+
+        n_lines = len(data.get('karaoke_lines', []))
+        n_chords = len(data.get('chords_timeline', []))
+        dur = data.get('meta', {}).get('duration_seconds', 0.0)
+        self.preview_info.setText(
+            f"{n_lines} karaoke řádků · {n_chords} akordů · délka ~{dur:.1f}s @ {tempo} BPM"
+        )
+
+    def _use_in_editor(self) -> None:
+        """Dokončení kompletního postupu: zavře dialog a předá hotový karaoke JSON
+        volajícímu (hlavní okno ho rovnou nahraje do časové osy). Řádky už mají
+        časy spočítané podle tempa/taktu (viz build_karaoke_json) — žádný další
+        krok není potřeba, jen případné doladění v editoru."""
+        if self.line_table.rowCount():
+            self._detected = self._table_to_detected()
+        self._update_json_preview()
+        if not self._preview_json or not self._preview_json.get('karaoke_lines'):
+            QMessageBox.warning(
+                self, "Nic k použití",
+                "Nejdřív načti text z webu, nebo ho vlož/napiš vlevo dole.")
+            return
+        self.result_json = self._preview_json
+        self.accept()
 
     def _update_counts(self, verb: str) -> None:
         n_c = sum(1 for d in self._detected if d['type'] == 'chord')
@@ -1096,7 +1318,7 @@ class WebImportDialog(QDialog):
         extra = f", {n_i} ignorováno" if n_i else ""
         self.status_lbl.setText(
             f"{verb}: {n_c} akord. řádků, {n_l} textových řádků{extra}. "
-            f"Uprav typ řádku vpravo → Uložit GP4 + JSON."
+            f"Uprav typ/obsah řádku → ✅ Použít v editoru."
         )
 
     # ------------------------------------------------------------------
@@ -1127,9 +1349,10 @@ class WebImportDialog(QDialog):
 
     def _on_type_changed(self, row: int) -> None:
         self._recolor_row(row)
-        # Průběžně promítni změny typů do self._detected a přepočti počty
+        # Průběžně promítni změny typů do self._detected a přepočti počty i náhled
         self._detected = self._table_to_detected()
         self._update_counts("Upraveno")
+        self._update_json_preview()
 
     def _recolor_row(self, row: int) -> None:
         combo = self.line_table.cellWidget(row, 0)
@@ -1193,8 +1416,10 @@ class WebImportDialog(QDialog):
                 song, self._detected, title=title, artist=artist,
                 tempo=tempo, base_path=out_path,
                 source_url=self.url_input.text().strip(),
+                bars_per_line=self.bars_per_line_spin.value(),
+                count_in_bars=self.count_in_spin.value(),
             )
-            n_kl = len(build_karaoke_json(self._detected, title, artist, tempo)['karaoke_lines'])
+            n_kl = len(self._preview_json.get('karaoke_lines', []))
             self.status_lbl.setText(
                 f"Uloženo:  {Path(gp_path).name}  +  {Path(json_path).name}  "
                 f"({n_kl} karaoke řádků)"

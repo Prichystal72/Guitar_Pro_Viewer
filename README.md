@@ -17,6 +17,12 @@ a **dávkové stažení celého interpreta**.
   `chords_timeline`/`drums_timeline`, **režie displeje** (`display_timeline`),
   **označení slok/refrénu** (`section`) a **seskupení do řádků** (`line`).
   Formát viz [JSON_FORMAT.md](JSON_FORMAT.md).
+- 📝 **Nová píseň — z webu / vlastní text** (Ctrl+N) — kompletní postup jedním
+  dialogem: načti text z webu (URL) **nebo** ho rovnou vlož/napiš ručně →
+  uprav řádky a akordy (typ i obsah, živě, se třemi propojenými panely — text,
+  rozpoznané řádky, náhled JSONu) → **✅ Použít v editoru** píseň rovnou
+  nahraje na časovou osu v zadaném tempu (řádek = jeden časový úsek/takt).
+  Uložení GP4+JSON na disk zůstává volitelné tlačítko uvnitř dialogu.
 - 🎵➕🥁 **Sloučit s webem** (Ctrl+M) — otevři GP soubor (kvůli **bicím** a
   časování), pak vlož URL písně z webu: **text, řádky, akordy a sloky/refrén se
   vezmou z webu**, napasují se na reálné časy zpěvu z GP a přidají se **bicí**.
@@ -91,11 +97,13 @@ python guitar_pro_viewer.py
    Tento výstup čte přehrávač na ESP32 (viz
    [ESP32_KARAOKE_IMPLEMENTATION.md](ESP32_KARAOKE_IMPLEMENTATION.md)).
 
-### Import z webu
-1. V okně **„Import z webu"** vlož URL písně (např. `pisnicky-akordy.cz/olympic/zelva`)
-   a klikni **🔄 Načíst**.
-2. Text lze v levém panelu **ručně upravit**, pak **🔍 Rozpoznat**.
-3. **💾 Uložit GP4 + JSON**.
+### Nová píseň — z webu / vlastní text (Ctrl+N)
+1. V dialogu **„Nová píseň"** buď vlož URL a klikni **🔄 Načíst z webu**, nebo
+   text rovnou vlož/napiš do panelu 1b vlevo (bez URL).
+2. Uprav řádky/akordy — typ i obsah se editují přímo v tabulce (panel 2),
+   změny se hned promítnou do textu i do náhledu JSONu (panel 3).
+3. **✅ Použít v editoru** — píseň se rovnou zobrazí na časové ose. Volitelně
+   lze navíc **💾 Uložit GP4 + JSON…** na disk (dialog zůstane otevřený).
 
 ### Stažení celého interpreta
 1. Do URL vlož stránku interpreta (např. `pisnicky-akordy.cz/olympic`).

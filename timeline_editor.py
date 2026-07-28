@@ -1,8 +1,9 @@
 """
 timeline_editor.py — Vizuální editor časové osy (DAW-styl) pro karaoke.
 
-Zobrazí stopy jako vodorovné pruhy, v nich bloky TEXTU (slabiky) a AKORDŮ
-umístěné na časové ose. Bloky lze:
+Zobrazí stopy jako vodorovné pruhy, v nich bloky TEXTU (řádky) a AKORDŮ
+umístěné na časové ose podle pravidelné mřížky taktů/beatů (dle tempa —
+žádné odhady z délky textu). Bloky lze:
   • posouvat po ose (změna času),
   • měnit jim délku tažením pravého okraje,
   • editovat obsah dvojklikem (akord / text),
@@ -537,11 +538,15 @@ class TimelineEditor(QWidget):
         bar.addSpacing(12)
         bar.addWidget(QLabel("Přichytit:"))
         self.snap_combo = QComboBox()
-        for label, val in [("vypnuto", 0.0), ("0,1 s", 0.1), ("0,25 s", 0.25),
-                           ("0,5 s", 0.5), ("1 s", 1.0)]:
-            self.snap_combo.addItem(label, val)
-        self.snap_combo.currentIndexChanged.connect(
-            lambda: setattr(self, "snap_s", self.snap_combo.currentData()))
+        self.snap_combo.setToolTip(
+            "Přichycení tažení k hudební mřížce (dle tempa písně) — "
+            "ne k pevným sekundám.")
+        for label, key in [("vypnuto", None), ("1/4 beatu", "q_beat"),
+                           ("1/2 beatu", "h_beat"), ("1 beat", "beat"),
+                           ("1 takt", "bar")]:
+            self.snap_combo.addItem(label, key)
+        self.snap_combo.setCurrentIndex(3)   # výchozí: 1 beat — hudebně smysluplné
+        self.snap_combo.currentIndexChanged.connect(self._update_snap_s)
         bar.addWidget(self.snap_combo)
 
         bar.addSpacing(12)
@@ -561,9 +566,9 @@ class TimelineEditor(QWidget):
         split_btn = QPushButton("✂ Rozdělit (S)")
         split_btn.setToolTip("Rozdělí vybraný klip v pozici kurzoru (klávesa S)")
         split_btn.clicked.connect(lambda: self.split_at_playhead())
-        autotime_btn = QPushButton("⏱ Auto-časování")
-        autotime_btn.setToolTip("Automaticky přerovná časy slabik "
-                                "(rovnoměrně v řádcích / do oken / na beat)")
+        autotime_btn = QPushButton("⏱ Na mřížku")
+        autotime_btn.setToolTip("Přichytí začátky bloků na hudební mřížku "
+                                "(takt/beat podle tempa) — žádné odhady.")
         autotime_btn.clicked.connect(self.auto_time_dialog)
         bar.addWidget(add_clip)
         bar.addWidget(split_btn)
@@ -607,12 +612,29 @@ class TimelineEditor(QWidget):
     def load_data(self, data: dict) -> None:
         self.data = data or {}
         self.tracks = self.data.get("tracks", []) or []
-        # základní délka akordu ~ podle tempa
-        bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
-        self.default_chord_dur = round(60.0 / bpm, 3)
+        # hudební mřížka — VŽDY dle tempa (žádné odhady z textu)
+        meta = self.data.get("meta", {}) or {}
+        self.bpm = meta.get("tempo_bpm", 120) or 120
+        self.beat_s = 60.0 / self.bpm
+        self.beats_per_measure = int(meta.get("beats_per_measure", 4) or 4)
+        self.bar_s = self.beat_s * self.beats_per_measure
+        self.count_in_s = float(meta.get("count_in_s", 0.0) or 0.0)
+        self.default_chord_dur = round(self.beat_s, 3)
+        self._update_snap_s()
         self._seed_line_starts()
         self._seed_display()
         self._relayout(full=True)
+
+    def _update_snap_s(self) -> None:
+        """Přepočítá `snap_s` z aktuálního tempa podle volby v `snap_combo`
+        (beat/takt — ne pevné sekundy, viz `load_data`)."""
+        key = self.snap_combo.currentData() if hasattr(self, "snap_combo") else None
+        beat_s = getattr(self, "beat_s", 0.5)
+        bar_s = getattr(self, "bar_s", 2.0)
+        self.snap_s = {
+            "q_beat": beat_s / 4, "h_beat": beat_s / 2,
+            "beat": beat_s, "bar": bar_s,
+        }.get(key, 0.0)
 
     # --- master "Displej" stopa (Vegas program) ---
 
@@ -900,25 +922,52 @@ class TimelineEditor(QWidget):
         self.clips.append(item)
 
     def _draw_ruler(self, max_t: float, total_h: float) -> None:
-        pen = QPen(QColor("#cccccc"))
-        thin = QPen(QColor("#eeeeee"))
+        """Pravidelná hudební osnova: silná čára + číslo na KAŽDÉM taktu, tenká
+        čára na každém beatu (dle tempa — `self.bar_s`/`self.beat_s`, viz
+        `load_data`). Žádné odhady z textu — jen tempo/takt."""
+        pen_bar = QPen(QColor("#999999")); pen_bar.setWidth(2)
+        pen_beat = QPen(QColor("#e2e2e2"))
         self.scene.addRect(0, 0, HEADER_W + max_t * self.pps + 200, RULER_H,
                            QPen(Qt.NoPen), QBrush(QColor("#f5f5f5")))
-        step = 1.0
-        if self.pps < 25:
-            step = 5.0
-        elif self.pps < 50:
-            step = 2.0
+
+        bar_s = max(0.05, getattr(self, "bar_s", 2.0))
+        beat_s = max(0.01, getattr(self, "beat_s", 0.5))
+        beats_per_bar = max(1, getattr(self, "beats_per_measure", 4))
+
+        # count-in (metronom / odklikání) — vizuálně odlišená zóna na začátku
+        count_in_s = getattr(self, "count_in_s", 0.0)
+        if count_in_s > 0:
+            cx = HEADER_W + count_in_s * self.pps
+            self.scene.addRect(HEADER_W, 0, cx - HEADER_W, total_h,
+                               QPen(Qt.NoPen), QBrush(QColor(255, 196, 84, 55)))
+            lbl = self.scene.addSimpleText("🎵 count-in (metronom)")
+            lbl.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            lbl.setPos(HEADER_W + 4, 5)
+            lbl.setBrush(QBrush(QColor("#8a5600")))
+
+        bar_px = bar_s * self.pps
+        show_beats = (beat_s * self.pps) >= 6          # ať se beaty nepřehustí
+        label_every = max(1, -(-40 // max(1, int(bar_px))))   # ceil(40/bar_px)
+
+        bar_i = 0
         t = 0.0
-        while t <= max_t + step:
+        while t <= max_t + bar_s:
             x = HEADER_W + t * self.pps
-            self.scene.addLine(x, 0, x, total_h, thin if (t % (step * 5)) else pen)
-            lbl = self.scene.addSimpleText(f"{t:g}s")
-            lbl.setPos(x + 2, 6)
-            lbl.setBrush(QBrush(QColor("#888")))
-            t += step
+            self.scene.addLine(x, 0, x, total_h, pen_bar)
+            if bar_i % label_every == 0:
+                lbl = self.scene.addSimpleText(f"Takt {bar_i + 1}  ·  {t:g}s")
+                lbl.setFont(QFont("Segoe UI", 7, QFont.Bold))
+                lbl.setPos(x + 3, RULER_H - 13)
+                lbl.setBrush(QBrush(QColor("#555")))
+            if show_beats:
+                for bi in range(1, beats_per_bar):
+                    bx = x + bi * beat_s * self.pps
+                    self.scene.addLine(bx, RULER_H * 0.35, bx, total_h, pen_beat)
+            t += bar_s
+            bar_i += 1
+
         # oddělovač hlavičky
-        self.scene.addLine(HEADER_W, 0, HEADER_W, total_h, pen)
+        self.scene.addLine(HEADER_W, 0, HEADER_W, total_h, pen_bar)
 
     def _draw_lane_bg(self, ti: int, top: float, name: str, total_w: float) -> None:
         line_y = top + 2
@@ -1159,34 +1208,28 @@ class TimelineEditor(QWidget):
         clips.append(right)
         self._relayout()
 
-    # --- automatické časování slabik ---
+    # --- přichycení na mřížku (jediný correctní způsob časování — dle tempa,
+    #     žádné odhady z délky textu/slabik) ---
 
     def auto_time_dialog(self) -> None:
         from PySide6.QtWidgets import (
             QDialog, QFormLayout, QComboBox, QDialogButtonBox, QLabel,
         )
         dlg = QDialog(self)
-        dlg.setWindowTitle("Automatické časování slabik")
+        dlg.setWindowTitle("Přichytit na mřížku")
         form = QFormLayout(dlg)
         info = QLabel(
-            "Přerovná časy slabik podle zvolené strategie — orientace dle slabik.\n"
-            "Tip: nejdřív nastav délky „oken\" (klipů Displeje), pak zvol\n"
-            "„Rozprostřít do oken\"."
+            "Přichytí začátky textových bloků na mřížku podle tempa (beat/takt).\n"
+            "Řádky/akordy pak leží přesně na hudební mřížce — žádné odhady."
         )
         info.setStyleSheet("color:#555;")
         form.addRow(info)
 
-        mode = QComboBox()
-        mode.addItem("Rovnoměrně v řádcích (dle délky slabik)", "line_even")
-        mode.addItem("Rozprostřít do oken Displeje (klipů)", "fit_clips")
-        mode.addItem("Přichytit slabiky na beat (tempo)", "beat_snap")
-        form.addRow("Strategie:", mode)
-
         sub = QComboBox()
-        for lbl, v in [("1 beat", 1), ("1/2 beatu", 2), ("1/4 beatu", 4)]:
+        for lbl, v in [("1 takt", 0.25), ("1 beat", 1), ("1/2 beatu", 2), ("1/4 beatu", 4)]:
             sub.addItem(lbl, v)
         sub.setCurrentIndex(1)
-        form.addRow("Mřížka (jen „na beat\"):", sub)
+        form.addRow("Mřížka:", sub)
 
         bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
         form.addRow(QLabel(f"Tempo: {bpm} BPM  →  1 beat = {60.0 / bpm:.3f} s"))
@@ -1198,69 +1241,20 @@ class TimelineEditor(QWidget):
 
         if not dlg.exec():
             return
-        m = mode.currentData()
-        if m == "line_even":
-            self._auto_time_line_even()
-        elif m == "fit_clips":
-            self._auto_time_fit_clips()
-        else:
-            self._auto_time_beat_snap(int(sub.currentData()))
+        self._auto_time_beat_snap(float(sub.currentData()))
         self._relayout()
 
-    @staticmethod
-    def _syllable_weight(e: dict) -> int:
-        """Váha slabiky ~ počet znaků (delší slova znějí déle). Min. 1."""
-        return max(1, len((e.get("text") or "").strip()))
-
-    def _distribute(self, evs: list[dict], t0: float, t1: float) -> None:
-        """Rozprostře slabiky evs do intervalu [t0, t1] vážené délkou textu."""
-        if not evs:
-            return
-        span = max(0.1, t1 - t0)
-        if len(evs) == 1:
-            evs[0]["time_s"] = round(t0, 3)
-            evs[0]["duration_s"] = round(span, 3)
-            return
-        weights = [self._syllable_weight(e) for e in evs]
-        total = sum(weights)
-        acc = t0
-        for e, w in zip(evs, weights):
-            d = span * w / total
-            e["time_s"] = round(acc, 3)
-            e["duration_s"] = round(d, 3)
-            acc += d
-
-    def _auto_time_line_even(self) -> None:
-        """Každý karaoke řádek: slabiky rovnoměrně (dle délky) přes jeho rozsah."""
-        for ti in self._track_order():
-            for line in self._group_lines(ti):
-                if len(line) < 2:
-                    continue
-                t0 = float(line[0]["time_s"])
-                t1 = max(float(e["time_s"]) + float(e.get("duration_s", 0.5)) for e in line)
-                self._distribute(line, t0, t1)
-
-    def _auto_time_fit_clips(self) -> None:
-        """Slabiky zdrojové stopy nacpe do časového okna každého klipu Displeje."""
-        for c in self.data.get("display_timeline", []):
-            if c.get("mode") in ("tab", "chords"):
-                continue
-            ti = c.get("source_track")
-            start, end = float(c["start_s"]), float(c["end_s"])
-            evs = [e for e in self._lyrics_of(ti)
-                   if start <= float(e["time_s"]) < end]
-            if evs:
-                self._distribute(evs, start, end)
-
-    def _auto_time_beat_snap(self, subdiv: int) -> None:
-        """Přichytí začátky slabik na mřížku beatu (tempo/subdiv) a dopočítá délky."""
+    def _auto_time_beat_snap(self, subdiv: float) -> None:
+        """Přichytí začátky textových bloků na mřížku beatu (tempo/subdiv) a
+        dopočítá délky. `subdiv` = dílků beatu na mřížkovou buňku (0.25 = celý
+        takt, 1 = beat, 2 = půl beatu…)."""
         bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
-        grid = (60.0 / bpm) / max(1, subdiv)
+        grid = (60.0 / bpm) / max(0.01, subdiv)
         for ti in self._track_order():
             evs = self._lyrics_of(ti)
             for e in evs:
                 e["time_s"] = round(round(float(e["time_s"]) / grid) * grid, 3)
-            # délka = do začátku další slabiky (poslední drží svou)
+            # délka = do začátku dalšího bloku (poslední drží svou)
             for i, e in enumerate(evs):
                 if i + 1 < len(evs):
                     nxt = float(evs[i + 1]["time_s"])
