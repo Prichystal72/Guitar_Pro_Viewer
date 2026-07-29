@@ -142,18 +142,28 @@ def ticks_to_seconds(tick: int, tempo_map: list[tuple[int, int]]) -> float:
 def expand_measure_order(measures) -> list[int]:
     """Vrátí pořadí INDEXŮ do `measures` tak, jak by se skladba SKUTEČNĚ
     přehrála — respektuje repeat značky (`isRepeatOpen`/`repeatClose`) a
-    1./2. zakončení (`repeatAlternative`, bitmaska průchodů). Bez tohohle
-    (naivní lineární `for m in measures`) je exportovaná časová osa u písní
-    s repeticemi KRATŠÍ než reálná nahrávka — vše po repetici pak "ujíždí"
-    a bicí/text skončí uprostřed písně.
+    1./2. zakončení (`repeatAlternative`, bitmaska průchodů). Bere `repeatClose`
+    vždy vážně (i bez `repeatAlternative`) — bez tohohle (naivní lineární
+    `for m in measures`) je exportovaná časová osa u písní s repeticemi
+    KRATŠÍ než reálná nahrávka a vše po repetici "ujíždí".
+
+    (Dřívější verze tohle dělala jen s `repeatAlternative` přítomným kdekoli
+    v souboru — domněnka, že holý `repeatClose` bez zakončení je v komunitních
+    GP tabech nespolehlivý. Vyvráceno na "Jasná zpráva" (Olympic): oficiální
+    text (pisnicky-akordy.cz) má explicitně 3× "Sólo: 2x" přesně na místech
+    3 repeat závorek v GP5 (žádné `repeatAlternative`), a synchronizovaný
+    LRC text řadí první zpívaný verš na 0:45 — s PLNOU expanzí vychází verš
+    na 52s, BEZ expanze na 32s. 52s sedí řádově líp (i když ne dokonale —
+    přepis v tabu není nikdy zvukově přesný na sekundu). Uživatelův odhad
+    "cca 240s" byl jen hrubý odhad, ne přesná data.)
 
     Nezohledňuje Segno/Coda/D.S./D.C./Fine skoky (`header.direction`) —
     vzácnější a podstatně složitější (skoky přes celou skladbu, ne jen
-    lokální blok). Takové soubory se přehrají zkrácené/nepřesné, ale bez
-    nekonečné smyčky (safety cap níže)."""
+    lokální blok)."""
     n = len(measures)
     if n == 0:
         return []
+
     order: list[int] = []
     repeat_start = 0
     pass_count: dict[int, int] = {}

@@ -1,18 +1,18 @@
 {
   "meta": {
     "format_version": 2,
-    "title": "Unknown",
-    "artist": "",
-    "tempo_bpm": 128,
+    "title": "Jasná zpráva",
+    "artist": "Olympic",
+    "tempo_bpm": 60,
     "ticks_per_beat": 960,
     "beats_per_measure": 4,
     "time_signature": "4/4",
     "bars_per_line": 2,
-    "count_in_bars": 0,
-    "count_in_s": 0.0,
+    "count_in_bars": 1,
+    "count_in_s": 4.0,
     "source": "web_import",
-    "duration_seconds": 176.2,
-    "total_measures": 94,
+    "duration_seconds": 252.0,
+    "total_measures": 63,
     "track_count": 1,
     "has_line_structure": true,
     "source_file": "Olympic - Jasná Zpráva.gp5",
@@ -22,7 +22,7 @@
   "tempo_map": [
     {
       "tick": 960,
-      "bpm": 128
+      "bpm": 60
     }
   ],
   "tracks": [
@@ -43,947 +43,880 @@
   ],
   "lyrics_timeline": [
     {
-      "time_s": 30.0,
-      "duration_s": 3.75,
+      "time_s": 17.0,
+      "duration_s": 4.4,
       "text": "1. Skončili jsme, jasná zpráva,",
-      "measure": 17,
+      "measure": 10,
       "line": 0,
       "track_index": 1,
       "line_start": false
     },
     {
-      "time_s": 33.75,
-      "duration_s": 3.75,
+      "time_s": 22.0,
+      "duration_s": 2.0,
       "text": "proč o Tebe zakopávám dál,",
-      "measure": 19,
+      "measure": 12,
       "line": 1,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 37.5,
-      "duration_s": 3.75,
+      "time_s": 30.0,
+      "duration_s": 2.0,
       "text": "projít bytem já abych se bál.",
-      "measure": 21,
+      "measure": 14,
       "line": 2,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 41.25,
-      "duration_s": 3.75,
+      "time_s": 34.0,
+      "duration_s": 7.0,
       "text": "2. Dík tobě se vidím zvenčí,",
-      "measure": 23,
+      "measure": 16,
       "line": 3,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 45.0,
-      "duration_s": 3.75,
+      "time_s": 42.0,
+      "duration_s": 8.0,
       "text": "připadám si starší, menší sám,",
-      "measure": 25,
+      "measure": 18,
       "line": 4,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 48.75,
-      "duration_s": 3.75,
+      "time_s": 50.0,
+      "duration_s": 5.0,
       "text": "kam se kouknu, kousek Tebe mám.",
-      "measure": 27,
+      "measure": 20,
       "line": 5,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 52.5,
-      "duration_s": 3.75,
+      "time_s": 54.0,
+      "duration_s": 7.0,
       "text": "Ref: Pěnu s vůní jablečnou,",
-      "measure": 29,
+      "measure": 22,
       "line": 6,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 56.25,
-      "duration_s": 3.75,
+      "time_s": 62.0,
+      "duration_s": 4.0,
       "text": "vyvanulý sprej,",
-      "measure": 31,
+      "measure": 24,
       "line": 7,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 60.0,
-      "duration_s": 3.75,
+      "time_s": 66.0,
+      "duration_s": 8.0,
       "text": "telefon, cos ustřihla mu šňůru.",
-      "measure": 33,
+      "measure": 26,
       "line": 8,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 63.75,
-      "duration_s": 3.75,
+      "time_s": 74.0,
+      "duration_s": 4.0,
       "text": "Knížku krásně zbytečnou,",
-      "measure": 35,
+      "measure": 28,
       "line": 9,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 67.5,
-      "duration_s": 3.75,
+      "time_s": 78.0,
+      "duration_s": 4.0,
       "text": "co má lživý děj,",
-      "measure": 37,
+      "measure": 30,
       "line": 10,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 71.25,
-      "duration_s": 3.75,
+      "time_s": 82.0,
+      "duration_s": 6.5,
       "text": "píše se v ní, jak se lítá vzhůru,",
-      "measure": 39,
+      "measure": 32,
       "line": 11,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 75.0,
-      "duration_s": 3.75,
+      "time_s": 88.0,
+      "duration_s": 4.0,
       "text": "lítá vzhůru,",
-      "measure": 41,
+      "measure": 34,
       "line": 12,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 78.75,
-      "duration_s": 3.75,
+      "time_s": 92.0,
+      "duration_s": 3.25,
       "text": "ve dvou vzhůru.",
-      "measure": 43,
+      "measure": 36,
       "line": 13,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 82.5,
-      "duration_s": 3.75,
+      "time_s": 95.0,
+      "duration_s": 6.25,
       "text": "3. Odešla's mi před úsvitem,",
-      "measure": 45,
+      "measure": 38,
       "line": 14,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 86.25,
-      "duration_s": 3.75,
+      "time_s": 102.0,
+      "duration_s": 8.0,
       "text": "mám snad bloudit vlastním bytem sám,",
-      "measure": 47,
+      "measure": 40,
       "line": 15,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 90.0,
-      "duration_s": 3.75,
+      "time_s": 110.0,
+      "duration_s": 8.0,
       "text": "kam se kouknu, kousek Tebe mám. Óooo",
-      "measure": 49,
+      "measure": 42,
       "line": 16,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 108.75,
-      "duration_s": 3.75,
-      "text": "Ref: Pěnu s vůní jablečnou,",
-      "measure": 59,
+      "time_s": 122.0,
+      "duration_s": 8.0,
+      "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
+      "measure": 46,
       "line": 17,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 112.5,
-      "duration_s": 3.75,
-      "text": "vyvanulý sprej,",
-      "measure": 61,
+      "time_s": 136.0,
+      "duration_s": 8.0,
+      "text": "telefon, cos ustřihla mu šňůru.",
+      "measure": 48,
       "line": 18,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 116.25,
-      "duration_s": 3.75,
-      "text": "telefon, cos ustřihla mu šňůru.",
-      "measure": 63,
+      "time_s": 144.0,
+      "duration_s": 8.0,
+      "text": "Knížku krásně zbytečnou, co má lživý děj,",
+      "measure": 50,
       "line": 19,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 120.0,
-      "duration_s": 3.75,
-      "text": "Knížku krásně zbytečnou,",
-      "measure": 65,
+      "time_s": 152.0,
+      "duration_s": 6.5,
+      "text": "píše se v ní, jak se lítá vzhůru,",
+      "measure": 52,
       "line": 20,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 123.75,
-      "duration_s": 3.75,
-      "text": "co má lživý děj,",
-      "measure": 67,
+      "time_s": 158.0,
+      "duration_s": 7.25,
+      "text": "lítá vzhůru, ve dvou vzhůru.",
+      "measure": 54,
       "line": 21,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 127.5,
-      "duration_s": 3.75,
-      "text": "píše se v ní, jak se lítá vzhůru,",
-      "measure": 69,
+      "time_s": 165.0,
+      "duration_s": 6.25,
+      "text": "4. Skončili jsme jasná zpráva,",
+      "measure": 56,
       "line": 22,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 131.25,
-      "duration_s": 3.75,
-      "text": "lítá vzhůru, ve dvou vzhůru.",
-      "measure": 71,
+      "time_s": 172.0,
+      "duration_s": 2.0,
+      "text": "není komu z okna mávat víc,",
+      "measure": 58,
       "line": 23,
       "track_index": 1,
       "line_start": true
     },
     {
-      "time_s": 135.0,
-      "duration_s": 3.75,
-      "text": "4. Skončili jsme jasná zpráva,",
-      "measure": 73,
-      "line": 24,
-      "track_index": 1,
-      "line_start": true
-    },
-    {
-      "time_s": 138.75,
-      "duration_s": 3.75,
-      "text": "není komu z okna mávat víc,",
-      "measure": 75,
-      "line": 25,
-      "track_index": 1,
-      "line_start": true
-    },
-    {
-      "time_s": 142.5,
-      "duration_s": 3.75,
+      "time_s": 180.0,
+      "duration_s": 2.0,
       "text": "jasná zpráva, rub, co nemá líc. Óooo",
-      "measure": 77,
-      "line": 26,
+      "measure": 60,
+      "line": 24,
       "track_index": 1,
       "line_start": true
     }
   ],
   "chords_timeline": [
     {
-      "time_s": 0.0,
+      "time_s": 8.0,
       "chord": "G",
-      "measure": 1,
+      "measure": 2,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 3.75,
+      "time_s": 8.0,
       "chord": "Gmaj7",
+      "measure": 2,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 9.0,
+      "chord": "Emi",
       "measure": 3,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 5.625,
-      "chord": "Emi",
+      "time_s": 10.0,
+      "chord": "C",
+      "measure": 3,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.0,
+      "chord": "D",
       "measure": 4,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 7.5,
-      "chord": "C",
-      "measure": 5,
+      "time_s": 16.0,
+      "chord": "Ami",
+      "measure": 4,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 9.375,
+      "time_s": 17.0,
+      "chord": "C",
+      "measure": 5,
+      "line": 0,
+      "track_index": 1
+    },
+    {
+      "time_s": 17.0,
+      "chord": "G",
+      "measure": 5,
+      "line": 0,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.0,
+      "chord": "G",
+      "measure": 10,
+      "line": 0,
+      "track_index": 1
+    },
+    {
+      "time_s": 20.0,
+      "chord": "Gmaj7",
+      "measure": 10,
+      "line": 0,
+      "track_index": 1
+    },
+    {
+      "time_s": 22.0,
+      "chord": "Emi",
+      "measure": 12,
+      "line": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 22.0,
+      "chord": "C",
+      "measure": 12,
+      "line": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 23.0,
       "chord": "D",
+      "measure": 12,
+      "line": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 25.0,
+      "chord": "Gmaj7",
       "measure": 6,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 11.25,
+      "time_s": 27.0,
+      "chord": "Emi",
+      "measure": 7,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 30.0,
       "chord": "Ami",
-      "measure": 7,
-      "line": null,
+      "measure": 14,
+      "line": 2,
       "track_index": 1
     },
     {
-      "time_s": 12.188,
+      "time_s": 30.0,
       "chord": "C",
-      "measure": 7,
-      "line": null,
+      "measure": 14,
+      "line": 2,
       "track_index": 1
     },
     {
-      "time_s": 13.594,
+      "time_s": 31.0,
       "chord": "G",
+      "measure": 14,
+      "line": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 32.0,
+      "chord": "C",
       "measure": 8,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 18.75,
-      "chord": "Gmaj7",
-      "measure": 11,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 20.625,
-      "chord": "Emi",
-      "measure": 12,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 22.5,
-      "chord": "C",
-      "measure": 13,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 24.375,
+      "time_s": 32.0,
       "chord": "D",
-      "measure": 14,
+      "measure": 8,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 26.25,
+      "time_s": 33.0,
       "chord": "Ami",
-      "measure": 15,
+      "measure": 8,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 27.188,
+      "time_s": 33.0,
       "chord": "C",
-      "measure": 15,
+      "measure": 9,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 28.594,
+      "time_s": 34.0,
+      "chord": "G",
+      "measure": 9,
+      "line": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 35.0,
       "chord": "G",
       "measure": 16,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 30.469,
-      "chord": "G",
-      "measure": 17,
-      "line": 0,
-      "track_index": 1
-    },
-    {
-      "time_s": 32.812,
-      "chord": "Gmaj7",
-      "measure": 17,
-      "line": 0,
-      "track_index": 1
-    },
-    {
-      "time_s": 33.75,
-      "chord": "Emi",
-      "measure": 19,
-      "line": 1,
-      "track_index": 1
-    },
-    {
-      "time_s": 35.625,
-      "chord": "C",
-      "measure": 19,
-      "line": 1,
-      "track_index": 1
-    },
-    {
-      "time_s": 36.562,
-      "chord": "D",
-      "measure": 19,
-      "line": 1,
-      "track_index": 1
-    },
-    {
-      "time_s": 37.5,
-      "chord": "Ami",
-      "measure": 21,
-      "line": 2,
-      "track_index": 1
-    },
-    {
-      "time_s": 38.438,
-      "chord": "C",
-      "measure": 21,
-      "line": 2,
-      "track_index": 1
-    },
-    {
-      "time_s": 40.312,
-      "chord": "G",
-      "measure": 21,
-      "line": 2,
-      "track_index": 1
-    },
-    {
-      "time_s": 41.719,
-      "chord": "G",
-      "measure": 23,
       "line": 3,
       "track_index": 1
     },
     {
-      "time_s": 44.062,
+      "time_s": 40.0,
       "chord": "Gmaj7",
-      "measure": 23,
+      "measure": 16,
       "line": 3,
       "track_index": 1
     },
     {
-      "time_s": 45.0,
+      "time_s": 42.0,
       "chord": "Emi",
-      "measure": 25,
+      "measure": 18,
       "line": 4,
       "track_index": 1
     },
     {
-      "time_s": 46.406,
+      "time_s": 44.0,
       "chord": "C",
-      "measure": 25,
+      "measure": 18,
       "line": 4,
       "track_index": 1
     },
     {
-      "time_s": 47.812,
+      "time_s": 48.0,
       "chord": "D",
-      "measure": 25,
+      "measure": 18,
       "line": 4,
       "track_index": 1
     },
     {
-      "time_s": 48.75,
+      "time_s": 50.0,
       "chord": "Ami",
-      "measure": 27,
+      "measure": 20,
       "line": 5,
       "track_index": 1
     },
     {
-      "time_s": 50.625,
+      "time_s": 52.0,
       "chord": "C",
-      "measure": 27,
+      "measure": 20,
       "line": 5,
       "track_index": 1
     },
     {
-      "time_s": 51.562,
+      "time_s": 53.0,
       "chord": "G",
-      "measure": 27,
+      "measure": 20,
       "line": 5,
       "track_index": 1
     },
     {
-      "time_s": 52.969,
+      "time_s": 55.0,
       "chord": "Emi",
-      "measure": 29,
+      "measure": 22,
       "line": 6,
-      "track_index": 1
-    },
-    {
-      "time_s": 55.312,
-      "chord": "Hmi",
-      "measure": 29,
-      "line": 6,
-      "track_index": 1
-    },
-    {
-      "time_s": 56.25,
-      "chord": "Emi",
-      "measure": 31,
-      "line": 7,
-      "track_index": 1
-    },
-    {
-      "time_s": 58.125,
-      "chord": "Hmi",
-      "measure": 31,
-      "line": 7,
       "track_index": 1
     },
     {
       "time_s": 60.0,
+      "chord": "Hmi",
+      "measure": 22,
+      "line": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 62.0,
       "chord": "Emi",
-      "measure": 33,
+      "measure": 24,
+      "line": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 64.0,
+      "chord": "Hmi",
+      "measure": 24,
+      "line": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 66.0,
+      "chord": "Emi",
+      "measure": 26,
       "line": 8,
       "track_index": 1
     },
     {
-      "time_s": 61.406,
+      "time_s": 68.0,
       "chord": "G",
-      "measure": 33,
+      "measure": 26,
       "line": 8,
       "track_index": 1
     },
     {
-      "time_s": 62.812,
+      "time_s": 72.0,
       "chord": "D",
-      "measure": 33,
+      "measure": 26,
       "line": 8,
       "track_index": 1
     },
     {
-      "time_s": 63.75,
+      "time_s": 74.0,
       "chord": "Emi",
-      "measure": 35,
+      "measure": 28,
       "line": 9,
       "track_index": 1
     },
     {
-      "time_s": 66.094,
+      "time_s": 76.0,
       "chord": "Hmi",
-      "measure": 35,
+      "measure": 28,
       "line": 9,
       "track_index": 1
     },
     {
-      "time_s": 67.5,
+      "time_s": 78.0,
       "chord": "Emi",
-      "measure": 37,
+      "measure": 30,
       "line": 10,
       "track_index": 1
     },
     {
-      "time_s": 70.312,
+      "time_s": 80.0,
       "chord": "Hmi",
-      "measure": 37,
+      "measure": 30,
       "line": 10,
       "track_index": 1
     },
     {
-      "time_s": 71.25,
+      "time_s": 82.0,
       "chord": "Emi",
-      "measure": 39,
+      "measure": 32,
       "line": 11,
       "track_index": 1
     },
     {
-      "time_s": 73.125,
+      "time_s": 85.0,
       "chord": "G",
-      "measure": 39,
+      "measure": 32,
       "line": 11,
       "track_index": 1
     },
     {
-      "time_s": 74.531,
+      "time_s": 87.0,
       "chord": "D",
-      "measure": 39,
+      "measure": 32,
       "line": 11,
-      "track_index": 1
-    },
-    {
-      "time_s": 76.875,
-      "chord": "Ami",
-      "measure": 41,
-      "line": 12,
-      "track_index": 1
-    },
-    {
-      "time_s": 78.75,
-      "chord": "D",
-      "measure": 43,
-      "line": 13,
-      "track_index": 1
-    },
-    {
-      "time_s": 82.969,
-      "chord": "G",
-      "measure": 45,
-      "line": 14,
-      "track_index": 1
-    },
-    {
-      "time_s": 85.312,
-      "chord": "Gmaj7",
-      "measure": 45,
-      "line": 14,
-      "track_index": 1
-    },
-    {
-      "time_s": 86.25,
-      "chord": "Emi",
-      "measure": 47,
-      "line": 15,
-      "track_index": 1
-    },
-    {
-      "time_s": 88.125,
-      "chord": "C",
-      "measure": 47,
-      "line": 15,
-      "track_index": 1
-    },
-    {
-      "time_s": 89.062,
-      "chord": "D",
-      "measure": 47,
-      "line": 15,
       "track_index": 1
     },
     {
       "time_s": 90.0,
       "chord": "Ami",
-      "measure": 49,
-      "line": 16,
+      "measure": 34,
+      "line": 12,
       "track_index": 1
     },
     {
-      "time_s": 91.406,
-      "chord": "C",
-      "measure": 49,
-      "line": 16,
-      "track_index": 1
-    },
-    {
-      "time_s": 92.344,
-      "chord": "G",
-      "measure": 49,
-      "line": 16,
-      "track_index": 1
-    },
-    {
-      "time_s": 97.5,
-      "chord": "Gmaj7",
-      "measure": 53,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 99.375,
-      "chord": "Emi",
-      "measure": 54,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 101.25,
-      "chord": "C",
-      "measure": 55,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 103.125,
+      "time_s": 92.0,
       "chord": "D",
-      "measure": 56,
-      "line": null,
+      "measure": 36,
+      "line": 13,
       "track_index": 1
     },
     {
-      "time_s": 105.0,
-      "chord": "Ami",
-      "measure": 57,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 105.938,
-      "chord": "C",
-      "measure": 57,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 107.344,
+      "time_s": 96.0,
       "chord": "G",
-      "measure": 58,
-      "line": null,
+      "measure": 38,
+      "line": 14,
       "track_index": 1
     },
     {
-      "time_s": 109.219,
+      "time_s": 100.0,
+      "chord": "Gmaj7",
+      "measure": 38,
+      "line": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 102.0,
       "chord": "Emi",
-      "measure": 59,
+      "measure": 40,
+      "line": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 106.0,
+      "chord": "C",
+      "measure": 40,
+      "line": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 108.0,
+      "chord": "D",
+      "measure": 40,
+      "line": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 110.0,
+      "chord": "Ami",
+      "measure": 42,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 112.0,
+      "chord": "C",
+      "measure": 42,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 114.0,
+      "chord": "G",
+      "measure": 42,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 123.0,
+      "chord": "Emi",
+      "measure": 46,
       "line": 17,
       "track_index": 1
     },
     {
-      "time_s": 111.562,
+      "time_s": 126.0,
       "chord": "Hmi",
-      "measure": 59,
+      "measure": 46,
       "line": 17,
       "track_index": 1
     },
     {
-      "time_s": 112.5,
+      "time_s": 127.0,
       "chord": "Emi",
-      "measure": 61,
+      "measure": 46,
+      "line": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 128.0,
+      "chord": "Hmi",
+      "measure": 46,
+      "line": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 136.0,
+      "chord": "Emi",
+      "measure": 48,
       "line": 18,
       "track_index": 1
     },
     {
-      "time_s": 114.375,
-      "chord": "Hmi",
-      "measure": 61,
+      "time_s": 138.0,
+      "chord": "G",
+      "measure": 48,
       "line": 18,
       "track_index": 1
     },
     {
-      "time_s": 116.25,
-      "chord": "Emi",
-      "measure": 63,
-      "line": 19,
-      "track_index": 1
-    },
-    {
-      "time_s": 117.656,
-      "chord": "G",
-      "measure": 63,
-      "line": 19,
-      "track_index": 1
-    },
-    {
-      "time_s": 119.062,
+      "time_s": 142.0,
       "chord": "D",
-      "measure": 63,
+      "measure": 48,
+      "line": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 144.0,
+      "chord": "Emi",
+      "measure": 50,
       "line": 19,
       "track_index": 1
     },
     {
-      "time_s": 120.0,
-      "chord": "Emi",
-      "measure": 65,
-      "line": 20,
-      "track_index": 1
-    },
-    {
-      "time_s": 122.344,
+      "time_s": 146.0,
       "chord": "Hmi",
-      "measure": 65,
-      "line": 20,
+      "measure": 50,
+      "line": 19,
       "track_index": 1
     },
     {
-      "time_s": 123.75,
+      "time_s": 146.0,
       "chord": "Emi",
-      "measure": 67,
-      "line": 21,
-      "track_index": 1
-    },
-    {
-      "time_s": 126.562,
-      "chord": "Hmi",
-      "measure": 67,
-      "line": 21,
-      "track_index": 1
-    },
-    {
-      "time_s": 127.5,
-      "chord": "Emi",
-      "measure": 69,
-      "line": 22,
-      "track_index": 1
-    },
-    {
-      "time_s": 129.375,
-      "chord": "G",
-      "measure": 69,
-      "line": 22,
-      "track_index": 1
-    },
-    {
-      "time_s": 130.781,
-      "chord": "D",
-      "measure": 69,
-      "line": 22,
-      "track_index": 1
-    },
-    {
-      "time_s": 131.719,
-      "chord": "Ami",
-      "measure": 71,
-      "line": 23,
-      "track_index": 1
-    },
-    {
-      "time_s": 134.062,
-      "chord": "D",
-      "measure": 71,
-      "line": 23,
-      "track_index": 1
-    },
-    {
-      "time_s": 135.469,
-      "chord": "G",
-      "measure": 73,
-      "line": 24,
-      "track_index": 1
-    },
-    {
-      "time_s": 137.812,
-      "chord": "Gmaj7",
-      "measure": 73,
-      "line": 24,
-      "track_index": 1
-    },
-    {
-      "time_s": 138.75,
-      "chord": "Emi",
-      "measure": 75,
-      "line": 25,
-      "track_index": 1
-    },
-    {
-      "time_s": 140.625,
-      "chord": "C",
-      "measure": 75,
-      "line": 25,
-      "track_index": 1
-    },
-    {
-      "time_s": 141.562,
-      "chord": "D",
-      "measure": 75,
-      "line": 25,
-      "track_index": 1
-    },
-    {
-      "time_s": 142.5,
-      "chord": "Ami",
-      "measure": 77,
-      "line": 26,
-      "track_index": 1
-    },
-    {
-      "time_s": 143.438,
-      "chord": "C",
-      "measure": 77,
-      "line": 26,
-      "track_index": 1
-    },
-    {
-      "time_s": 144.844,
-      "chord": "G",
-      "measure": 77,
-      "line": 26,
+      "measure": 50,
+      "line": 19,
       "track_index": 1
     },
     {
       "time_s": 150.0,
-      "chord": "Gmaj7",
-      "measure": 81,
-      "line": null,
+      "chord": "Hmi",
+      "measure": 50,
+      "line": 19,
       "track_index": 1
     },
     {
-      "time_s": 151.875,
+      "time_s": 152.0,
       "chord": "Emi",
-      "measure": 82,
-      "line": null,
+      "measure": 52,
+      "line": 20,
       "track_index": 1
     },
     {
-      "time_s": 153.75,
-      "chord": "C",
-      "measure": 83,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 155.625,
-      "chord": "D",
-      "measure": 84,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 157.5,
-      "chord": "Ami",
-      "measure": 85,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 158.438,
-      "chord": "C",
-      "measure": 85,
-      "line": null,
-      "track_index": 1
-    },
-    {
-      "time_s": 159.844,
+      "time_s": 155.0,
       "chord": "G",
-      "measure": 86,
-      "line": null,
+      "measure": 52,
+      "line": 20,
       "track_index": 1
     },
     {
-      "time_s": 165.0,
+      "time_s": 157.0,
+      "chord": "D",
+      "measure": 52,
+      "line": 20,
+      "track_index": 1
+    },
+    {
+      "time_s": 159.0,
+      "chord": "Ami",
+      "measure": 54,
+      "line": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 163.0,
+      "chord": "D",
+      "measure": 54,
+      "line": 21,
+      "track_index": 1
+    },
+    {
+      "time_s": 166.0,
+      "chord": "G",
+      "measure": 56,
+      "line": 22,
+      "track_index": 1
+    },
+    {
+      "time_s": 170.0,
       "chord": "Gmaj7",
-      "measure": 89,
-      "line": null,
+      "measure": 56,
+      "line": 22,
       "track_index": 1
     },
     {
-      "time_s": 166.875,
+      "time_s": 172.0,
       "chord": "Emi",
-      "measure": 90,
-      "line": null,
+      "measure": 58,
+      "line": 23,
       "track_index": 1
     },
     {
-      "time_s": 168.75,
+      "time_s": 172.0,
       "chord": "C",
-      "measure": 91,
-      "line": null,
+      "measure": 58,
+      "line": 23,
       "track_index": 1
     },
     {
-      "time_s": 170.625,
+      "time_s": 173.0,
       "chord": "D",
-      "measure": 92,
+      "measure": 58,
+      "line": 23,
+      "track_index": 1
+    },
+    {
+      "time_s": 176.0,
+      "chord": "Gmaj7",
+      "measure": 44,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 172.5,
-      "chord": "Ami",
-      "measure": 93,
+      "time_s": 177.0,
+      "chord": "Emi",
+      "measure": 44,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 173.438,
+      "time_s": 177.0,
       "chord": "C",
-      "measure": 93,
+      "measure": 44,
       "line": null,
       "track_index": 1
     },
     {
-      "time_s": 174.844,
+      "time_s": 178.0,
+      "chord": "D",
+      "measure": 45,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 178.0,
+      "chord": "Ami",
+      "measure": 45,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 179.0,
+      "chord": "C",
+      "measure": 45,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 179.0,
       "chord": "G",
-      "measure": 94,
+      "measure": 45,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 180.0,
+      "chord": "Ami",
+      "measure": 60,
+      "line": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 180.0,
+      "chord": "C",
+      "measure": 60,
+      "line": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 181.0,
+      "chord": "G",
+      "measure": 60,
+      "line": 24,
+      "track_index": 1
+    },
+    {
+      "time_s": 249.0,
+      "chord": "Gmaj7",
+      "measure": 62,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 250.0,
+      "chord": "Emi",
+      "measure": 62,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 251.0,
+      "chord": "C",
+      "measure": 62,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 252.0,
+      "chord": "D",
+      "measure": 63,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 253.0,
+      "chord": "Ami",
+      "measure": 63,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 254.0,
+      "chord": "C",
+      "measure": 63,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 255.0,
+      "chord": "G",
+      "measure": 63,
       "line": null,
       "track_index": 1
     }
@@ -991,17 +924,18 @@
   "karaoke_lines": [
     {
       "line": 0,
-      "start_s": 30.0,
-      "end_s": 33.75,
+      "start_s": 17.0,
+      "end_s": 21.4,
       "chords": [
+        "C",
         "G",
         "Gmaj7"
       ],
       "text": "1. Skončili jsme, jasná zpráva,",
       "words": [
         {
-          "time_s": 30.0,
-          "duration_s": 3.75,
+          "time_s": 17.0,
+          "duration_s": 4.4,
           "text": "1. Skončili jsme, jasná zpráva,",
           "line": 0,
           "track_index": 1
@@ -1012,8 +946,8 @@
     },
     {
       "line": 1,
-      "start_s": 33.75,
-      "end_s": 37.5,
+      "start_s": 22.0,
+      "end_s": 24.0,
       "chords": [
         "Emi",
         "C",
@@ -1022,8 +956,8 @@
       "text": "proč o Tebe zakopávám dál,",
       "words": [
         {
-          "time_s": 33.75,
-          "duration_s": 3.75,
+          "time_s": 22.0,
+          "duration_s": 2.0,
           "text": "proč o Tebe zakopávám dál,",
           "line": 1,
           "track_index": 1
@@ -1033,8 +967,8 @@
     },
     {
       "line": 2,
-      "start_s": 37.5,
-      "end_s": 41.25,
+      "start_s": 30.0,
+      "end_s": 32.0,
       "chords": [
         "Ami",
         "C",
@@ -1043,8 +977,8 @@
       "text": "projít bytem já abych se bál.",
       "words": [
         {
-          "time_s": 37.5,
-          "duration_s": 3.75,
+          "time_s": 30.0,
+          "duration_s": 2.0,
           "text": "projít bytem já abych se bál.",
           "line": 2,
           "track_index": 1
@@ -1054,8 +988,8 @@
     },
     {
       "line": 3,
-      "start_s": 41.25,
-      "end_s": 45.0,
+      "start_s": 34.0,
+      "end_s": 41.0,
       "chords": [
         "G",
         "Gmaj7"
@@ -1063,8 +997,8 @@
       "text": "2. Dík tobě se vidím zvenčí,",
       "words": [
         {
-          "time_s": 41.25,
-          "duration_s": 3.75,
+          "time_s": 34.0,
+          "duration_s": 7.0,
           "text": "2. Dík tobě se vidím zvenčí,",
           "line": 3,
           "track_index": 1
@@ -1075,8 +1009,8 @@
     },
     {
       "line": 4,
-      "start_s": 45.0,
-      "end_s": 48.75,
+      "start_s": 42.0,
+      "end_s": 50.0,
       "chords": [
         "Emi",
         "C",
@@ -1085,8 +1019,8 @@
       "text": "připadám si starší, menší sám,",
       "words": [
         {
-          "time_s": 45.0,
-          "duration_s": 3.75,
+          "time_s": 42.0,
+          "duration_s": 8.0,
           "text": "připadám si starší, menší sám,",
           "line": 4,
           "track_index": 1
@@ -1096,8 +1030,8 @@
     },
     {
       "line": 5,
-      "start_s": 48.75,
-      "end_s": 52.5,
+      "start_s": 50.0,
+      "end_s": 55.0,
       "chords": [
         "Ami",
         "C",
@@ -1106,8 +1040,8 @@
       "text": "kam se kouknu, kousek Tebe mám.",
       "words": [
         {
-          "time_s": 48.75,
-          "duration_s": 3.75,
+          "time_s": 50.0,
+          "duration_s": 5.0,
           "text": "kam se kouknu, kousek Tebe mám.",
           "line": 5,
           "track_index": 1
@@ -1117,8 +1051,8 @@
     },
     {
       "line": 6,
-      "start_s": 52.5,
-      "end_s": 56.25,
+      "start_s": 54.0,
+      "end_s": 61.0,
       "chords": [
         "Emi",
         "Hmi"
@@ -1126,8 +1060,8 @@
       "text": "Ref: Pěnu s vůní jablečnou,",
       "words": [
         {
-          "time_s": 52.5,
-          "duration_s": 3.75,
+          "time_s": 54.0,
+          "duration_s": 7.0,
           "text": "Ref: Pěnu s vůní jablečnou,",
           "line": 6,
           "track_index": 1
@@ -1138,8 +1072,8 @@
     },
     {
       "line": 7,
-      "start_s": 56.25,
-      "end_s": 60.0,
+      "start_s": 62.0,
+      "end_s": 66.0,
       "chords": [
         "Emi",
         "Hmi"
@@ -1147,8 +1081,8 @@
       "text": "vyvanulý sprej,",
       "words": [
         {
-          "time_s": 56.25,
-          "duration_s": 3.75,
+          "time_s": 62.0,
+          "duration_s": 4.0,
           "text": "vyvanulý sprej,",
           "line": 7,
           "track_index": 1
@@ -1158,8 +1092,8 @@
     },
     {
       "line": 8,
-      "start_s": 60.0,
-      "end_s": 63.75,
+      "start_s": 66.0,
+      "end_s": 74.0,
       "chords": [
         "Emi",
         "G",
@@ -1168,8 +1102,8 @@
       "text": "telefon, cos ustřihla mu šňůru.",
       "words": [
         {
-          "time_s": 60.0,
-          "duration_s": 3.75,
+          "time_s": 66.0,
+          "duration_s": 8.0,
           "text": "telefon, cos ustřihla mu šňůru.",
           "line": 8,
           "track_index": 1
@@ -1179,8 +1113,8 @@
     },
     {
       "line": 9,
-      "start_s": 63.75,
-      "end_s": 67.5,
+      "start_s": 74.0,
+      "end_s": 78.0,
       "chords": [
         "Emi",
         "Hmi"
@@ -1188,8 +1122,8 @@
       "text": "Knížku krásně zbytečnou,",
       "words": [
         {
-          "time_s": 63.75,
-          "duration_s": 3.75,
+          "time_s": 74.0,
+          "duration_s": 4.0,
           "text": "Knížku krásně zbytečnou,",
           "line": 9,
           "track_index": 1
@@ -1199,8 +1133,8 @@
     },
     {
       "line": 10,
-      "start_s": 67.5,
-      "end_s": 71.25,
+      "start_s": 78.0,
+      "end_s": 82.0,
       "chords": [
         "Emi",
         "Hmi"
@@ -1208,8 +1142,8 @@
       "text": "co má lživý děj,",
       "words": [
         {
-          "time_s": 67.5,
-          "duration_s": 3.75,
+          "time_s": 78.0,
+          "duration_s": 4.0,
           "text": "co má lživý děj,",
           "line": 10,
           "track_index": 1
@@ -1219,8 +1153,8 @@
     },
     {
       "line": 11,
-      "start_s": 71.25,
-      "end_s": 75.0,
+      "start_s": 82.0,
+      "end_s": 88.5,
       "chords": [
         "Emi",
         "G",
@@ -1229,8 +1163,8 @@
       "text": "píše se v ní, jak se lítá vzhůru,",
       "words": [
         {
-          "time_s": 71.25,
-          "duration_s": 3.75,
+          "time_s": 82.0,
+          "duration_s": 6.5,
           "text": "píše se v ní, jak se lítá vzhůru,",
           "line": 11,
           "track_index": 1
@@ -1240,16 +1174,16 @@
     },
     {
       "line": 12,
-      "start_s": 75.0,
-      "end_s": 78.75,
+      "start_s": 88.0,
+      "end_s": 92.0,
       "chords": [
         "Ami"
       ],
       "text": "lítá vzhůru,",
       "words": [
         {
-          "time_s": 75.0,
-          "duration_s": 3.75,
+          "time_s": 88.0,
+          "duration_s": 4.0,
           "text": "lítá vzhůru,",
           "line": 12,
           "track_index": 1
@@ -1259,16 +1193,16 @@
     },
     {
       "line": 13,
-      "start_s": 78.75,
-      "end_s": 82.5,
+      "start_s": 92.0,
+      "end_s": 95.25,
       "chords": [
         "D"
       ],
       "text": "ve dvou vzhůru.",
       "words": [
         {
-          "time_s": 78.75,
-          "duration_s": 3.75,
+          "time_s": 92.0,
+          "duration_s": 3.25,
           "text": "ve dvou vzhůru.",
           "line": 13,
           "track_index": 1
@@ -1278,8 +1212,8 @@
     },
     {
       "line": 14,
-      "start_s": 82.5,
-      "end_s": 86.25,
+      "start_s": 95.0,
+      "end_s": 101.25,
       "chords": [
         "G",
         "Gmaj7"
@@ -1287,8 +1221,8 @@
       "text": "3. Odešla's mi před úsvitem,",
       "words": [
         {
-          "time_s": 82.5,
-          "duration_s": 3.75,
+          "time_s": 95.0,
+          "duration_s": 6.25,
           "text": "3. Odešla's mi před úsvitem,",
           "line": 14,
           "track_index": 1
@@ -1299,8 +1233,8 @@
     },
     {
       "line": 15,
-      "start_s": 86.25,
-      "end_s": 90.0,
+      "start_s": 102.0,
+      "end_s": 110.0,
       "chords": [
         "Emi",
         "C",
@@ -1309,8 +1243,8 @@
       "text": "mám snad bloudit vlastním bytem sám,",
       "words": [
         {
-          "time_s": 86.25,
-          "duration_s": 3.75,
+          "time_s": 102.0,
+          "duration_s": 8.0,
           "text": "mám snad bloudit vlastním bytem sám,",
           "line": 15,
           "track_index": 1
@@ -1320,8 +1254,8 @@
     },
     {
       "line": 16,
-      "start_s": 90.0,
-      "end_s": 93.75,
+      "start_s": 110.0,
+      "end_s": 118.0,
       "chords": [
         "Ami",
         "C",
@@ -1330,8 +1264,8 @@
       "text": "kam se kouknu, kousek Tebe mám. Óooo",
       "words": [
         {
-          "time_s": 90.0,
-          "duration_s": 3.75,
+          "time_s": 110.0,
+          "duration_s": 8.0,
           "text": "kam se kouknu, kousek Tebe mám. Óooo",
           "line": 16,
           "track_index": 1
@@ -1341,18 +1275,18 @@
     },
     {
       "line": 17,
-      "start_s": 108.75,
-      "end_s": 112.5,
+      "start_s": 122.0,
+      "end_s": 130.0,
       "chords": [
         "Emi",
         "Hmi"
       ],
-      "text": "Ref: Pěnu s vůní jablečnou,",
+      "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
       "words": [
         {
-          "time_s": 108.75,
-          "duration_s": 3.75,
-          "text": "Ref: Pěnu s vůní jablečnou,",
+          "time_s": 122.0,
+          "duration_s": 8.0,
+          "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
           "line": 17,
           "track_index": 1
         }
@@ -1362,28 +1296,8 @@
     },
     {
       "line": 18,
-      "start_s": 112.5,
-      "end_s": 116.25,
-      "chords": [
-        "Emi",
-        "Hmi"
-      ],
-      "text": "vyvanulý sprej,",
-      "words": [
-        {
-          "time_s": 112.5,
-          "duration_s": 3.75,
-          "text": "vyvanulý sprej,",
-          "line": 18,
-          "track_index": 1
-        }
-      ],
-      "track_index": 1
-    },
-    {
-      "line": 19,
-      "start_s": 116.25,
-      "end_s": 120.0,
+      "start_s": 136.0,
+      "end_s": 144.0,
       "chords": [
         "Emi",
         "G",
@@ -1392,9 +1306,29 @@
       "text": "telefon, cos ustřihla mu šňůru.",
       "words": [
         {
-          "time_s": 116.25,
-          "duration_s": 3.75,
+          "time_s": 136.0,
+          "duration_s": 8.0,
           "text": "telefon, cos ustřihla mu šňůru.",
+          "line": 18,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 19,
+      "start_s": 144.0,
+      "end_s": 152.0,
+      "chords": [
+        "Emi",
+        "Hmi"
+      ],
+      "text": "Knížku krásně zbytečnou, co má lživý děj,",
+      "words": [
+        {
+          "time_s": 144.0,
+          "duration_s": 8.0,
+          "text": "Knížku krásně zbytečnou, co má lživý děj,",
           "line": 19,
           "track_index": 1
         }
@@ -1403,48 +1337,8 @@
     },
     {
       "line": 20,
-      "start_s": 120.0,
-      "end_s": 123.75,
-      "chords": [
-        "Emi",
-        "Hmi"
-      ],
-      "text": "Knížku krásně zbytečnou,",
-      "words": [
-        {
-          "time_s": 120.0,
-          "duration_s": 3.75,
-          "text": "Knížku krásně zbytečnou,",
-          "line": 20,
-          "track_index": 1
-        }
-      ],
-      "track_index": 1
-    },
-    {
-      "line": 21,
-      "start_s": 123.75,
-      "end_s": 127.5,
-      "chords": [
-        "Emi",
-        "Hmi"
-      ],
-      "text": "co má lživý děj,",
-      "words": [
-        {
-          "time_s": 123.75,
-          "duration_s": 3.75,
-          "text": "co má lživý děj,",
-          "line": 21,
-          "track_index": 1
-        }
-      ],
-      "track_index": 1
-    },
-    {
-      "line": 22,
-      "start_s": 127.5,
-      "end_s": 131.25,
+      "start_s": 152.0,
+      "end_s": 158.5,
       "chords": [
         "Emi",
         "G",
@@ -1453,19 +1347,19 @@
       "text": "píše se v ní, jak se lítá vzhůru,",
       "words": [
         {
-          "time_s": 127.5,
-          "duration_s": 3.75,
+          "time_s": 152.0,
+          "duration_s": 6.5,
           "text": "píše se v ní, jak se lítá vzhůru,",
-          "line": 22,
+          "line": 20,
           "track_index": 1
         }
       ],
       "track_index": 1
     },
     {
-      "line": 23,
-      "start_s": 131.25,
-      "end_s": 135.0,
+      "line": 21,
+      "start_s": 158.0,
+      "end_s": 165.25,
       "chords": [
         "Ami",
         "D"
@@ -1473,19 +1367,19 @@
       "text": "lítá vzhůru, ve dvou vzhůru.",
       "words": [
         {
-          "time_s": 131.25,
-          "duration_s": 3.75,
+          "time_s": 158.0,
+          "duration_s": 7.25,
           "text": "lítá vzhůru, ve dvou vzhůru.",
-          "line": 23,
+          "line": 21,
           "track_index": 1
         }
       ],
       "track_index": 1
     },
     {
-      "line": 24,
-      "start_s": 135.0,
-      "end_s": 138.75,
+      "line": 22,
+      "start_s": 165.0,
+      "end_s": 171.25,
       "chords": [
         "G",
         "Gmaj7"
@@ -1493,10 +1387,10 @@
       "text": "4. Skončili jsme jasná zpráva,",
       "words": [
         {
-          "time_s": 135.0,
-          "duration_s": 3.75,
+          "time_s": 165.0,
+          "duration_s": 6.25,
           "text": "4. Skončili jsme jasná zpráva,",
-          "line": 24,
+          "line": 22,
           "track_index": 1
         }
       ],
@@ -1504,9 +1398,9 @@
       "section": "Sloka 4"
     },
     {
-      "line": 25,
-      "start_s": 138.75,
-      "end_s": 142.5,
+      "line": 23,
+      "start_s": 172.0,
+      "end_s": 174.0,
       "chords": [
         "Emi",
         "C",
@@ -1515,19 +1409,19 @@
       "text": "není komu z okna mávat víc,",
       "words": [
         {
-          "time_s": 138.75,
-          "duration_s": 3.75,
+          "time_s": 172.0,
+          "duration_s": 2.0,
           "text": "není komu z okna mávat víc,",
-          "line": 25,
+          "line": 23,
           "track_index": 1
         }
       ],
       "track_index": 1
     },
     {
-      "line": 26,
-      "start_s": 142.5,
-      "end_s": 146.25,
+      "line": 24,
+      "start_s": 180.0,
+      "end_s": 182.0,
       "chords": [
         "Ami",
         "C",
@@ -1536,545 +1430,71 @@
       "text": "jasná zpráva, rub, co nemá líc. Óooo",
       "words": [
         {
-          "time_s": 142.5,
-          "duration_s": 3.75,
+          "time_s": 180.0,
+          "duration_s": 2.0,
           "text": "jasná zpráva, rub, co nemá líc. Óooo",
-          "line": 26,
+          "line": 24,
           "track_index": 1
         }
       ],
       "track_index": 1
     }
   ],
-  "display_timeline": [
-    {
-      "id": "clip-1",
-      "start_s": 0.0,
-      "end_s": 3.75,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "G",
-      "line": 0
-    },
-    {
-      "id": "clip-2",
-      "start_s": 3.75,
-      "end_s": 7.5,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Gmaj7 Emi",
-      "line": 1
-    },
-    {
-      "id": "clip-3",
-      "start_s": 7.5,
-      "end_s": 11.25,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "C D",
-      "line": 2
-    },
-    {
-      "id": "clip-4",
-      "start_s": 11.25,
-      "end_s": 15.0,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Ami C G",
-      "line": 3
-    },
-    {
-      "id": "clip-5",
-      "start_s": 15.0,
-      "end_s": 18.75,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "G",
-      "line": 4
-    },
-    {
-      "id": "clip-6",
-      "start_s": 18.75,
-      "end_s": 22.5,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Gmaj7 Emi",
-      "line": 5
-    },
-    {
-      "id": "clip-7",
-      "start_s": 22.5,
-      "end_s": 26.25,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "C D",
-      "line": 6
-    },
-    {
-      "id": "clip-8",
-      "start_s": 26.25,
-      "end_s": 30.0,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Ami C G",
-      "line": 7
-    },
-    {
-      "id": "clip-9",
-      "start_s": 30.0,
-      "end_s": 33.75,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "1. Skončili jsme, jasná ",
-      "line": 8
-    },
-    {
-      "id": "clip-10",
-      "start_s": 33.75,
-      "end_s": 37.5,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "proč o Tebe zakopávám dá",
-      "line": 9
-    },
-    {
-      "id": "clip-11",
-      "start_s": 37.5,
-      "end_s": 41.25,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "projít bytem já abych se",
-      "line": 10
-    },
-    {
-      "id": "clip-12",
-      "start_s": 41.25,
-      "end_s": 45.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "2. Dík tobě se vidím zve",
-      "line": 11
-    },
-    {
-      "id": "clip-13",
-      "start_s": 45.0,
-      "end_s": 48.75,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "připadám si starší, menš",
-      "line": 12
-    },
-    {
-      "id": "clip-14",
-      "start_s": 48.75,
-      "end_s": 52.5,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "kam se kouknu, kousek Te",
-      "line": 13
-    },
-    {
-      "id": "clip-15",
-      "start_s": 52.5,
-      "end_s": 56.25,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "Ref: Pěnu s vůní jablečn",
-      "line": 14
-    },
-    {
-      "id": "clip-16",
-      "start_s": 56.25,
-      "end_s": 60.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "vyvanulý sprej,",
-      "line": 15
-    },
-    {
-      "id": "clip-17",
-      "start_s": 60.0,
-      "end_s": 63.75,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "telefon, cos ustřihla mu",
-      "line": 16
-    },
-    {
-      "id": "clip-18",
-      "start_s": 63.75,
-      "end_s": 67.5,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "Knížku krásně zbytečnou,",
-      "line": 17
-    },
-    {
-      "id": "clip-19",
-      "start_s": 67.5,
-      "end_s": 71.25,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "co má lživý děj,",
-      "line": 18
-    },
-    {
-      "id": "clip-20",
-      "start_s": 71.25,
-      "end_s": 75.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "píše se v ní, jak se lít",
-      "line": 19
-    },
-    {
-      "id": "clip-21",
-      "start_s": 75.0,
-      "end_s": 78.75,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "lítá vzhůru,",
-      "line": 20
-    },
-    {
-      "id": "clip-22",
-      "start_s": 78.75,
-      "end_s": 82.5,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "ve dvou vzhůru.",
-      "line": 21
-    },
-    {
-      "id": "clip-23",
-      "start_s": 82.5,
-      "end_s": 86.25,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "3. Odešla's mi před úsvi",
-      "line": 22
-    },
-    {
-      "id": "clip-24",
-      "start_s": 86.25,
-      "end_s": 90.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "mám snad bloudit vlastní",
-      "line": 23
-    },
-    {
-      "id": "clip-25",
-      "start_s": 90.0,
-      "end_s": 93.75,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "kam se kouknu, kousek Te",
-      "line": 24
-    },
-    {
-      "id": "clip-26",
-      "start_s": 93.75,
-      "end_s": 97.5,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "G",
-      "line": 25
-    },
-    {
-      "id": "clip-27",
-      "start_s": 97.5,
-      "end_s": 101.25,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Gmaj7 Emi",
-      "line": 26
-    },
-    {
-      "id": "clip-28",
-      "start_s": 101.25,
-      "end_s": 105.0,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "C D",
-      "line": 27
-    },
-    {
-      "id": "clip-29",
-      "start_s": 105.0,
-      "end_s": 108.75,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Ami C G",
-      "line": 28
-    },
-    {
-      "id": "clip-30",
-      "start_s": 108.75,
-      "end_s": 112.5,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "Ref: Pěnu s vůní jablečn",
-      "line": 29
-    },
-    {
-      "id": "clip-31",
-      "start_s": 112.5,
-      "end_s": 116.25,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "vyvanulý sprej,",
-      "line": 30
-    },
-    {
-      "id": "clip-32",
-      "start_s": 116.25,
-      "end_s": 120.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "telefon, cos ustřihla mu",
-      "line": 31
-    },
-    {
-      "id": "clip-33",
-      "start_s": 120.0,
-      "end_s": 123.75,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "Knížku krásně zbytečnou,",
-      "line": 32
-    },
-    {
-      "id": "clip-34",
-      "start_s": 123.75,
-      "end_s": 127.5,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "co má lživý děj,",
-      "line": 33
-    },
-    {
-      "id": "clip-35",
-      "start_s": 127.5,
-      "end_s": 131.25,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "píše se v ní, jak se lít",
-      "line": 34
-    },
-    {
-      "id": "clip-36",
-      "start_s": 131.25,
-      "end_s": 135.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "lítá vzhůru, ve dvou vzh",
-      "line": 35
-    },
-    {
-      "id": "clip-37",
-      "start_s": 135.0,
-      "end_s": 138.75,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "4. Skončili jsme jasná z",
-      "line": 36
-    },
-    {
-      "id": "clip-38",
-      "start_s": 138.75,
-      "end_s": 142.5,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "není komu z okna mávat v",
-      "line": 37
-    },
-    {
-      "id": "clip-39",
-      "start_s": 142.5,
-      "end_s": 146.25,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "jasná zpráva, rub, co ne",
-      "line": 38
-    },
-    {
-      "id": "clip-40",
-      "start_s": 146.25,
-      "end_s": 150.0,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "G",
-      "line": 39
-    },
-    {
-      "id": "clip-41",
-      "start_s": 150.0,
-      "end_s": 153.75,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Gmaj7 Emi",
-      "line": 40
-    },
-    {
-      "id": "clip-42",
-      "start_s": 153.75,
-      "end_s": 157.5,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "C D",
-      "line": 41
-    },
-    {
-      "id": "clip-43",
-      "start_s": 157.5,
-      "end_s": 161.25,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Ami C G",
-      "line": 42
-    },
-    {
-      "id": "clip-44",
-      "start_s": 161.25,
-      "end_s": 165.0,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "G",
-      "line": 43
-    },
-    {
-      "id": "clip-45",
-      "start_s": 165.0,
-      "end_s": 168.75,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Gmaj7 Emi",
-      "line": 44
-    },
-    {
-      "id": "clip-46",
-      "start_s": 168.75,
-      "end_s": 172.5,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "C D",
-      "line": 45
-    },
-    {
-      "id": "clip-47",
-      "start_s": 172.5,
-      "end_s": 176.25,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "Ami C G",
-      "line": 46
-    }
-  ],
   "drums_timeline": [
     {
       "time_s": 0.0,
-      "duration_s": 1.0,
-      "drum": "Low Floor Tom",
-      "midi": 41,
+      "duration_s": 0.3,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 1.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
-      "track_index": 2
-    },
-    {
-      "time_s": 1.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
-      "track_index": 2
-    },
-    {
-      "time_s": 1.5,
-      "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
-      "track_index": 2
-    },
-    {
-      "time_s": 2.0,
-      "duration_s": 0.5,
+      "duration_s": 0.3,
       "drum": "Closed Hi-Hat",
       "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 2.0,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
-      "track_index": 2
-    },
-    {
-      "time_s": 2.5,
-      "duration_s": 0.5,
+      "duration_s": 0.3,
       "drum": "Closed Hi-Hat",
       "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 3.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 3.5,
-      "duration_s": 0.5,
+      "duration_s": 0.3,
       "drum": "Closed Hi-Hat",
       "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 4.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 4.0,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
-      "track_index": 2
-    },
-    {
-      "time_s": 4.5,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 1.0,
+      "drum": "Low Floor Tom",
+      "midi": 41,
       "track_index": 2
     },
     {
       "time_s": 5.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 5.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 5.5,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 5.5,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
@@ -2135,30 +1555,30 @@
     },
     {
       "time_s": 9.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
-      "track_index": 2
-    },
-    {
-      "time_s": 9.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 9.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 9.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
       "time_s": 10.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -2190,13 +1610,6 @@
       "track_index": 2
     },
     {
-      "time_s": 11.5,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
-      "track_index": 2
-    },
-    {
       "time_s": 12.0,
       "duration_s": 0.5,
       "drum": "Closed Hi-Hat",
@@ -2219,23 +1632,23 @@
     },
     {
       "time_s": 13.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 13.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 13.5,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 13.5,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
@@ -2358,6 +1771,13 @@
       "track_index": 2
     },
     {
+      "time_s": 19.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
       "time_s": 20.0,
       "duration_s": 0.5,
       "drum": "Closed Hi-Hat",
@@ -2435,13 +1855,6 @@
       "track_index": 2
     },
     {
-      "time_s": 23.5,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
-      "track_index": 2
-    },
-    {
       "time_s": 24.0,
       "duration_s": 0.5,
       "drum": "Closed Hi-Hat",
@@ -2488,13 +1901,6 @@
       "duration_s": 0.5,
       "drum": "Crash Cymbal 1",
       "midi": 49,
-      "track_index": 2
-    },
-    {
-      "time_s": 26.0,
-      "duration_s": 0.5,
-      "drum": "Crash Cymbal 2",
-      "midi": 57,
       "track_index": 2
     },
     {
@@ -2555,23 +1961,23 @@
     },
     {
       "time_s": 29.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
-      "track_index": 2
-    },
-    {
-      "time_s": 29.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 29.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 29.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -2579,6 +1985,13 @@
       "duration_s": 0.5,
       "drum": "Crash Cymbal 1",
       "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 30.0,
+      "duration_s": 0.5,
+      "drum": "Crash Cymbal 2",
+      "midi": 57,
       "track_index": 2
     },
     {
@@ -2639,23 +2052,23 @@
     },
     {
       "time_s": 33.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 33.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 33.5,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 33.5,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
@@ -2778,6 +2191,13 @@
       "track_index": 2
     },
     {
+      "time_s": 39.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
       "time_s": 40.0,
       "duration_s": 0.5,
       "drum": "Closed Hi-Hat",
@@ -2855,13 +2275,6 @@
       "track_index": 2
     },
     {
-      "time_s": 43.5,
-      "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
-      "track_index": 2
-    },
-    {
       "time_s": 44.0,
       "duration_s": 0.5,
       "drum": "Closed Hi-Hat",
@@ -2908,13 +2321,6 @@
       "duration_s": 0.5,
       "drum": "Crash Cymbal 1",
       "midi": 49,
-      "track_index": 2
-    },
-    {
-      "time_s": 46.0,
-      "duration_s": 0.5,
-      "drum": "Crash Cymbal 2",
-      "midi": 57,
       "track_index": 2
     },
     {
@@ -2975,23 +2381,23 @@
     },
     {
       "time_s": 49.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
-      "track_index": 2
-    },
-    {
-      "time_s": 49.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 49.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 49.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -2999,6 +2405,13 @@
       "duration_s": 0.5,
       "drum": "Crash Cymbal 1",
       "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 50.0,
+      "duration_s": 0.5,
+      "drum": "Crash Cymbal 2",
+      "midi": 57,
       "track_index": 2
     },
     {
@@ -3023,17 +2436,17 @@
       "track_index": 2
     },
     {
-      "time_s": 51.0,
+      "time_s": 51.5,
       "duration_s": 0.5,
-      "drum": "Hi-Mid Tom",
-      "midi": 48,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
       "time_s": 51.5,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -3059,37 +2472,30 @@
     },
     {
       "time_s": 53.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
       "track_index": 2
     },
     {
-      "time_s": 53.0,
-      "duration_s": 0.5,
-      "drum": "Hi-Mid Tom",
-      "midi": 48,
-      "track_index": 2
-    },
-    {
-      "time_s": 53.5,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "time_s": 53.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 53.5,
       "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
       "time_s": 54.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -3878,23 +3284,30 @@
     },
     {
       "time_s": 89.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
-      "time_s": 89.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "time_s": 89.0,
+      "duration_s": 0.5,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
       "track_index": 2
     },
     {
       "time_s": 89.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 89.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -3962,30 +3375,23 @@
     },
     {
       "time_s": 93.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
       "track_index": 2
     },
     {
-      "time_s": 93.0,
-      "duration_s": 0.5,
-      "drum": "Hi-Mid Tom",
-      "midi": 48,
-      "track_index": 2
-    },
-    {
-      "time_s": 93.5,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "time_s": 93.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 93.5,
       "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
@@ -4810,8 +4216,8 @@
     {
       "time_s": 130.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -4901,8 +4307,8 @@
     {
       "time_s": 134.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -5265,8 +4671,8 @@
     {
       "time_s": 150.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -5398,8 +4804,8 @@
     {
       "time_s": 156.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -5489,8 +4895,8 @@
     {
       "time_s": 160.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -5580,8 +4986,8 @@
     {
       "time_s": 164.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -5671,8 +5077,8 @@
     {
       "time_s": 168.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -5691,23 +5097,30 @@
     },
     {
       "time_s": 169.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
-      "time_s": 169.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "time_s": 169.0,
+      "duration_s": 0.5,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
       "track_index": 2
     },
     {
       "time_s": 169.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 169.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -5775,30 +5188,23 @@
     },
     {
       "time_s": 173.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
       "track_index": 2
     },
     {
-      "time_s": 173.0,
-      "duration_s": 0.5,
-      "drum": "Hi-Mid Tom",
-      "midi": 48,
-      "track_index": 2
-    },
-    {
-      "time_s": 173.5,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "time_s": 173.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 173.5,
       "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
@@ -5846,8 +5252,8 @@
     {
       "time_s": 176.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -5937,8 +5343,8 @@
     {
       "time_s": 180.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -6028,8 +5434,8 @@
     {
       "time_s": 184.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -6119,8 +5525,8 @@
     {
       "time_s": 188.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -6139,23 +5545,30 @@
     },
     {
       "time_s": 189.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
-      "time_s": 189.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "time_s": 189.0,
+      "duration_s": 0.5,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
       "track_index": 2
     },
     {
       "time_s": 189.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 189.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -6223,37 +5636,30 @@
     },
     {
       "time_s": 193.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
       "track_index": 2
     },
     {
-      "time_s": 193.0,
-      "duration_s": 0.5,
-      "drum": "Hi-Mid Tom",
-      "midi": 48,
-      "track_index": 2
-    },
-    {
-      "time_s": 193.5,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "time_s": 193.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 193.5,
       "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
       "time_s": 194.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -7071,8 +6477,8 @@
     {
       "time_s": 230.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -7162,8 +6568,8 @@
     {
       "time_s": 234.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -7526,8 +6932,8 @@
     {
       "time_s": 250.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -7659,8 +7065,8 @@
     {
       "time_s": 256.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -7750,8 +7156,8 @@
     {
       "time_s": 260.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -7841,8 +7247,8 @@
     {
       "time_s": 264.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -7932,8 +7338,8 @@
     {
       "time_s": 268.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -7952,23 +7358,30 @@
     },
     {
       "time_s": 269.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
-      "time_s": 269.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "time_s": 269.0,
+      "duration_s": 0.5,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
       "track_index": 2
     },
     {
       "time_s": 269.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 269.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -8036,30 +7449,23 @@
     },
     {
       "time_s": 273.0,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
       "track_index": 2
     },
     {
-      "time_s": 273.0,
-      "duration_s": 0.5,
-      "drum": "Hi-Mid Tom",
-      "midi": 48,
-      "track_index": 2
-    },
-    {
-      "time_s": 273.5,
-      "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "time_s": 273.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
       "track_index": 2
     },
     {
       "time_s": 273.5,
       "duration_s": 0.5,
-      "drum": "Bass Drum 1",
-      "midi": 36,
+      "drum": "High Floor Tom",
+      "midi": 43,
       "track_index": 2
     },
     {
@@ -8107,8 +7513,8 @@
     {
       "time_s": 276.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -8198,8 +7604,8 @@
     {
       "time_s": 280.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -8289,8 +7695,8 @@
     {
       "time_s": 284.0,
       "duration_s": 0.5,
-      "drum": "Crash Cymbal 1",
-      "midi": 49,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
@@ -8380,8 +7786,8 @@
     {
       "time_s": 288.0,
       "duration_s": 0.5,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
       "track_index": 2
     },
     {
@@ -8400,23 +7806,30 @@
     },
     {
       "time_s": 289.0,
-      "duration_s": 0.25,
-      "drum": "Low-Mid Tom",
-      "midi": 47,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
       "track_index": 2
     },
     {
-      "time_s": 289.25,
-      "duration_s": 0.25,
-      "drum": "Low Tom",
-      "midi": 45,
+      "time_s": 289.0,
+      "duration_s": 0.5,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
       "track_index": 2
     },
     {
       "time_s": 289.5,
       "duration_s": 0.5,
-      "drum": "High Floor Tom",
-      "midi": 43,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 289.5,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
       "track_index": 2
     },
     {
@@ -8505,10 +7918,376 @@
     },
     {
       "time_s": 294.0,
+      "duration_s": 0.5,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 294.0,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 294.5,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 295.0,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 295.0,
+      "duration_s": 0.5,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 295.5,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 296.0,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 296.0,
+      "duration_s": 0.5,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 296.5,
+      "duration_s": 0.5,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 297.0,
+      "duration_s": 0.25,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 297.25,
+      "duration_s": 0.25,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 297.5,
+      "duration_s": 0.5,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 298.0,
       "duration_s": 4.0,
       "drum": "Crash Cymbal 1",
       "midi": 49,
       "track_index": 2
+    }
+  ],
+  "bass_timeline": [],
+  "display_timeline": [
+    {
+      "id": "clip-1",
+      "start_s": 8.0,
+      "end_s": 10.0,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C",
+      "line": 0
+    },
+    {
+      "id": "clip-2",
+      "start_s": 16.0,
+      "end_s": 17.1,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "D Ami C G",
+      "line": 1
+    },
+    {
+      "id": "clip-3",
+      "start_s": 17.0,
+      "end_s": 21.4,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "1. Skončili jsme, jasná ",
+      "line": 4
+    },
+    {
+      "id": "clip-4",
+      "start_s": 22.0,
+      "end_s": 24.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "proč o Tebe zakopávám dá",
+      "line": 5
+    },
+    {
+      "id": "clip-5",
+      "start_s": 24.0,
+      "end_s": 29.5,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi",
+      "line": 2
+    },
+    {
+      "id": "clip-6",
+      "start_s": 30.0,
+      "end_s": 32.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "projít bytem já abych se",
+      "line": 6
+    },
+    {
+      "id": "clip-7",
+      "start_s": 32.0,
+      "end_s": 34.5,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "C D Ami G",
+      "line": 3
+    },
+    {
+      "id": "clip-8",
+      "start_s": 34.0,
+      "end_s": 41.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "2. Dík tobě se vidím zve",
+      "line": 7
+    },
+    {
+      "id": "clip-9",
+      "start_s": 42.0,
+      "end_s": 50.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "připadám si starší, menš",
+      "line": 8
+    },
+    {
+      "id": "clip-10",
+      "start_s": 50.0,
+      "end_s": 55.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "kam se kouknu, kousek Te",
+      "line": 9
+    },
+    {
+      "id": "clip-11",
+      "start_s": 54.0,
+      "end_s": 61.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Ref: Pěnu s vůní jablečn",
+      "line": 10
+    },
+    {
+      "id": "clip-12",
+      "start_s": 62.0,
+      "end_s": 66.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "vyvanulý sprej,",
+      "line": 11
+    },
+    {
+      "id": "clip-13",
+      "start_s": 66.0,
+      "end_s": 74.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "telefon, cos ustřihla mu",
+      "line": 12
+    },
+    {
+      "id": "clip-14",
+      "start_s": 74.0,
+      "end_s": 78.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Knížku krásně zbytečnou,",
+      "line": 13
+    },
+    {
+      "id": "clip-15",
+      "start_s": 78.0,
+      "end_s": 82.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "co má lživý děj,",
+      "line": 14
+    },
+    {
+      "id": "clip-16",
+      "start_s": 82.0,
+      "end_s": 88.5,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "píše se v ní, jak se lít",
+      "line": 15
+    },
+    {
+      "id": "clip-17",
+      "start_s": 88.0,
+      "end_s": 92.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "lítá vzhůru,",
+      "line": 16
+    },
+    {
+      "id": "clip-18",
+      "start_s": 92.0,
+      "end_s": 95.25,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "ve dvou vzhůru.",
+      "line": 17
+    },
+    {
+      "id": "clip-19",
+      "start_s": 95.0,
+      "end_s": 101.25,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "3. Odešla's mi před úsvi",
+      "line": 18
+    },
+    {
+      "id": "clip-20",
+      "start_s": 102.0,
+      "end_s": 110.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "mám snad bloudit vlastní",
+      "line": 19
+    },
+    {
+      "id": "clip-21",
+      "start_s": 110.0,
+      "end_s": 118.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "kam se kouknu, kousek Te",
+      "line": 20
+    },
+    {
+      "id": "clip-22",
+      "start_s": 122.0,
+      "end_s": 130.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Ref: Pěnu s vůní jablečn",
+      "line": 22
+    },
+    {
+      "id": "clip-23",
+      "start_s": 136.0,
+      "end_s": 144.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "telefon, cos ustřihla mu",
+      "line": 23
+    },
+    {
+      "id": "clip-24",
+      "start_s": 144.0,
+      "end_s": 152.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Knížku krásně zbytečnou,",
+      "line": 24
+    },
+    {
+      "id": "clip-25",
+      "start_s": 152.0,
+      "end_s": 158.5,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "píše se v ní, jak se lít",
+      "line": 25
+    },
+    {
+      "id": "clip-26",
+      "start_s": 158.0,
+      "end_s": 165.25,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "lítá vzhůru, ve dvou vzh",
+      "line": 26
+    },
+    {
+      "id": "clip-27",
+      "start_s": 165.0,
+      "end_s": 171.25,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "4. Skončili jsme jasná z",
+      "line": 27
+    },
+    {
+      "id": "clip-28",
+      "start_s": 172.0,
+      "end_s": 174.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "není komu z okna mávat v",
+      "line": 28
+    },
+    {
+      "id": "clip-29",
+      "start_s": 176.0,
+      "end_s": 179.5,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C D Ami",
+      "line": 21
+    },
+    {
+      "id": "clip-30",
+      "start_s": 180.0,
+      "end_s": 182.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "jasná zpráva, rub, co ne",
+      "line": 29
+    },
+    {
+      "id": "clip-31",
+      "start_s": 248.0,
+      "end_s": 256.0,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C D Ami",
+      "line": 30
     }
   ]
 }

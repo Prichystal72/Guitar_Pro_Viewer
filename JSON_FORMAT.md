@@ -78,8 +78,8 @@ na starší soubor, který je má, ignoruj je (dopředná kompatibilita).
 | `beats_per_measure` | int | beatů v taktu (web import; vždy `4`) |
 | `time_signature` | str | `"4/4"` (web import) |
 | `bars_per_line` | int | kolik taktů zabere KAŽDÝ karaoke řádek (web import, výchozí `2`) — pravidelná mřížka, ne odhad z textu |
-| `count_in_bars` | int | počet úvodních taktů ticha před prvním řádkem (na odklikání metronomu; web import, výchozí `1`) |
-| `count_in_s` | float | totéž v sekundách (`count_in_bars × 4 × 60/tempo_bpm`) |
+| `count_in_bars` | int | počet úvodních taktů ticha před prvním řádkem s klikací stopou pro odpočítávání (`drums_timeline`, `drum: "Closed Hi-Hat"`, viz `ESP32_KARAOKE_IMPLEMENTATION.md` §6c). Web import ho nastaví vždy (výchozí `1`); GP sloučení jen když se zavolá `add_count_in()` — nepovinné |
+| `count_in_s` | float | totéž v sekundách (`count_in_bars × beats_per_measure × 60/tempo_bpm`) — o tolik je POSUNUTÁ celá časová osa dopředu (žádné záporné časy) |
 | `has_line_structure` | bool | `true` u obou producentů vždy — řádky jsou explicitní přes `line`, ne odvozené |
 | `merged_web_gp` | bool | `true`, pokud data vznikla GP sloučením (Ctrl+M nebo GP-po-textu) — nepovinné, chybí u čistě GP/web dat |
 | `edited_in_timeline` | bool | `true`, pokud JSON prošel `to_json()` editoru časové osy |

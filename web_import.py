@@ -81,11 +81,12 @@ _REPEAT_RE = re.compile(r'^\d+\s*x$', re.IGNORECASE)
 
 
 def _chord_tokens(line: str) -> list[str]:
-    """Tokeny pro detekci/extrakci akordů: bar-line '|' oddělují akordy,
-    opakovací značky (2x) a bar-line znaky se vynechají."""
+    """Tokeny pro detekci/extrakci akordů: bar-line '|' i čárka (inline výčet
+    typu "G, Gmaj7, Emi, C") oddělují akordy, opakovací značky (2x) a
+    bar-line/čárka znaky se vynechají."""
     out = []
-    for tok in line.replace('|', ' ').split():
-        tok = tok.strip(':')
+    for tok in line.replace('|', ' ').replace(',', ' ').split():
+        tok = tok.strip(':,')
         if not tok or _REPEAT_RE.match(tok):
             continue
         out.append(tok)
@@ -670,6 +671,66 @@ def attach_bass(web: dict, gp_bass: list[dict], bass_track: dict | None) -> dict
             ev['track_index'] = bt['index']
         web.setdefault('tracks', []).append(bt)
     return web
+
+
+def add_count_in(data: dict, bars: int = 1, drum_track_index: int | None = None) -> dict:
+    """Přidá TICHÝ úvod (`bars` taktů) před píseň s klikací stopou (Closed
+    Hi-Hat) pro odpočítávání — a POSUNE celou časovou osu o tuhle dobu
+    dopředu, aby počítání předcházelo první notě/slovu, ne se s ní
+    překrývalo. Bez tohohle nikdo (na displeji ani na vysílání) neví, kdy
+    píseň/hraní má začít.
+
+    Vizuální odpočet (mezinárodně = jen čísla `4,3,2,1`, žádná slova) se
+    NEUKLÁDÁ do JSONu jako zvláštní eventy — přehrávač si ho dopočítá z
+    `meta.count_in_s`/`count_in_bars`/`tempo_bpm` (vzorec viz
+    `ESP32_KARAOKE_IMPLEMENTATION.md` §6c). Klikací zvuk zatím vždy
+    `"Closed Hi-Hat"` (uživatel: "asi zavřená hajtka zatím stačí, později
+    přidáme jiné zvuky metronomu") — namapuje se přes stejný
+    `drum_samples.json` jako běžné bicí, žádná zvláštní cesta netřeba.
+    """
+    meta = data.setdefault('meta', {})
+    bpm = meta.get('tempo_bpm', 120) or 120
+    beats_per_bar = meta.get('beats_per_measure', 4) or 4
+    beat_s = 60.0 / bpm
+    count_in_s = round(bars * beats_per_bar * beat_s, 3)
+    if count_in_s <= 0:
+        return data
+
+    def shift(t) -> float:
+        return round(float(t) + count_in_s, 3)
+
+    for key in ('lyrics_timeline', 'chords_timeline', 'drums_timeline', 'bass_timeline'):
+        for ev in data.get(key, []):
+            if 'time_s' in ev:
+                ev['time_s'] = shift(ev['time_s'])
+    for kl in data.get('karaoke_lines', []):
+        kl['start_s'] = shift(kl.get('start_s', 0.0))
+        kl['end_s'] = shift(kl.get('end_s', 0.0))
+        for w in kl.get('words', []):
+            w['time_s'] = shift(w.get('time_s', 0.0))
+    for c in data.get('display_timeline', []):
+        c['start_s'] = shift(c.get('start_s', 0.0))
+        c['end_s'] = shift(c.get('end_s', 0.0))
+
+    # klikací stopa v nově uvolněném okně [0, count_in_s)
+    ti = drum_track_index
+    if ti is None:
+        dt = next((t for t in data.get('tracks', []) if t.get('is_drums')), None)
+        ti = dt['index'] if dt else None
+    if ti is not None:
+        clicks = data.setdefault('drums_timeline', [])
+        for i in range(bars * beats_per_bar):
+            clicks.append({
+                'time_s': round(i * beat_s, 3),
+                'duration_s': round(beat_s * 0.3, 3),
+                'drum': 'Closed Hi-Hat', 'midi': 42,
+                'track_index': ti,
+            })
+        clicks.sort(key=lambda e: e['time_s'])
+
+    meta['count_in_bars'] = bars
+    meta['count_in_s'] = count_in_s
+    return data
 
 
 def save_gp_and_json(

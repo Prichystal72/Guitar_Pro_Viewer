@@ -1561,14 +1561,21 @@ class TimelineEditor(QWidget):
             c["line"] = next((li for li, (s, e) in enumerate(line_ranges) if s <= t < e), None)
 
         # Klipy master "Displej" stopy — spáruj s řádky přes `line`, starší
-        # klipy bez tagu dohledej podle stopy a blízkého startu.
+        # klipy bez tagu dohledej podle stopy a blízkého startu. Klipy s
+        # mode="chords" (bezeslovné intro/mezihra) se sem NIKDY nepočítají —
+        # `karaoke_lines` z to_json() jsou vždy textové, takže čistě akordový
+        # klip nemůže korektně odpovídat žádnému z nich (i kdyby náhodou měl
+        # `.line` shodné se STARÝM číslem nějakého textového řádku a byl mu
+        # časově blízko — přesně tenhle případ dřív procházel kolem
+        # MAX_LINE_CLIP_DRIFT_S kontroly a řádku podstrčil cizí čas).
         display_clips = data.get("display_timeline", []) or []
+        TEXT_MODES = ("lyrics_chords", "lyrics")
         clip_by_line: dict[int, dict] = {
-            c["line"]: c for c in display_clips if isinstance(c.get("line"), int)
+            c["line"]: c for c in display_clips
+            if isinstance(c.get("line"), int) and c.get("mode") in TEXT_MODES
         }
         unlinked = [c for c in display_clips
-                    if not isinstance(c.get("line"), int)
-                    and c.get("mode") in ("lyrics_chords", "lyrics")]
+                    if not isinstance(c.get("line"), int) and c.get("mode") in TEXT_MODES]
 
         def _match_unlinked(ti: int, start: float):
             for c in unlinked:
@@ -1576,12 +1583,27 @@ class TimelineEditor(QWidget):
                     return c
             return None
 
+        # Kolik smí být klip vzdálený od přirozeného startu řádku, aby se
+        # ještě bral jako "tenhle řádek, uživatel jen posunul okraj" — nad
+        # tím jde o STARÝ/cizí tag ze zcela jiného čísla řádku (viz níže).
+        MAX_LINE_CLIP_DRIFT_S = 6.0
+
         karaoke: list[dict] = []
         for line_idx, (ti, _line) in enumerate(grouped):
             words = line_words[line_idx]
             start, end = line_ranges[line_idx]
 
             clip = clip_by_line.get(line_idx)
+            if clip is not None and abs(float(clip.get("start_s", start)) - start) > MAX_LINE_CLIP_DRIFT_S:
+                # `line_idx` číslování je čerstvě přepočítané z `lyrics_timeline`
+                # (řádky beze slov — např. jen akordy — se do něj vůbec
+                # nepočítají). Klip svůj `line` tag dostal DŘÍV, v jiném
+                # číslování (mohlo zahrnovat i bezeslovné řádky) — pro jiný
+                # počet takových řádků PŘED touto pozicí se čísla rozejdou a
+                # `clip_by_line[line_idx]` pak omylem trefí klip NĚJAKÉHO
+                # jiného řádku (o desítky sekund jinde). Zahodit, dohledat
+                # znovu podle stopy + skutečného času (self-healing níže).
+                clip = None
             if clip is None:
                 clip = _match_unlinked(ti, start)
                 if clip is not None:

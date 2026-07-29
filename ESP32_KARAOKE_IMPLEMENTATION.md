@@ -275,6 +275,38 @@ nehrozí, že by se pokusil otevřít něco jiného jako soubor).
 - Pokud `/drums/drum_samples.json` na kartě chybí, přehrávač bicí prostě
   nehraje — text/akordy fungují dál (bicí jsou doplněk, ne nutnost).
 
+## 6c. Count-in — odpočet před písní (`meta.count_in_s`)
+
+Bez odpočtu neví nikdo (na displeji ani na vysílání/přenosu), kdy má
+zpěv/hraní začít — proto je na začátku každé písně **tichý úvod** s klikací
+stopou (viz §6b, `drum: "Closed Hi-Hat"` v `drums_timeline` v okně
+`[0, meta.count_in_s)`) a **celá časová osa je posunutá** tak, aby první
+skutečná nota/slovo začínala až PO count-inu, ne se s ním nepřekrývala.
+
+- **Vizuální odpočet je vždy jen ČÍSLA** (mezinárodní, nezávislé na jazyce
+  displeje) — `4, 3, 2, 1`, ne slova. Žádná zvláštní data v JSONu navíc —
+  dopočítá se z `meta.count_in_s` / `meta.count_in_bars` / `meta.tempo_bpm` /
+  `meta.beats_per_measure` (výchozí 4):
+
+```c
+// t < count_in_s  →  jsme v count-in okně
+float beat_s = 60.0f / tempo_bpm;
+int total_beats = count_in_bars * beats_per_measure;   // typicky 1×4 = 4
+int beats_elapsed = (int)(t / beat_s);                  // 0,1,2,3…
+int number = total_beats - beats_elapsed;               // 4,3,2,1
+if (number >= 1) draw_big_number(number);                // velký, uprostřed displeje
+```
+
+- Klikací zvuk (§6b) a vizuální číslo jsou SYNCHRONNÍ ze stejné mřížky —
+  žádné dodatečné párování netřeba, obojí se odvozuje jen z `t`.
+- Zvuk je zatím vždy `"Closed Hi-Hat"` — jde přes stejný `drum_samples.json`
+  jako běžné bicí. Až budou další zvuky metronomu (klasický „klik", odlišný
+  poslední úder apod.), přibude nové jméno do `drum_samples.json`, žádná
+  změna schématu ani firmwaru.
+- Po `t >= count_in_s` přepni na normální render (§3–§6) — první klip
+  `display_timeline` začíná přesně na `count_in_s` (nebo později, pokud má
+  song ještě instrumentální úvod navíc).
+
 ---
 
 ## 7. Idle / mezery / náhled dalšího řádku

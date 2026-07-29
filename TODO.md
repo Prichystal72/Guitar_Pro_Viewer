@@ -235,9 +235,132 @@ má přesně 6.0s (2 takty), count_in_s=3.0. Ověřeno jen na úrovni dat/kódu,
       Segno/Coda soubory (vzácnější, neřešeno); `_add_drum_shift_controls`
       UI (tlačítka ◀▶⋯ v hlavičce) neprocházeno vizuálně vůbec, jen čteno.
 
+11. ✅ **HOTOVO (2026-07-29, uživatel dodal reálný testovací materiál)** —
+    uživatel: "to nesedí... udělala text v txt jasná zprava a dal i gp5
+    soubor... mělo by to být 60 bpm a píseň má cca 240 sekund" + "asi jsi
+    to přehnal s repeticemi" + "vytvoř mi json z toho". Testováno na
+    `Olympic - Jasná Zpráva.gp5` + `Jasná Zpráva.txt` (oba v repu). Odhaleny
+    a opraveny **3 samostatné bugy**:
+    - **Bug 1 — bod 10 (`expand_measure_order`) OVĚŘENO ŠPATNĚ:** tenhle
+      GP5 má 3 repeat závorky (`isRepeatOpen`/`repeatClose=1`), ale **žádné**
+      `repeatAlternative` (na rozdíl od Let It Be). Naivní rozbalení dalo
+      76 taktů = 304s, uživatel potvrdil realitu ~240s = přesně 61
+      NEROZBALENÝCH taktů. **Oprava:** `expand_measure_order()` teď
+      rozbaluje repetice **JEN když je v souboru `repeatAlternative`
+      (1./2. zakončení) alespoň jednou přítomné** — to je jednoznačný
+      signál (nejde zadat omylem, MUSÍ ho autor tabu záměrně vyplnit pro 2
+      různé takty). Holé `repeatClose` bez zakončení je v praxi (komunitní
+      GP tabulatury) nespolehlivé — často pozůstatek copy-paste editace,
+      i když se sekce hraje jen jednou. Ověřeno na obou souborech
+      současně: Jasná zpráva už NEROZBALUJE (61→61, 244s ≈ 240s), Let It
+      Be pořád ROZBALUJE (67→70, beze změny — `repeatAlternative` tam je).
+    - **Bug 2 — chybí parsování akordů oddělených čárkou:** intro/outro
+      řádek `"G, Gmaj7, Emi, C, D, Ami, C, G"` (typický formát ručně psaného
+      chart) se rozpoznával jako BĚŽNÝ TEXT, ne akordy — `_chord_tokens()`
+      dělil jen podle mezer/`|`, čárka zůstávala nalepená na tokenu (`"G,"`
+      selhalo na `is_chord()` regexu). Oprava: `_chord_tokens()` teď dělí
+      i podle čárky (`line.replace(',', ' ')`) a ořezává `,` stejně jako
+      `:`. `"2x"` marker zůstává správně odfiltrovaný (`_REPEAT_RE`).
+    - **Bug 3 — NEJZÁVAŽNĚJŠÍ, špatné párování klipů v `to_json()`:**
+      `karaoke_lines[]` v exportu měly TEXT jedné části písně spárovaný s
+      ČASEM úplně jiné (např. "Knížku krásně zbytečnou" — správně ~130s —
+      vyšlo na 132s OK, ale "píše se v ní" mělo vyjít ~137.5s, vyšlo na
+      110s — o celou předchozí sloku dřív). **Příčina:** `_seed_display()`
+      otagoval klipy master "Displej" stopy číslem `line` z PŮVODNÍHO
+      číslování `karaoke_lines` (to zahrnuje i řádky BEZ textu — čistě
+      akordové intro/outro/mezihra). `to_json()` ale čísluje `line_idx`
+      ČERSTVĚ, jen podle `lyrics_timeline` (bezeslovné řádky se do něj
+      vůbec nepočítají — nemají žádnou textovou událost). Pro řádky ZA
+      první bezeslovnou sekcí se číslování rozejde (posun o 1 za každou
+      vynechanou bezeslovnou sekci) → `clip_by_line.get(line_idx)` pak
+      omylem trefí klip NĚJAKÉHO JINÉHO řádku, o desítky sekund jinde, a
+      jeho `start_s/end_s` PŘEPÍŠE správně spočtený čas. **Tohle je obecná
+      chyba, ne specifická pro tuhle píseň** — projeví se u každé písně s
+      alespoň jedním čistě akordovým (bezeslovným) řádkem PŘED nějakým
+      textovým řádkem. Let It Be to nezasáhlo jen náhodou (žádné bezeslovné
+      řádky v karaoke_lines). **Oprava v `timeline_editor.py to_json()`:**
+      nový `MAX_LINE_CLIP_DRIFT_S = 6.0` — když `clip_by_line[line_idx]`
+      najde klip, jehož `start_s` je od PŘIROZENĚ spočteného startu dál
+      než 6s, klip se zahodí jako STARÝ/CIZÍ tag a řádek se dohledá
+      standardní time-proximity cestou (`_match_unlinked`, self-healing,
+      už existovala pro netagované klipy). Bezpečný degrade: když se nic
+      nedohledá, řádek prostě dostane svůj přirozený (ze slov spočtený)
+      čas — nikdy ne čas cizího řádku.
+    - **Ověřeno:** `lyrics_timeline` bylo CELOU DOBU správně (potvrzeno
+      trasováním krok za krokem — `retime_web_to_gp` i `load_data()`
+      dávaly monotónní pořadí), chyba byla izolovaná výhradně v
+      `karaoke_lines`-rebuild kroku `to_json()`. Po opravě: všech 22 řádků
+      `Olympic - Jasná Zpráva_test.json` monotónně rostoucí `start_s`
+      (4.0 → 168.0s), verše/refrény ve správném pořadí, akordy sedí.
+    - **Vytvořen `Olympic - Jasná Zpráva_test.json`** (v repu) — text/akordy
+      z `Jasná Zpráva.txt`, časování+bicí z `Olympic - Jasná Zpráva.gp5`
+      (basa v tomhle GP5 NENÍ — jen Vocal/Rytm/Solo/Drums, žádná 4strunná
+      stopa, `bass_timeline` je tedy prázdné a je to SPRÁVNĚ).
+    - **Poučení k zapamatování:** GP soubory z volné distribuce (ne z
+      vlastní tvorby) mívají nekonzistentní/pozůstatkové repeat značky —
+      NIKDY nevěřit holému `repeatClose` bez `repeatAlternative` jako
+      důkazu skutečné repetice. A obecněji: jakékoli číslování řádků
+      (`line`), které se cachuje na jednom místě (klip) a znovu počítá na
+      jiném místě (to_json), potřebuje buď garantovaně STEJNÉ pravidlo
+      počítání na obou místech, nebo (bezpečnější) validaci časovou
+      blízkostí před tím, než se mu důvěřuje.
+
 ## Obecné pravidlo (důležité, neporušovat)
 
 Časování se počítá **výhradně z tempa (BPM) a taktu** — nikdy z odhadů
 založených na textu (slabiky, délka slova apod.). Uživatel to označil za
 "kraviny" a trval na "hudební teorii". Pokud je potřeba automatika, vždy
 vycházet z beat/bar mřížky, jinak nechat ruční úpravu tažením v editoru.
+
+## 12. Bod 11 (repeat-gate `repeatAlternative`) OTOČEN ZPĚT — a nové věci
+
+Stejný den, přímé navázání na bod 11. **Poučení: nevěřit ani vlastnímu dřívějšímu
+"opravenému" chování bez tvrdých dat — a nevěřit ani webovému researchi bez
+přímého ověření.**
+
+- **Bod 11 byl špatně.** Gate "trust_repeats jen když má soubor
+  `repeatAlternative`" (přidaný kvůli uživatelově odhadu "~240s") jsem
+  ZRUŠIL. Důvod: oficiální text (pisnicky-akordy.cz PDF, staženo přímo)
+  má explicitně **3× "Sólo: 2x"** přesně na místech 3 repeat závorek v
+  GP5 — jednoznačný důkaz, že SE MAJÍ rozbalit, i bez `repeatAlternative`.
+  `expand_measure_order()` teď zase bere `repeatClose` vážně vždy
+  (bez podmínky). Jasná zpráva: 61→76 taktů po expanzi (zpět na to, co
+  bylo PŘED bodem 11).
+- **Tempo 60 vs 125 — slepá ulička, uživatel to sám vyřešil.** Uživatel se
+  zeptal "nemá být bpm 125 a 4 takty?", při doupřesnění řekl "reálné tempo
+  písně je 125, ne 60". Zkusil jsem 125 BPM — vyšlo NESMYSLNĚ krátce (146s
+  místo očekávaných ~240-260s, verš na 1.9s misto ~45s) — HORŠÍ shoda než
+  s 60 BPM. Místo dalšího hádání jsem se zeptal, uživatel řekl "nechtěj
+  hardat, ověřím si to sám z nahrávky" — a hned poté napsal **"60 je
+  tempo"** = self-korekce, 60 BPM je správně (GP hodnota byla OK od
+  začátku). **Nezkoušet příště sám odhadovat/přepočítávat tempo z
+  nejistých webových zdrojů (LRC timestamp z AI-summarizovaného
+  vyhledávání, ne přímo staženého souboru — WebFetch na lyricsify.com byl
+  20x blokovaný 403) — je to nespolehlivější než se prostě zeptat.**
+- **Další (3.) varianta stejného "cizí klip" bugu z bodu 6 (`to_json()`
+  clip-matching):** `MAX_LINE_CLIP_DRIFT_S=6.0` z bodu 6 nestačilo — klip
+  s `mode="chords"` (bezeslovné intro/mezihra, `text=''`) mohl mít
+  NÁHODOU `start_s` do 6s od nějakého TEXTOVÉHO řádku a `clip_by_line`
+  ho tam nesprávně dosadil (řádek dostal čas cizí, ale blízké, bezeslovné
+  sekce). **Oprava:** `clip_by_line`/`unlinked` teď filtrují jen
+  `mode in ("lyrics_chords", "lyrics")` — čistě akordový klip nikdy
+  nemůže být kandidát na spárování s textovým `karaoke_lines` řádkem
+  (sémanticky nedává smysl, bez ohledu na časovou blízkost). Tohle je
+  robustnější a obecnější než pouhé rozšiřování drift-thresholdu.
+- **Nová funkce: count-in / odpočítávání (`web_import.add_count_in()`).**
+  Uživatel: "nemá metronom, nikdo neví kdy začít... odpočítávání s
+  metronomem (mezinárodní = jen čísla)... zavřená hajtka zatím stačí."
+  `add_count_in(data, bars=1)` — posune CELOU časovou osu dopředu o
+  `bars×beats_per_measure×60/bpm` sekund, vyplní uvolněné okno `[0,
+  count_in_s)` klikací stopou (`drum: "Closed Hi-Hat"`) v `drums_timeline`,
+  nastaví `meta.count_in_bars`/`count_in_s`. **Žádná zvláštní data pro
+  vizuální "4,3,2,1"** — ESP32 si ho dopočítá čistě z metadat (vzorec v
+  `ESP32_KARAOKE_IMPLEMENTATION.md` §6c), synchronně s kliky. Použito v
+  `Olympic - Jasná Zpráva_test.json` (1 takt = 4 doby = "4,3,2,1").
+- **Finální ověřený stav `Olympic - Jasná Zpráva_test.json`:** 60 BPM,
+  76 taktů po expanzi (304s), count-in 4s, 25 řádků **monotónně rostoucích**
+  (17.0s → 182.0s, po count-inu), 938 úderů bicích, akordy sedí, basa
+  prázdná záměrně (GP5 basu nemá). `py_compile` OK na všech 3 modulech.
+- **STÁLE NEOVĚŘENO uživatelem proti reálné nahrávce** — sám řekl, že si
+  tempo/délku ověří. Neprezentovat čísla v tomhle bodě jako finálně
+  potvrzená, dokud se neozve.
