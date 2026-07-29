@@ -1,8 +1,10 @@
 # TODO — rozpracováno
 
 Stav ke commitu `85575dc` (2026-07-28, pushnuto na `origin/main`).
-TODO.md samo přidáno v `7bba6eb`. Body 1+2 z "Co zbývá" dodělány v navazující
-session téhož dne — zatím **necommitnuto** (viz `git status`).
+TODO.md samo přidáno v `7bba6eb`. Body 3–10 (merge fix, basa, ikonky bicích,
+expanze repetic, dokumentační audit) vznikly v navazujících sessions
+2026-07-28/29 a jsou součástí commitu, který následuje hned za touto
+aktualizací TODO.md — viz `git log` pro přesný hash.
 
 ## Právě dokončeno
 
@@ -170,6 +172,68 @@ má přesně 6.0s (2 takty), count_in_s=3.0. Ověřeno jen na úrovni dat/kódu,
    - §5 "Změny oproti verzi 1": tvrzení "`tracks[]` má `has_tab`" bylo
      historicky pravdivé, ale zavádějící vůči SOUČASNÉMU schématu (`has_tab`
      byl později úplně odstraněn) → doplněna poznámka o pozdějším odstranění.
+
+10. ✅ **HOTOVO (stejný den, mid-audit interrupt)** — uživatel zasáhl uprostřed
+    dokumentačního auditu bodu 9 se dvěma NOVÝMI konkrétními bugy, které
+    ukázaly, že `timeline_editor.py` mezitím (mimo viditelnou historii této
+    session — zjevně buď ruční úprava uživatelem, nebo dřívější kolo, co
+    jsem nezaznamenal do TODO) dostalo **skutečné PNG/SVG ikonky bicích**
+    (`assets/drum_icons/`, `_drum_icon_key`/`_drum_icon_pixmap`) a
+    **tlačítka pro fázový posun stopy bicích** (`_add_drum_shift_controls`/
+    `shift_drum_track`) — ŽÁDNÉ z toho nebylo v mém TODO záznamu (bod 7
+    mluvil o "note-head tečkách", `DRUM_ROW_MIN_H=20`, realita byla ikonky
+    + `DRUM_ROW_MIN_H=74`). **Poučení pro příště:** před editací
+    `_draw_drums_lane`/okolí vždy nejdřív PŘEČÍST aktuální kód, ne se
+    spoléhat na vlastní TODO poznámky — stav se očividně umí posunout mimo
+    zaznamenanou historii.
+    - **Bug A — ikonky moc velké, stopa moc vysoká:** `icon_size` se počítal
+      z `rows_h` (`max(24,min(64,rows_h-10))`) a `DRUM_ROW_MIN_H=74` navíc
+      vynucovalo `max(PER_TRACK, ...)` floor → i 1-2 bubny dělaly obří
+      řádky. **Oprava:** nové konstanty `DRUM_ICON_SIZE=32`, `DRUM_ROW_H=40`
+      (fixní, ne "minimum"), `icon_size = min(DRUM_ICON_SIZE, rows_h-8)`,
+      **floor na `PER_TRACK` úplně odstraněn** pro stopu bicích — výška teď
+      roste čistě `8 + n_řádků×40 + TRACK_GAP`, žádné umělé nafouknutí.
+      Ověřeno: Let It Be (8 různých bubnů) scene height 812→540px.
+    - **Bug B — "bicí končí v půlce písničky" (repetice):** uživatel:
+      "při importu bicích se pravdepobně nepočítá s repeticemi". POTVRZENO
+      na reálných datech — `Beatles (The) - Let It Be.gp4` má takt 5
+      `isRepeatOpen=True`, takt 8 `repeatClose=1, repeatAlternative=1`
+      (1. zakončení), takt 9 `repeatAlternative=2` (2. zakončení). Celý kód
+      dosud dělal NAIVNÍ lineární `for m in track.measures` — ignoroval
+      repeat brackets úplně, takže export byl kratší než reálná nahrávka
+      (vše po repetici "ujíždí" dřív a dřív, poslední řádky/bicí chybí).
+      **Oprava — 3 nové sdílené funkce v `guitar_pro_viewer.py`:**
+      - `expand_measure_order(measures)` — vrátí pořadí INDEXŮ taktů, jak
+        by se SKUTEČNĚ přehrálo (repeat open/close + 1./2. zakončení
+        bitmaska). Bezpečnostní strop proti nekonečné smyčce na
+        poškozených datech. **Nezohledňuje Segno/Coda/D.S./D.C./Fine
+        skoky** (`header.direction`) — vzácnější, mnohem složitější
+        (skoky přes celou skladbu, ne lokální blok); zdokumentováno jako
+        známé omezení v docstringu, ne potichu.
+      - `tempo_at_tick(tick, tempo_map)` — tempo platné v surovém ticku.
+      - `walk_track_beats(track, tempo_map)` — generátor `(m_idx, beat,
+        time_s, duration_s)` v EXPANDOVANÉM pořadí. **Klíčový detail:**
+        `time_s` se NEPOČÍTÁ z absolutního GP ticku (`ticks_to_seconds`) —
+        při repetici se surové ticky OPAKUJÍ (2. průchod má stejné ticky
+        jako 1.), takže absolutní přepočet by dal stejný čas pro oba
+        průchody. Místo toho běžící součet (`elapsed`) délek beatů v
+        expandovaném pořadí, tempo pro každý beat se čte z `tempo_map`
+        podle jeho PŮVODNÍHO surového ticku (zůstává platné i při opakování).
+      - Přepojeno do **všech 4 míst**, co dřív dělaly naivní walk:
+        `_build_karaoke_json` (hlavní GP export), `_gp_vocal_words`,
+        `_gp_drums_for_merge`, `_gp_bass_for_merge`.
+      - **Ověřeno na reálných datech:** `expand_measure_order` na Let It Be
+        dá přesně očekávanou sekvenci `[...4,5,6,7, 4,5,6,8, 9...]`
+        (0-based) = 70 přehraných taktů z 67 napsaných. Basová linka: starý
+        naivní poslední čas 199.5s → nový 208.5s (+9.0s = přesně 3 takty ×
+        4 beaty × 60/80s — matematicky přesně sedí). Soubor BEZ repetic
+        (Guns N' Roses) → `expand_measure_order` dá identitu (žádná
+        regrese). `py_compile` OK.
+    - README doplněno (ikonky 32×32, `assets/drum_icons/`, tlačítka fázového
+      posunu) — nahrazuje moje vlastní chybné "barevné tečky" z bodu 9.
+    - **NEOVĚŘENO:** vizuálně na reálném Windows (jen data/offscreen);
+      Segno/Coda soubory (vzácnější, neřešeno); `_add_drum_shift_controls`
+      UI (tlačítka ◀▶⋯ v hlavičce) neprocházeno vizuálně vůbec, jen čteno.
 
 ## Obecné pravidlo (důležité, neporušovat)
 

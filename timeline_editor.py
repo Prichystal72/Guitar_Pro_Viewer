@@ -54,6 +54,8 @@ PER_TRACK = LINE_H + CHORD_H + LYRIC_H + TRACK_GAP
 BLOCK_MIN_W = 14
 EDGE = 6            # zóna u okraje pro resize
 HANDLE_W = 8        # šířka tažného oddělovače řádku
+DRUM_ICON_SIZE = 32     # px — fixní velikost ikonky bubnu v pruhu bicích
+DRUM_ROW_H = 40.0       # px — výška JEDNOHO řádku bicí stopy (ikona + okraj)
 
 LINE_COLOR = QColor("#9141ac")   # fialová = karaoke řádky
 BREAK_COLOR = QColor("#e5a50a")  # oranžová = tažná hranice řádku
@@ -906,13 +908,13 @@ class TimelineEditor(QWidget):
             max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 0)))
 
         # výška stopy: normální stopy PER_TRACK; bicí rostou podle počtu
-        # RŮZNÝCH bubnů (min. výška řádku, ať se popisky nemačkají)
-        DRUM_ROW_MIN_H = 74.0
+        # RŮZNÝCH bubnů — fixní kompaktní výška řádku (ikona 32×32 + okraj),
+        # žádné umělé napasování na PER_TRACK (to dělalo i 1-2 bubny zbytečně
+        # vysoké).
         lane_h: dict[int, float] = {}
         for ti in order:
             if self._track_is_drums(ti):
-                lane_h[ti] = max(PER_TRACK,
-                                 8 + self._drum_row_count(ti) * DRUM_ROW_MIN_H + TRACK_GAP)
+                lane_h[ti] = 8 + self._drum_row_count(ti) * DRUM_ROW_H + TRACK_GAP
             else:
                 lane_h[ti] = PER_TRACK
 
@@ -1186,7 +1188,7 @@ class TimelineEditor(QWidget):
             if i > 0:
                 self.scene.addLine(HEADER_W, ry, HEADER_W + w, ry, QPen(QColor("#f7e6cc"), 1))
 
-        icon_size = max(24, min(64, int(rows_h - 10)))
+        icon_size = min(DRUM_ICON_SIZE, max(12, int(rows_h - 8)))
         for ev in self.data.get("drums_timeline", []):
             if ev.get("track_index") != ti:
                 continue

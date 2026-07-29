@@ -139,6 +139,87 @@ def ticks_to_seconds(tick: int, tempo_map: list[tuple[int, int]]) -> float:
     return round(seconds, 4)
 
 
+def expand_measure_order(measures) -> list[int]:
+    """Vrátí pořadí INDEXŮ do `measures` tak, jak by se skladba SKUTEČNĚ
+    přehrála — respektuje repeat značky (`isRepeatOpen`/`repeatClose`) a
+    1./2. zakončení (`repeatAlternative`, bitmaska průchodů). Bez tohohle
+    (naivní lineární `for m in measures`) je exportovaná časová osa u písní
+    s repeticemi KRATŠÍ než reálná nahrávka — vše po repetici pak "ujíždí"
+    a bicí/text skončí uprostřed písně.
+
+    Nezohledňuje Segno/Coda/D.S./D.C./Fine skoky (`header.direction`) —
+    vzácnější a podstatně složitější (skoky přes celou skladbu, ne jen
+    lokální blok). Takové soubory se přehrají zkrácené/nepřesné, ale bez
+    nekonečné smyčky (safety cap níže)."""
+    n = len(measures)
+    if n == 0:
+        return []
+    order: list[int] = []
+    repeat_start = 0
+    pass_count: dict[int, int] = {}
+    i = 0
+    SAFETY = n * 8 + 64   # tvrdý strop proti nekonečné smyčce na poškozených datech
+    steps = 0
+    while i < n and steps < SAFETY:
+        steps += 1
+        h = measures[i].header
+        alt = getattr(h, "repeatAlternative", 0) or 0
+        cur_pass = pass_count.get(repeat_start, 1)
+        if alt == 0 or (alt & (1 << (cur_pass - 1))):
+            order.append(i)
+        if getattr(h, "isRepeatOpen", False):
+            repeat_start = i
+            pass_count.setdefault(repeat_start, 1)
+        close = getattr(h, "repeatClose", -1) or -1
+        if close > 0:
+            done = pass_count.get(repeat_start, 1)
+            if done <= close:
+                pass_count[repeat_start] = done + 1
+                i = repeat_start
+                continue
+        i += 1
+    return order
+
+
+def tempo_at_tick(tick: int, tempo_map: list[tuple[int, int]]) -> int:
+    """Tempo (BPM) platné v daném absolutním (surovém, nerozbaleném) GP ticku."""
+    bpm = tempo_map[0][1]
+    for map_tick, map_tempo in tempo_map:
+        if tick < map_tick:
+            break
+        bpm = map_tempo
+    return bpm
+
+
+def walk_track_beats(track, tempo_map: list[tuple[int, int]]):
+    """Generuje `(measure_idx0, beat, time_s, duration_s)` pro stopu **v
+    reálném pořadí přehrávání** — repetice rozbalené (`expand_measure_order`).
+
+    `time_s` NEJDE spočítat z absolutního GP ticku (`ticks_to_seconds`) —
+    při repetici se surové ticky opakují (2. průchod repeatovaným úsekem má
+    stejné ticky jako 1.), takže absolutní přepočet by dal STEJNÝ čas pro
+    oba průchody. Místo toho se `time_s` kumuluje sekvenčně: běžící součet
+    délek beatů v EXPANDOVANÉM pořadí. Tempo pro délku beatu se čte z
+    `tempo_map` podle jeho původního (surového) ticku — to zůstává platné
+    i při opakování, protože říká „jaké tempo je v tomhle místě partitury"."""
+    TICKS_PER_BEAT = 960
+    order = expand_measure_order(track.measures)
+    elapsed = 0.0
+    for m_idx in order:
+        m = track.measures[m_idx]
+        for v_idx, v in enumerate(m.voices):
+            if v_idx > 0:
+                continue
+            for b in v.beats:
+                dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
+                if b.duration.isDotted:
+                    dur_ticks = int(dur_ticks * 1.5)
+                bpm = tempo_at_tick(b.start, tempo_map)
+                duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / bpm), 4)
+                yield m_idx, b, round(elapsed, 4), duration_s
+                elapsed += duration_s
+
+
 def note_to_midi(note, track) -> int:
     if getattr(track, "isPercussionTrack", False):
         # U bicích je note.value přímo GM percussion číslo (jaký buben/sample zní),
@@ -1157,42 +1238,35 @@ class GuitarProViewer(QMainWindow):
             }
             contributes[ti] = track.isPercussionTrack or (ti == vocal_ti)
 
-            for m_idx, m in enumerate(track.measures):
-                for v_idx, v in enumerate(m.voices):
-                    if v_idx > 0:
-                        continue
-                    for b in v.beats:
-                        dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
-                        if b.duration.isDotted:
-                            dur_ticks = int(dur_ticks * 1.5)
-                        duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / song.tempo), 4)
-                        time_s = ticks_to_seconds(b.start, self.tempo_map)
+            # walk_track_beats = repetice rozbalené (viz jeho docstring) —
+            # naivní `for m in track.measures` dělalo časovou osu kratší
+            # než reálná nahrávka u písní s repeat značkami.
+            for m_idx, b, time_s, duration_s in walk_track_beats(track, self.tempo_map):
+                if track.isPercussionTrack:
+                    for n in b.notes:
+                        midi = note_to_midi(n, track)
+                        all_drum_events.append({
+                            "time_s": time_s, "duration_s": duration_s,
+                            "drum": drum_name(midi), "midi": midi,
+                            "track_index": ti,
+                        })
+                    continue
 
-                        if track.isPercussionTrack:
-                            for n in b.notes:
-                                midi = note_to_midi(n, track)
-                                all_drum_events.append({
-                                    "time_s": time_s, "duration_s": duration_s,
-                                    "drum": drum_name(midi), "midi": midi,
-                                    "track_index": ti,
-                                })
-                            continue
+                chord_name = get_chord_name(b)
+                if chord_name:
+                    all_chord_events.append({
+                        "time_s": time_s, "chord": chord_name,
+                        "measure": m_idx + 1, "track_index": ti,
+                    })
+                    contributes[ti] = True
 
-                        chord_name = get_chord_name(b)
-                        if chord_name:
-                            all_chord_events.append({
-                                "time_s": time_s, "chord": chord_name,
-                                "measure": m_idx + 1, "track_index": ti,
-                            })
-                            contributes[ti] = True
-
-                        if ti == vocal_ti:
-                            beat_txt = get_beat_text(b)
-                            if beat_txt and beat_txt.strip():
-                                vocal_beats.append({
-                                    "time_s": time_s, "duration_s": duration_s,
-                                    "text": beat_txt.strip(),
-                                })
+                if ti == vocal_ti:
+                    beat_txt = get_beat_text(b)
+                    if beat_txt and beat_txt.strip():
+                        vocal_beats.append({
+                            "time_s": time_s, "duration_s": duration_s,
+                            "text": beat_txt.strip(),
+                        })
 
             if contributes[ti]:
                 result["tracks"].append(track_data)
@@ -1325,12 +1399,10 @@ class GuitarProViewer(QMainWindow):
             return []
         beats = []
         track = song.tracks[vocal_ti - 1]
-        for m in track.measures:
-            for v in m.voices[:1]:
-                for b in v.beats:
-                    txt = get_beat_text(b)
-                    if txt and txt.strip():
-                        beats.append((ticks_to_seconds(b.start, self.tempo_map), txt.strip()))
+        for _m_idx, b, time_s, _dur in walk_track_beats(track, self.tempo_map):
+            txt = get_beat_text(b)
+            if txt and txt.strip():
+                beats.append((time_s, txt.strip()))
         beats.sort()
         words: list[dict] = []
         for bi, (t0, txt) in enumerate(beats):
@@ -1345,11 +1417,12 @@ class GuitarProViewer(QMainWindow):
         return words
 
     def _gp_drums_for_merge(self):
-        """Vrátí (drums_timeline, drum_track_dict) z aktuálního GP songu."""
+        """Vrátí (drums_timeline, drum_track_dict) z aktuálního GP songu.
+        `walk_track_beats` = repetice rozbalené — jinak bicí u písní s
+        repeat značkami (1./2. zakončení apod.) skončí uprostřed písně."""
         song = self.song
         if not song:
             return [], None
-        TICKS_PER_BEAT = 960
         drums: list[dict] = []
         drum_track = None
         for t_idx, track in enumerate(song.tracks):
@@ -1359,30 +1432,23 @@ class GuitarProViewer(QMainWindow):
             drum_track = {"index": ti, "name": track.name, "type": "drums",
                           "is_drums": True,
                           "instrument_midi": track.channel.instrument if track.channel else 0}
-            for m in track.measures:
-                for v in m.voices[:1]:
-                    for b in v.beats:
-                        dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
-                        if b.duration.isDotted:
-                            dur_ticks = int(dur_ticks * 1.5)
-                        duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / song.tempo), 4)
-                        time_s = ticks_to_seconds(b.start, self.tempo_map)
-                        for n in b.notes:
-                            midi = note_to_midi(n, track)
-                            drums.append({"time_s": time_s, "duration_s": duration_s,
-                                          "drum": drum_name(midi), "midi": midi,
-                                          "track_index": ti})
+            for _m_idx, b, time_s, duration_s in walk_track_beats(track, self.tempo_map):
+                for n in b.notes:
+                    midi = note_to_midi(n, track)
+                    drums.append({"time_s": time_s, "duration_s": duration_s,
+                                  "drum": drum_name(midi), "midi": midi,
+                                  "track_index": ti})
             break
         drums.sort(key=lambda e: e["time_s"])
         return drums, drum_track
 
     def _gp_bass_for_merge(self):
         """Vrátí (bass_timeline, bass_track_dict) z aktuálního GP songu —
-        basová stopa (4 struny), noty s výškou (midi/note_name), ne bicí."""
+        basová stopa (4 struny), noty s výškou (midi/note_name), ne bicí.
+        `walk_track_beats` = repetice rozbalené (viz `_gp_drums_for_merge`)."""
         song = self.song
         if not song:
             return [], None
-        TICKS_PER_BEAT = 960
         bass_notes: list[dict] = []
         bass_track = None
         for t_idx, track in enumerate(song.tracks):
@@ -1392,22 +1458,15 @@ class GuitarProViewer(QMainWindow):
             bass_track = {"index": ti, "name": track.name, "type": "bass",
                          "is_drums": False,
                          "instrument_midi": track.channel.instrument if track.channel else 0}
-            for m in track.measures:
-                for v in m.voices[:1]:
-                    for b in v.beats:
-                        if not b.notes:
-                            continue
-                        dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
-                        if b.duration.isDotted:
-                            dur_ticks = int(dur_ticks * 1.5)
-                        duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / song.tempo), 4)
-                        time_s = ticks_to_seconds(b.start, self.tempo_map)
-                        for n in b.notes:
-                            midi = note_to_midi(n, track)
-                            bass_notes.append({"time_s": time_s, "duration_s": duration_s,
-                                               "note_name": midi_to_name(midi), "midi": midi,
-                                               "string": n.string, "fret": n.value,
-                                               "track_index": ti})
+            for _m_idx, b, time_s, duration_s in walk_track_beats(track, self.tempo_map):
+                if not b.notes:
+                    continue
+                for n in b.notes:
+                    midi = note_to_midi(n, track)
+                    bass_notes.append({"time_s": time_s, "duration_s": duration_s,
+                                       "note_name": midi_to_name(midi), "midi": midi,
+                                       "string": n.string, "fret": n.value,
+                                       "track_index": ti})
             break
         bass_notes.sort(key=lambda e: e["time_s"])
         return bass_notes, bass_track

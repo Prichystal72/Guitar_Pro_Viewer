@@ -65,9 +65,12 @@ a **dávkové stažení celého interpreta**.
   - **⏱ Na mřížku** — přichytí začátky bloků na hudební mřížku (takt / beat /
     1⁄2 beatu / 1⁄4 beatu) podle tempa. Žádné odhady z délky textu.
   - **🥁 Stopa bicích** (objeví se po GP sloučení) — **každý konkrétní buben má
-    vlastní podepsaný řádek** (ne sdílenou kategorii), úhozy jako plné
-    barevné tečky. Výška stopy roste automaticky podle počtu různých bubnů
-    v písni, ať se popisky nemačkají.
+    vlastní podepsaný řádek** (ne sdílenou kategorii), úhozy jako **ikonky
+    32×32 px** (`assets/drum_icons/`: kick/snare/tomy/hi-hat/činel, ostatní
+    perkuse mají obecnou náhradní ikonku). Výška stopy roste kompaktně podle
+    počtu různých bubnů v písni (fixní výška řádku, ne nafouknutá na
+    minimum běžné stopy). Tlačítka v hlavičce stopy posunou všechny údery
+    dané stopy v čase najednou (oprava fáze, když bicí z GP vyjedou).
   - **🎸 Stopa basy** (objeví se po GP sloučení) — noty jako úsečky ve 4
     řadách podle struny. Jen náhled/reference, do exportu nejde.
   - Posun bloků, editace dvojklikem, zalomení řádků pravým klikem, zoom
