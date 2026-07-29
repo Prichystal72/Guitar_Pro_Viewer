@@ -140,7 +140,7 @@ class DisplayClipItem(QGraphicsRectItem):
         self.setZValue(12)
         self.setToolTip(
             "Táhni okraj = posuň ZAČÁTEK/KONEC řádku na displeji "
-            "(nezávisle na tom, kdy doznívá poslední slabika). "
+            "(nezávisle na hudební mřížce taktů/beatů). "
             "Táhni střed = posuň celý klip po ose."
         )
         self._sync_from_clip()
@@ -847,11 +847,25 @@ class TimelineEditor(QWidget):
             max_t = max(max_t, float(c.get("end_s", 0)))
         for ev in self.data.get("drums_timeline", []):
             max_t = max(max_t, float(ev.get("time_s", 0)))
-        total_h = RULER_H + DISPLAY_ROW_H + len(order) * PER_TRACK + 20
+        for ev in self.data.get("bass_timeline", []):
+            max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 0)))
+
+        # výška stopy: normální stopy PER_TRACK; bicí rostou podle počtu
+        # RŮZNÝCH bubnů (min. výška řádku, ať se popisky nemačkají)
+        DRUM_ROW_MIN_H = 20.0
+        lane_h: dict[int, float] = {}
+        for ti in order:
+            if self._track_is_drums(ti):
+                lane_h[ti] = max(PER_TRACK,
+                                 8 + self._drum_row_count(ti) * DRUM_ROW_MIN_H + TRACK_GAP)
+            else:
+                lane_h[ti] = PER_TRACK
+
+        total_h = RULER_H + DISPLAY_ROW_H + sum(lane_h.values()) + 20
         total_w = HEADER_W + max_t * self.pps + 200
         self.scene.setSceneRect(0, 0, total_w, total_h)
 
-        # pozadí pruhů + názvy + pravítko
+        # pozadí pruhů + names + pravítko
         self._draw_ruler(max_t, total_h)
 
         # master "Displej" stopa navrchu
@@ -860,18 +874,21 @@ class TimelineEditor(QWidget):
         for clip in self.data.get("display_timeline", []):
             self._add_clip_item(clip)
 
-        # zdrojové stopy (posunuté pod master stopu)
-        base_top = RULER_H + DISPLAY_ROW_H
-        for row, ti in enumerate(order):
-            top = base_top + row * PER_TRACK
+        # zdrojové stopy (posunuté pod master stopu, proměnná výška řádku)
+        top = RULER_H + DISPLAY_ROW_H
+        for ti in order:
+            h_slot = lane_h[ti]
             if self._track_is_drums(ti):
-                self._draw_drums_lane(ti, top, names.get(ti, f"Stopa {ti}"), total_w)
-                continue
-            line_y = top + 2
-            chord_y = line_y + LINE_H
-            lyric_y = chord_y + CHORD_H
-            self._track_lane[ti] = {"line_y": line_y, "chord_y": chord_y, "lyric_y": lyric_y}
-            self._draw_lane_bg(ti, top, names.get(ti, f"Stopa {ti}"), total_w)
+                self._draw_drums_lane(ti, top, names.get(ti, f"Stopa {ti}"), total_w, h_slot)
+            elif self._track_is_bass(ti):
+                self._draw_bass_lane(ti, top, names.get(ti, f"Stopa {ti}"), total_w, h_slot)
+            else:
+                line_y = top + 2
+                chord_y = line_y + LINE_H
+                lyric_y = chord_y + CHORD_H
+                self._track_lane[ti] = {"line_y": line_y, "chord_y": chord_y, "lyric_y": lyric_y}
+                self._draw_lane_bg(ti, top, names.get(ti, f"Stopa {ti}"), total_w)
+            top += h_slot
 
         # bloky (akordy, slova)
         for ev in self.data.get("chords_timeline", []):
@@ -999,10 +1016,22 @@ class TimelineEditor(QWidget):
                 return bool(t.get("is_drums") or t.get("type") == "drums")
         return False
 
+    def _drum_names_for(self, ti: int) -> list[str]:
+        """Distinct jména bubnů použitá touto stopou, seřazená pro zobrazení
+        (činely/hi-hat nahoře, snare/tom uprostřed, kick dole; abecedně
+        v rámci skupiny). Každé dostane VLASTNÍ řádek — žádné 2 různé bubny
+        se nikdy nepřekrývají v jednom řádku."""
+        names = {ev.get("drum", "?") for ev in self.data.get("drums_timeline", [])
+                 if ev.get("track_index") == ti}
+        return sorted(names, key=lambda n: (self._drum_family(n)[0], n))
+
+    def _drum_row_count(self, ti: int) -> int:
+        return max(1, len(self._drum_names_for(ti)))
+
     @staticmethod
     def _drum_family(name: str):
-        """Vrátí (řada 0-2, barva) podle jména bubnu. Řada 0=nahoře (činely/hi-hat),
-        1=uprostřed (snare/tom), 2=dole (kick)."""
+        """Vrátí (skupina 0-2, barva) podle jména bubnu — určuje POŘADÍ řádků
+        (0=nahoře: činely/hi-hat, 1=uprostřed: snare/tom, 2=dole: kick) a barvu."""
         n = (name or "").lower()
         if "kick" in n or "bass drum" in n:
             return 2, QColor("#3a3a3a")
@@ -1016,10 +1045,13 @@ class TimelineEditor(QWidget):
             return 0, QColor("#e08a00")
         return 1, QColor("#888888")
 
-    def _draw_drums_lane(self, ti: int, top: float, name: str, total_w: float) -> None:
-        """Vykreslí stopu bicích: úhozy jako svislé značky ve 3 řadách
-        (činely/hi-hat, snare/tom, kick), barevně dle bubnu. Jen zobrazení."""
-        h = PER_TRACK - TRACK_GAP
+    def _draw_drums_lane(self, ti: int, top: float, name: str, total_w: float,
+                         h_slot: float | None = None) -> None:
+        """Vykreslí stopu bicích: KAŽDÝ konkrétní buben má vlastní popsaný
+        řádek (ne sdílenou kategorii) — úhozy jsou plné "note-head" tečky, ne
+        tenké čárky, takže se dá při hustším rytmu pořád rozeznat, kdy který
+        buben hraje. Jen zobrazení."""
+        h = (h_slot if h_slot is not None else PER_TRACK) - TRACK_GAP
         y = top + 2
         w = total_w - HEADER_W
         self.scene.addRect(HEADER_W, y, w, h - 2,
@@ -1032,24 +1064,82 @@ class TimelineEditor(QWidget):
         nm.setPos(6, top + 3)
         nm.setBrush(QBrush(QColor("#b56b1e")))
 
-        rows_h = (h - 8) / 3.0
-        for r, lab in enumerate(("činely/hi-hat", "snare/tom", "kick")):
-            ry = y + 4 + r * rows_h
-            it = self.scene.addSimpleText(lab)
+        drum_names = self._drum_names_for(ti)
+        n_rows = max(1, len(drum_names))
+        rows_h = (h - 8) / n_rows
+        row_of = {dn: i for i, dn in enumerate(drum_names)}
+        colors = {dn: self._drum_family(dn)[1] for dn in drum_names}
+
+        for i, dn in enumerate(drum_names):
+            ry = y + 4 + i * rows_h
+            it = self.scene.addSimpleText(dn)
             it.setFont(QFont("Segoe UI", 7))
-            it.setPos(12, ry - 2)
-            it.setBrush(QBrush(QColor("#b56b1e")))
-            # jemná vodicí linka řady
+            it.setPos(12, ry + rows_h / 2 - 6)
+            it.setBrush(QBrush(colors[dn].darker(140)))
+            # jemná vodicí linka řady (skrz střed)
             self.scene.addLine(HEADER_W, ry + rows_h / 2, HEADER_W + w, ry + rows_h / 2,
                                QPen(QColor("#f0e0cc"), 1))
+            # oddělovač mezi řádky
+            if i > 0:
+                self.scene.addLine(HEADER_W, ry, HEADER_W + w, ry, QPen(QColor("#f7e6cc"), 1))
 
+        r_dot = max(2.0, min(5.0, rows_h / 2 - 2))
         for ev in self.data.get("drums_timeline", []):
             if ev.get("track_index") != ti:
                 continue
-            r, col = self._drum_family(ev.get("drum", ""))
+            dn = ev.get("drum", "?")
+            i = row_of.get(dn, 0)
+            col = colors.get(dn, QColor("#888888"))
             x = HEADER_W + float(ev.get("time_s", 0)) * self.pps
-            ry = y + 4 + r * rows_h
-            self.scene.addLine(x, ry + 1, x, ry + rows_h - 3, QPen(col, 1.4))
+            ry = y + 4 + i * rows_h + rows_h / 2
+            self.scene.addEllipse(x - r_dot, ry - r_dot, r_dot * 2, r_dot * 2,
+                                  QPen(col.darker(130), 1), QBrush(col))
+
+    def _track_is_bass(self, ti: int) -> bool:
+        for t in self.tracks:
+            if t.get("index") == ti:
+                return t.get("type") == "bass"
+        return False
+
+    def _draw_bass_lane(self, ti: int, top: float, name: str, total_w: float,
+                        h_slot: float | None = None) -> None:
+        """Vykreslí basovou stopu: noty jako úsečky (délka = duration_s) ve
+        4 řadách podle struny (1 = nejtenčí nahoře … 4 = nejtlustší dole).
+        Jen zobrazení — basa se do exportu neposílá."""
+        h = (h_slot if h_slot is not None else PER_TRACK) - TRACK_GAP
+        y = top + 2
+        w = total_w - HEADER_W
+        self.scene.addRect(HEADER_W, y, w, h - 2,
+                           QPen(Qt.NoPen), QBrush(QColor("#eaf3ff")))
+        self.scene.addRect(0, top, HEADER_W, h + 2,
+                           QPen(QColor("#a3c2e6")), QBrush(QColor("#e0ecfb")))
+        nm = self.scene.addSimpleText("🎸 " + name)
+        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm.setPos(6, top + 3)
+        nm.setBrush(QBrush(QColor("#1a5fb4")))
+
+        n_strings = 4
+        rows_h = (h - 8) / n_strings
+        for s in range(1, n_strings + 1):
+            ry = y + 4 + (s - 1) * rows_h
+            it = self.scene.addSimpleText(f"struna {s}")
+            it.setFont(QFont("Segoe UI", 7))
+            it.setPos(12, ry - 2)
+            it.setBrush(QBrush(QColor("#4a7fc9")))
+            self.scene.addLine(HEADER_W, ry + rows_h / 2, HEADER_W + w, ry + rows_h / 2,
+                               QPen(QColor("#cfe0f5"), 1))
+
+        col = QColor("#1a5fb4")
+        for ev in self.data.get("bass_timeline", []):
+            if ev.get("track_index") != ti:
+                continue
+            s = max(1, min(n_strings, int(ev.get("string", 4))))
+            ry = y + 4 + (s - 1) * rows_h + rows_h / 2
+            x0 = HEADER_W + float(ev.get("time_s", 0)) * self.pps
+            x1 = x0 + max(2.0, float(ev.get("duration_s", 0.2)) * self.pps)
+            p = QPen(col, 3)
+            p.setCapStyle(Qt.RoundCap)
+            self.scene.addLine(x0, ry, x1, ry, p)
 
     def _add_line_items(self, ti: int) -> None:
         lane = self._track_lane.get(ti)
@@ -1095,7 +1185,7 @@ class TimelineEditor(QWidget):
             if ok:
                 block.event["chord"] = text.strip()
         else:
-            text, ok = QInputDialog.getText(self, "Editace textu", "Slabika / slovo:",
+            text, ok = QInputDialog.getText(self, "Editace textu", "Text řádku:",
                                             text=block.event.get("text", ""))
             if ok:
                 block.event["text"] = text.strip()
@@ -1285,9 +1375,9 @@ class TimelineEditor(QWidget):
 
         Zobrazovaný rozsah řádku (`karaoke_lines[].start_s/end_s`) může
         uživatel přetáhnout přes odpovídající klip na master "Displej" stopě
-        — nezávisle na tom, kdy doznívá poslední slovo. To je potřeba u
+        — nezávisle na hudební mřížce (`bars_per_line`). To je potřeba u
         rytmických skladeb, kde má řádek zůstat na displeji déle/kratčeji,
-        než trvá poslední slabika. Klip se s řádkem páruje přes `line`
+        než odpovídá mřížkovému rozsahu. Klip se s řádkem páruje přes `line`
         (viz `_seed_display`); starší klipy bez tohoto tagu se dohledají
         podle stopy + blízkého startu a tag jim dopíšeme."""
         data = self.data

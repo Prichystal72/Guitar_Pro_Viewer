@@ -574,7 +574,7 @@ def retime_web_to_gp(web: dict, gp_words: list[dict]) -> dict:
     `gp_words` = [{'time_s', 'text'}] slova zpěvní stopy z GP. Zarovná se
     sekvence webových slov na GP slova (difflib), z toho se vezme START každého
     řádku; konec = start dalšího řádku. Akordy i délky se v rámci řádku
-    přeškálují (zachová se slabiková pozice akordu). Text zůstává po řádcích."""
+    přeškálují (zachová se poměrná pozice akordu v řádku). Text zůstává po řádcích."""
     import difflib
     norm = lambda s: re.sub(r'[^a-z0-9]', '', (s or '').lower())
 
@@ -657,6 +657,18 @@ def attach_drums(web: dict, gp_drums: list[dict], drum_track: dict | None) -> di
         for ev in web['drums_timeline']:
             ev['track_index'] = dt['index']
         web.setdefault('tracks', []).append(dt)
+    return web
+
+
+def attach_bass(web: dict, gp_bass: list[dict], bass_track: dict | None) -> dict:
+    """Přidá basovou linku (z GP) do webového JSONu + stopu basy do tracks."""
+    web['bass_timeline'] = gp_bass or []
+    if bass_track and not any(t.get('type') == 'bass' for t in web.get('tracks', [])):
+        bt = dict(bass_track)
+        bt['index'] = max([t.get('index', 0) for t in web.get('tracks', [])] + [0]) + 1
+        for ev in web['bass_timeline']:
+            ev['track_index'] = bt['index']
+        web.setdefault('tracks', []).append(bt)
     return web
 
 

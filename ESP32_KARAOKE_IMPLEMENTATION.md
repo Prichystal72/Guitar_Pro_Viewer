@@ -24,7 +24,9 @@
 4. **Řídící osa = `display_timeline`.** Najdi klip aktivní v čase `t` → podle
    jeho `mode` vykresli obsah `source_track` (text / text+akordy).
    Když `display_timeline` chybí, odvoď řádky z `karaoke_lines`.
-5. Zvýrazni **aktuální slovo** podle `time_s`/`duration_s`.
+5. Text je typicky **jeden blok na celý řádek** (ne po slovech) — zvýrazňuj
+   celý řádek (progress bar) podle `time_s`/`duration_s` klipu, ne
+   jednotlivá slova (viz §5).
 6. **Paralelně** přehrávej `drums_timeline` — nezávisle na displeji (§6b).
 
 ---
@@ -136,26 +138,36 @@ zvýrazněné slovo, můžeš překreslit jen „karaoke wipe" a šetřit.
 
 ---
 
-## 5. Řádek textu + zvýraznění slov (jádro karaoke)
+## 5. Řádek textu (jádro karaoke)
 
-### 5.1 Slova řádku
+### 5.1 Text řádku — TYPICKY JEDEN BLOK, ne slovo po slovu
+Text z `build_karaoke_json()` (web import i GP viewer) je **po řádcích**:
+jeden záznam v `lyrics_timeline` = **celý řádek** (`text` = celá věta,
+`time_s`/`duration_s` = začátek/délka celého řádku). **Není tam** jemnější
+časování jednotlivých slov — `duration_s` pokrývá celý řádek najednou.
+
 Slova klipu = položky `lyrics_timeline` (nebo `karaoke_lines[].words`) se
 `track_index == source_track` a `start_s <= time_s < end_s`. Předpočítej si
 při načtení pro každý klip rozsah indexů (žádné hledání za běhu).
 
-> **Seskupení do řádků napřímo:** když má JSON `meta.has_line_structure: true`,
-> nese každé slovo v `lyrics_timeline` klíč **`line`** (index řádku). Slova se
-> stejným `line` = jeden řádek — nemusíš řádky odvozovat z pauz ani z klipů.
-> Bez tohoto klíče vezmi řádky z `karaoke_lines[].words`.
+> **Seskupení do řádků napřímo:** když má JSON `meta.has_line_structure: true`
+> (u obou producentů vždy), nese každý záznam v `lyrics_timeline` klíč
+> **`line`** (index řádku). Záznamy se stejným `line` = jeden řádek —
+> nemusíš řádky odvozovat z pauz ani z klipů. Typicky je na `line` jen JEDEN
+> záznam (viz výše); víc záznamů na stejném `line` je legální (ruční editace
+> v timeline editoru může řádek rozdělit na víc bloků), ale neočekávej to
+> jako běžný případ.
 
-Text řádku slož mezerami: `"napadů, aú, co podporujou…"`. Pozor: slovo už často
-obsahuje interpunkci/mezeru — **nepřidávej mezeru navíc**, pokud slovo končí
-mezerou/pomlčkou.
+Pokud je na řádku víc než jeden záznam, slož text mezerami: „napadů, aú, co
+podporujou…". Pozor: slovo/blok už často obsahuje interpunkci/mezeru —
+**nepřidávej mezeru navíc**, pokud končí mezerou/pomlčkou.
 
-### 5.2 Které slovo je „aktuální"
-Index aktivního slova = poslední slovo s `time_s <= t`. Zvýrazněné je, dokud
-`t < time_s + duration_s`; mezi slovy (pauza) není zvýrazněné nic, ale text
-řádku **zůstává** zobrazený.
+### 5.2 Zvýrazňování — jen když TO DATA dovolí
+Protože `lyrics_timeline` je typicky **jeden blok na celý řádek**, defaultně
+**není** co zvýrazňovat slovo po slově — celý řádek se buď zvýrazní jako
+celek (progress bar `(t-start)/(end-start)`, viz §12), nebo se nechá staticky
+zobrazený po celou dobu klipu. Kdyby přece jen řádek obsahoval víc bloků
+(`line`), zvýrazňuj po nich stejnou logikou jako dřív:
 
 ```c
 int cur = -1;
@@ -164,12 +176,15 @@ bool active = cur >= 0 && t < words[cur].time_s + words[cur].duration_s;
 ```
 (Za běhu udělej binární hledání místo lineárního.)
 
-### 5.3 Dva styly zvýraznění
-- **Celé slovo** (jednodušší): obarvi slovo `cur` highlight barvou.
-- **Karaoke wipe** (hezčí): highlight se „nalévá" slovem podle zlomku času
-  `frac = clamp((t - w.time_s)/w.duration_s, 0, 1)`. Kresli slovo highlight
-  barvou jen do `x_start + frac * word_px_width`, zbytek základní barvou
+### 5.3 Dva styly zvýraznění (jen víc-blokový případ)
+- **Celý blok** (jednodušší): obarvi blok `cur` highlight barvou.
+- **Karaoke wipe** (hezčí): highlight se „nalévá" podle zlomku času
+  `frac = clamp((t - w.time_s)/w.duration_s, 0, 1)`. Kresli highlight
+  barvou jen do `x_start + frac * block_px_width`, zbytek základní barvou
   (technika: clipovací obdélník, nebo dvě vykreslení textu s ořezem).
+- V typickém (jednoblokovém) případě aplikuj `frac` na **celý řádek** —
+  vizuálně stejný efekt jako „progress bar" z §12, jen s doslovným wipe
+  přes text.
 
 ### 5.4 Layout / zalomení na šířku displeje
 Řádek z JSONu **může být širší než displej**. Řeš jedním z:
@@ -207,12 +222,58 @@ klipy (bicí jedou dál, i když displej zrovna nic neukazuje).
 - **Naplánuj přehrání samplu v `time_s`**, ne až ho uvidíš v `render(t)` — bicí
   potřebují nižší latenci než text. Vhodné řešení: fronta budoucích úderů,
   při postupu `t` vyjmi a přehraj vše s `time_s <= t` od poslední kontroly.
-- Namapuj `midi`/`drum` na soubor samplu předem (načtením do RAM/SD), např.
-  `midi 35/36 → kick.wav`, `38/40 → snare.wav`, `42 → hihat_closed.wav`,
-  `46 → hihat_open.wav`, `49/57 → crash.wav`, `51/59 → ride.wav`. Víc úderů se
-  stejným `time_s` (kick+hi-hat současně) = přehraj oba kanály najednou (mix
-  nebo víc hlasů přehrávače).
+- Víc úderů se stejným `time_s` (kick+hi-hat současně) = přehraj oba kanály
+  najednou (mix nebo víc hlasů přehrávače).
 - Bez zvukového výstupu tuhle sekci ignoruj — displej funguje bez ní.
+
+### Mapování jméno bubnu → soubor samplu (`drum_samples.json` na SD kartě)
+
+**Nenapevno v kódu firmwaru** (to by šlo přeřadit jen přeflashováním) — mapa
+žije jako **jeden globální soubor na SD kartě**, platný pro všechny písně
+(bubny jsou vždy stejná sada jmen z GM Percussion mapy, bez ohledu na song).
+Přeřazení = uprav textový soubor na kartě, žádný nový firmware.
+
+Umístění: **`/drums/drum_samples.json`** (samply samotné v `/drums/rock/`).
+Reálný vyplněný soubor (pro aktuální sadu 8 samplů) je v repu jako
+[`drum_samples.json`](drum_samples.json) — zkopíruj ho na kartu do `/drums/`.
+
+Formát — plochý slovník `"jméno bubnu": "cesta k souboru"`, plus `"_default"`
+pro jména, která v mapě nejsou. Žádné jiné speciální klíče (firmware dělá
+přímé vyhledání konkrétního jména bubnu, ne iteraci přes všechny klíče —
+nehrozí, že by se pokusil otevřít něco jiného jako soubor).
+
+```jsonc
+{
+  "Acoustic Snare": "/drums/rock/snare.wav",
+  "Acoustic Bass Drum": "/drums/rock/kick.wav",
+  "Bass Drum 1": "/drums/rock/kick.wav",
+  "Closed Hi-Hat": "/drums/rock/hihat_closed.wav",
+  "Open Hi-Hat": "/drums/rock/hihat_open.wav",
+  "Low Tom": "/drums/rock/tom_mid.wav",
+  "High Tom": "/drums/rock/tom_hi.wav",
+  "Crash Cymbal 1": "/drums/rock/crash.wav",
+  "_default": "/drums/rock/hihat_closed.wav"
+}
+```
+
+- **Víc jmen bubnů smí mířit na stejný soubor** — běžné, když máš fyzicky
+  méně samplů než GM Percussion jmen. Aktuální sada má jen 8 samplů
+  (kick/snare/hihat_closed/hihat_open/crash/tom_hi/tom_mid/tom_low) na 47
+  možných GM jmen — mapa je tedy silně **N:1** (např. 6 GM tomů → 3 vzorky
+  dle výšky, všechny činely/ride → `crash.wav`, protože ride sample není).
+  Viz plný soubor v repu pro přesné rozdělení.
+- `"_default"` je fallback pro jméno, které v mapě chybí (neznámý/exotický
+  buben z GP souboru, např. bonga/conga/agogo — v rockové sadě nejsou) — ať
+  přehrávač nikdy neselže, jen zahraje `_default` sample.
+- Cesty jsou **absolutní od rootu SD karty** (`/drums/rock/kick.wav`), ne
+  relativní — odpovídá tomu, kam se samply reálně kopírují. `rock` je název
+  sady/kitu — až budou další sady (jazz, elektronika…), přepíšou se jen
+  cesty v tomhle jednom souboru, žádná změna firmwaru.
+- **Při startu (jednou):** načti `/drums/drum_samples.json` do paměti (malý
+  soubor, pár desítek klíčů), postav si hash mapu jméno→sample. **Za běhu**
+  k eventu z `drums_timeline[].drum` jen vyhledej v té mapě (O(1)), přehraj.
+- Pokud `/drums/drum_samples.json` na kartě chybí, přehrávač bicí prostě
+  nehraje — text/akordy fungují dál (bicí jsou doplněk, ne nutnost).
 
 ---
 
@@ -290,22 +351,29 @@ Nedrž „index řádku" napříč snímky jako pravdu; ber ho vždy z `t`.
 2. V každém `t` je aktivní ≤ 1 klip (klipy se nepřekrývají).
 3. Řádek se objeví v `start_s` a zmizí v `end_s` odpovídajícího klipu (i po
    ručním posunu okraje — viz `JSON_FORMAT.md` §3.6).
-4. Zvýrazněné je právě slovo, jehož `[time_s, time_s+duration_s)` obsahuje `t`.
+4. Zvýrazněný/aktivní je blok, jehož `[time_s, time_s+duration_s)` obsahuje
+   `t` — v typickém případě to je **celý řádek** (jeden blok), ne slovo.
 5. V mezeře mezi klipy displej „nezamrzne" na starém řádku.
 6. Akord se kreslí nad slovem s nejbližším časem; `chords` režim ukáže aktuální.
 7. Bicí (`drums_timeline`) hrají nezávisle na displeji, i v mezerách mezi klipy.
-8. Seek na libovolný `t` zobrazí správný řádek+slovo bez „dohánění".
+8. Seek na libovolný `t` zobrazí správný řádek bez „dohánění".
 
-**Konkrétní příklad — JSON vyexportovaný z vieweru** (song „Dej mi víc své
-lásky", Olympic, 120 BPM, 1 stopa; po úpravě v časové ose ~19 oken, jen zpěv
-`lyrics_chords`). Získáš ho: otevři skladbu → uprav v časové ose → **💾 Export
-JSON**. Očekávané chování:
-- `t=0.5 s` → klip `clip-1`, řádek „|Ami G|E| 2x 1. Vymyslel", zvýrazněné slovo
-  „G|E|" (`time_s 0.5`, `dur 0.5`).
-- `t≈2.5 s` → nad textem akord **Ami**; `t≈4.5 s` → **C** (viz `chords_timeline`).
-- `t=4.0 s` → přepnutí na `clip-2` „napadů, aú, co podporujo…".
-- `t=9.0 s` → **mezera** mezi `clip-2 (…8.5)` a `clip-3 (10.0…)` → idle/náhled.
-- Seek na `t=13.6 s` → rovnou `clip-4` „…holou skálu, v noci chod".
+**Konkrétní příklad — JSON z importu webu** (song „Let It Be", The Beatles,
+80 BPM, `bars_per_line=2`, `count_in_bars=1` → `count_in_s=3.0`; 21 karaoke
+řádků, každý přesně 6.0 s = 2 takty). Získáš ho: **Ctrl+N** → vlož URL →
+✅ Použít v editoru → **💾 Export JSON**. Očekávané chování:
+- `t=0.0–3.0 s` → **count-in**, žádný klip aktivní → idle/odpočet (viz §7).
+- `t=3.0 s` → klip `clip-1` [3.0–9.0], řádek „1. When I find myself in times
+  of trouble" (celý jako jeden blok, žádné zvýrazňování po slovech — viz §5).
+- `t≈4.5 s` → nad textem akord **C**; později **G** (viz `chords_timeline`,
+  pozice dle pořadí slova na hudební mřížce, ne odhad).
+- `t=9.0 s` → přepnutí na `clip-2` [9.0–15.0] „Mother Mary comes to me",
+  akordy **Ami**, **F**.
+- Žádné mezery mezi řádky (`bars_per_line` je pravidelné, řádky na sebe
+  navazují) — pokud uživatel v editoru ručně natáhne/zkrátí klip (§3.6
+  `JSON_FORMAT.md`), mezera vzniknout může.
+- Seek na libovolné `t` (např. `t=45.0 s`) → rovnou správný klip, žádné
+  „dohánění" předchozích řádků.
 
 ---
 

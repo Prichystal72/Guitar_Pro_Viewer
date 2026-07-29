@@ -628,11 +628,13 @@ class GuitarProViewer(QMainWindow):
         meta = data.get("meta", {}) or {}
         self.lbl_title.setText(meta.get("title") or (self.current_file and Path(self.current_file).stem) or "")
         self.lbl_artist.setText(meta.get("artist") or "")
+        bass_n = len(data.get("bass_timeline", []))
         self.lbl_meta.setText(
             f"Tempo: {meta.get('tempo_bpm', '?')} BPM  |  "
             f"{len(data.get('tracks', []))} stop  |  "
             f"{len(data.get('karaoke_lines', []))} řádků  |  "
             f"{len(data.get('drums_timeline', []))} úderů bicích"
+            + (f"  |  {bass_n} not basy" if bass_n else "")
         )
 
         self.track_tree.clear()
@@ -652,9 +654,13 @@ class GuitarProViewer(QMainWindow):
         self.status.showMessage(f"Načteno ({source_desc}) — {n_lines} karaoke řádků")
 
     def merge_with_web(self):
-        """Sloučí OTEVŘENÝ GP soubor (bicí + časování) s textem/akordy z webu.
-        Web je mistr struktury (řádky, sloky/refrén, akordy); GP dodá bicí a
-        napasuje časy řádků na reálný zpěv."""
+        """Sloučí OTEVŘENÝ GP soubor (bicí + basa + časování) s textem/akordy
+        z ZADANÉ URL. Na rozdíl od `_merge_gp_tracks_into_current` (kterou
+        spustí `_on_loaded`, když GP otevřeš AŽ PO existujících datech) tahle
+        metoda text/akordy PŘEPÍŠE čerstvě staženými z webu — je to jednorázová
+        akce na vyžádání (Ctrl+M), ne automatický merge. Web je mistr struktury
+        (řádky, sloky/refrén, akordy); GP dodá bicí/basu a napasuje časy řádků
+        na reálný zpěv."""
         if not self.song:
             QMessageBox.warning(
                 self, "Nejdřív Guitar Pro soubor",
@@ -674,6 +680,7 @@ class GuitarProViewer(QMainWindow):
             gp_title, gp_artist = self.song.title, self.song.artist
             gp_words = self._gp_vocal_words()
             drums, drum_track = self._gp_drums_for_merge()
+            bass, bass_track = self._gp_bass_for_merge()
 
             r = requests.get(url, timeout=25, headers=W.BROWSER_HEADERS)
             r.encoding = W.detect_encoding(r)
@@ -682,6 +689,7 @@ class GuitarProViewer(QMainWindow):
                                        self.song.tempo, url)
             W.retime_web_to_gp(web, gp_words)
             W.attach_drums(web, drums, drum_track)
+            W.attach_bass(web, bass, bass_track)
             web.setdefault("meta", {})
             web["meta"]["source_file"] = Path(self.current_file).name if self.current_file else ""
             web["meta"]["merged_web_gp"] = True
@@ -696,15 +704,61 @@ class GuitarProViewer(QMainWindow):
             f"Sloučeno s webem:\n\n"
             f"  Řádků: {len(web.get('karaoke_lines', []))}\n"
             f"  Akordů: {len(web.get('chords_timeline', []))}\n"
-            f"  Úderů bicích: {len(web.get('drums_timeline', []))}\n\n"
+            f"  Úderů bicích: {len(web.get('drums_timeline', []))}\n"
+            f"  Not basy: {len(web.get('bass_timeline', []))}\n\n"
             f"Uprav řádky/akordy v editoru a exportuj (Ctrl+E).")
 
     def _on_loaded(self, song):
+        path = self._worker.path
+        if self._loaded_json is not None:
+            # Text/akordy už jsou načtené (web/JSON/merge) — tenhle GP soubor
+            # jen PŘIDÁ své stopy (bicí), text/akordy zůstávají beze změny.
+            self._merge_gp_tracks_into_current(song, path)
+            return
         self.song = song
-        self.current_file = self._worker.path
+        self.current_file = path
         self.tempo_map = build_tempo_map(song)
         self._populate_ui()
         self.status.showMessage(f"Načteno: {self.current_file}")
+
+    def _merge_gp_tracks_into_current(self, song, path: str) -> None:
+        """GP otevřený AŽ PO existujících karaoke datech (web/JSON) — text a
+        akordy zůstávají beze změny, z GP se přidají bicí a basa (jediné dva
+        typy stopy, které tento merge z GP bere — viz `_gp_drums_for_merge`
+        / `_gp_bass_for_merge`)."""
+        self.song = song
+        self.tempo_map = build_tempo_map(song)
+        drums, drum_track = self._gp_drums_for_merge()
+        bass, bass_track = self._gp_bass_for_merge()
+
+        import web_import as W
+        data = self.timeline.data if self.timeline.data else self._loaded_json
+        if drum_track:
+            W.attach_drums(data, drums, drum_track)
+        if bass_track:
+            W.attach_bass(data, bass, bass_track)
+        meta = data.setdefault("meta", {})
+        meta["source_file"] = Path(path).name
+        meta["merged_web_gp"] = True
+        self.current_file = path
+
+        gp_name = Path(path).name
+        self._present_karaoke_data(data, source_desc=f"web+GP bicí/basa: {gp_name}")
+        added = []
+        if drum_track:
+            added.append(f"{len(drums)} úderů bicích")
+        if bass_track:
+            added.append(f"{len(bass)} not basy")
+        if added:
+            QMessageBox.information(
+                self, "Přidány stopy z GP",
+                f"Text a akordy zůstaly beze změny.\n"
+                f"Přidáno z GP ({gp_name}): " + ", ".join(added) + ".")
+        else:
+            QMessageBox.information(
+                self, "GP bez bicích/basy",
+                f"Text a akordy zůstaly beze změny.\n"
+                f"GP soubor ({gp_name}) neobsahuje bicí ani basovou stopu — nic se nepřidalo.")
 
     def _on_load_error(self, msg: str):
         QMessageBox.critical(self, "Chyba načítání", f"Nepodařilo se načíst soubor:\n\n{msg}")
@@ -1321,6 +1375,42 @@ class GuitarProViewer(QMainWindow):
             break
         drums.sort(key=lambda e: e["time_s"])
         return drums, drum_track
+
+    def _gp_bass_for_merge(self):
+        """Vrátí (bass_timeline, bass_track_dict) z aktuálního GP songu —
+        basová stopa (4 struny), noty s výškou (midi/note_name), ne bicí."""
+        song = self.song
+        if not song:
+            return [], None
+        TICKS_PER_BEAT = 960
+        bass_notes: list[dict] = []
+        bass_track = None
+        for t_idx, track in enumerate(song.tracks):
+            if track.isPercussionTrack or len(track.strings) != 4:
+                continue
+            ti = t_idx + 1
+            bass_track = {"index": ti, "name": track.name, "type": "bass",
+                         "is_drums": False,
+                         "instrument_midi": track.channel.instrument if track.channel else 0}
+            for m in track.measures:
+                for v in m.voices[:1]:
+                    for b in v.beats:
+                        if not b.notes:
+                            continue
+                        dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
+                        if b.duration.isDotted:
+                            dur_ticks = int(dur_ticks * 1.5)
+                        duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / song.tempo), 4)
+                        time_s = ticks_to_seconds(b.start, self.tempo_map)
+                        for n in b.notes:
+                            midi = note_to_midi(n, track)
+                            bass_notes.append({"time_s": time_s, "duration_s": duration_s,
+                                               "note_name": midi_to_name(midi), "midi": midi,
+                                               "string": n.string, "fret": n.value,
+                                               "track_index": ti})
+            break
+        bass_notes.sort(key=lambda e: e["time_s"])
+        return bass_notes, bass_track
 
     # ------------------------------------------------------------------
     # Export
