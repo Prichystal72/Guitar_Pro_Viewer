@@ -15,15 +15,31 @@ stejné schéma, takže úpravy jdou rovnou exportovat do JSON.
 
 from __future__ import annotations
 
+import os
 from typing import Any, Optional
 
 from PySide6.QtCore import Qt, QRectF, QPointF
-from PySide6.QtGui import QColor, QBrush, QPen, QFont, QPainter
+from PySide6.QtGui import QColor, QBrush, QPen, QFont, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox,
     QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem,
-    QInputDialog, QCheckBox,
+    QGraphicsSimpleTextItem, QInputDialog, QCheckBox,
 )
+
+# --- ikonky bicích (assets/drum_icons/*), klíč = _drum_icon_key() ---
+DRUM_ICON_DIR = os.path.join(os.path.dirname(__file__), "assets", "drum_icons")
+DRUM_ICON_FILES = {
+    "kick": "kick.png",
+    "snare": "snare.png",
+    "tom_high": "tom_high.png",
+    "tom_mid": "tom_mid.png",
+    "tom_low": "tom_low.png",
+    "hihat_closed": "hihat_closed.png",
+    "hihat_open": "hihat_open.png",
+    "cymbal": "cymbal.png",
+    "perc": "perc.svg",   # bez vlastní grafiky (bonga/conga/timbale/…) — SVG placeholder
+}
 
 # --- rozměry rozvržení (px) ---
 HEADER_W = 150      # levý sloupec s názvy stop
@@ -468,6 +484,44 @@ class BreakHandle(QGraphicsRectItem):
         self.editor._relayout()
 
 
+class DrumShiftButton(QGraphicsRectItem):
+    """Malé klikatelné tlačítko v hlavičce stopy bicích (posun celé stopy
+    v čase). Vykreslené jako obyčejná scénová položka, NE jako vložený
+    QWidget/QGraphicsProxyWidget — ten při `scene.clear()` (volá se při
+    každém překreslení) občas spadne na dvojitém uvolnění paměti."""
+
+    def __init__(self, label: str, tooltip: str, on_click, w: float = 20.0, h: float = 18.0):
+        super().__init__(0, 0, w, h)
+        self._on_click = on_click
+        self.setBrush(QBrush(QColor("#ffffff")))
+        self.setPen(QPen(QColor("#d8b98a")))
+        self.setToolTip(tooltip)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setAcceptHoverEvents(True)
+        self.setZValue(20)
+        txt = QGraphicsSimpleTextItem(label, self)
+        txt.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        txt.setBrush(QBrush(QColor("#8a5a1e")))
+        br = txt.boundingRect()
+        txt.setPos((w - br.width()) / 2, (h - br.height()) / 2)
+
+    def hoverEnterEvent(self, ev):
+        self.setBrush(QBrush(QColor("#ffe9cc")))
+        super().hoverEnterEvent(ev)
+
+    def hoverLeaveEvent(self, ev):
+        self.setBrush(QBrush(QColor("#ffffff")))
+        super().hoverLeaveEvent(ev)
+
+    def mousePressEvent(self, ev):
+        ev.accept()
+
+    def mouseReleaseEvent(self, ev):
+        ev.accept()
+        if self.rect().contains(ev.pos()):
+            self._on_click()   # může spustit _relayout() → self zanikne, nic po tomto řádku
+
+
 class TimelineView(QGraphicsView):
     def __init__(self, scene, editor):
         super().__init__(scene)
@@ -521,6 +575,7 @@ class TimelineEditor(QWidget):
         self._display_lane_y: float = RULER_H + 4
         self._track_lane: dict[int, dict] = {}   # track_index → {'chord_y','lyric_y'}
         self.export_callback = None              # nastaví hlavní okno: fn(dict)
+        self._drum_icon_pixmaps: dict[tuple[str, int], QPixmap] = {}
         self._setup_ui()
 
     def _setup_ui(self):
@@ -852,7 +907,7 @@ class TimelineEditor(QWidget):
 
         # výška stopy: normální stopy PER_TRACK; bicí rostou podle počtu
         # RŮZNÝCH bubnů (min. výška řádku, ať se popisky nemačkají)
-        DRUM_ROW_MIN_H = 20.0
+        DRUM_ROW_MIN_H = 74.0
         lane_h: dict[int, float] = {}
         for ti in order:
             if self._track_is_drums(ti):
@@ -1045,6 +1100,53 @@ class TimelineEditor(QWidget):
             return 0, QColor("#e08a00")
         return 1, QColor("#888888")
 
+    @staticmethod
+    def _drum_icon_key(name: str) -> str:
+        """Vrátí klíč do DRUM_ICON_FILES podle jména bubnu (konkrétnější
+        než _drum_family — rozlišuje otevřenou/zavřenou hi-hat a má vlastní
+        'perc' ikonku pro ostatní perkuse, které nemají specifickou ikonu)."""
+        n = (name or "").lower()
+        if "kick" in n or "bass drum" in n:
+            return "kick"
+        if "snare" in n or "side stick" in n or "hand clap" in n:
+            return "snare"
+        if "tom" in n:
+            if "floor" in n:
+                return "tom_low"
+            if "high" in n or "hi-mid" in n or "hi mid" in n:
+                return "tom_high"
+            return "tom_mid"
+        if "open hi-hat" in n or "open hihat" in n or "open hi hat" in n:
+            return "hihat_open"
+        if "hi-hat" in n or "hihat" in n or "hi hat" in n:
+            return "hihat_closed"
+        if any(k in n for k in ("crash", "ride", "cymbal", "splash", "china", "bell")):
+            return "cymbal"
+        return "perc"
+
+    def _drum_icon_pixmap(self, key: str, size_px: int) -> QPixmap:
+        """Ikonka bubnu jako QPixmap dané velikosti (cachováno). Zdroj je buď
+        PNG (skutečná grafika v resources/, ořezaná bez popisku), nebo SVG
+        placeholder (perc.svg) pro bubny bez vlastní grafiky."""
+        cache_key = (key, size_px)
+        pm = self._drum_icon_pixmaps.get(cache_key)
+        if pm is None:
+            filename = DRUM_ICON_FILES.get(key, "perc.svg")
+            path = os.path.join(DRUM_ICON_DIR, filename)
+            if filename.lower().endswith(".svg"):
+                renderer = QSvgRenderer(path)
+                pm = QPixmap(size_px, size_px)
+                pm.fill(Qt.transparent)
+                painter = QPainter(pm)
+                renderer.render(painter)
+                painter.end()
+            else:
+                src = QPixmap(path)
+                pm = src.scaled(size_px, size_px, Qt.KeepAspectRatio,
+                                Qt.SmoothTransformation)
+            self._drum_icon_pixmaps[cache_key] = pm
+        return pm
+
     def _draw_drums_lane(self, ti: int, top: float, name: str, total_w: float,
                          h_slot: float | None = None) -> None:
         """Vykreslí stopu bicích: KAŽDÝ konkrétní buben má vlastní popsaný
@@ -1063,6 +1165,7 @@ class TimelineEditor(QWidget):
         nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
         nm.setPos(6, top + 3)
         nm.setBrush(QBrush(QColor("#b56b1e")))
+        self._add_drum_shift_controls(ti, top)
 
         drum_names = self._drum_names_for(ti)
         n_rows = max(1, len(drum_names))
@@ -1073,8 +1176,8 @@ class TimelineEditor(QWidget):
         for i, dn in enumerate(drum_names):
             ry = y + 4 + i * rows_h
             it = self.scene.addSimpleText(dn)
-            it.setFont(QFont("Segoe UI", 7))
-            it.setPos(12, ry + rows_h / 2 - 6)
+            it.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            it.setPos(12, ry + rows_h / 2 - 8)
             it.setBrush(QBrush(colors[dn].darker(140)))
             # jemná vodicí linka řady (skrz střed)
             self.scene.addLine(HEADER_W, ry + rows_h / 2, HEADER_W + w, ry + rows_h / 2,
@@ -1083,17 +1186,60 @@ class TimelineEditor(QWidget):
             if i > 0:
                 self.scene.addLine(HEADER_W, ry, HEADER_W + w, ry, QPen(QColor("#f7e6cc"), 1))
 
-        r_dot = max(2.0, min(5.0, rows_h / 2 - 2))
+        icon_size = max(24, min(64, int(rows_h - 10)))
         for ev in self.data.get("drums_timeline", []):
             if ev.get("track_index") != ti:
                 continue
             dn = ev.get("drum", "?")
             i = row_of.get(dn, 0)
-            col = colors.get(dn, QColor("#888888"))
+            pm = self._drum_icon_pixmap(self._drum_icon_key(dn), icon_size)
             x = HEADER_W + float(ev.get("time_s", 0)) * self.pps
             ry = y + 4 + i * rows_h + rows_h / 2
-            self.scene.addEllipse(x - r_dot, ry - r_dot, r_dot * 2, r_dot * 2,
-                                  QPen(col.darker(130), 1), QBrush(col))
+            item = self.scene.addPixmap(pm)
+            item.setOffset(-icon_size / 2, -icon_size / 2)
+            item.setPos(x, ry)
+
+    def _add_drum_shift_controls(self, ti: int, top: float) -> None:
+        """Tlačítka v hlavičce stopy bicích pro posun VŠECH úhozů dané stopy
+        v čase najednou (řeší situaci, kdy bicí z GP souboru vyjedou z fáze
+        vůči textu/akordům odjinud)."""
+        x0 = HEADER_W - 72
+        y0 = top + 3
+        specs = [
+            ("◀", "Posunout celou stopu bicích dřív o krok mřížky (Přichytit)",
+             lambda: self.shift_drum_track(ti, -self._nudge_step())),
+            ("▶", "Posunout celou stopu bicích později o krok mřížky (Přichytit)",
+             lambda: self.shift_drum_track(ti, self._nudge_step())),
+            ("⋯", "Posunout celou stopu bicích o přesný čas…",
+             lambda: self._shift_drum_track_dialog(ti)),
+        ]
+        for i, (label, tip, cb) in enumerate(specs):
+            btn = DrumShiftButton(label, tip, cb)
+            btn.setPos(x0 + i * 22, y0)
+            self.scene.addItem(btn)
+
+    def _nudge_step(self) -> float:
+        """Krok posunu stopy = aktuální mřížka (Přichytit), jinak 0,1 s."""
+        return self.snap_s if self.snap_s > 0 else 0.1
+
+    def shift_drum_track(self, ti: int, delta_s: float) -> None:
+        """Posune ČASY VŠECH úhozů bicích dané stopy o delta_s (+ později,
+        − dřív). Jen bicí (drums_timeline) — text/akordy zůstávají beze
+        změny, protože právě jejich vzájemný posun je cílem."""
+        if not delta_s:
+            return
+        for ev in self.data.get("drums_timeline", []):
+            if ev.get("track_index") == ti:
+                ev["time_s"] = round(max(0.0, float(ev.get("time_s", 0.0)) + delta_s), 3)
+        self._relayout()
+
+    def _shift_drum_track_dialog(self, ti: int) -> None:
+        delta, ok = QInputDialog.getDouble(
+            self, "Posunout stopu bicích",
+            "Posun v sekundách (kladné = později, záporné = dřív):",
+            0.0, -60.0, 60.0, 3)
+        if ok and delta:
+            self.shift_drum_track(ti, delta)
 
     def _track_is_bass(self, ti: int) -> bool:
         for t in self.tracks:
