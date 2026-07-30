@@ -83,6 +83,7 @@ na starší soubor, který je má, ignoruj je (dopředná kompatibilita).
 | `has_line_structure` | bool | `true` u obou producentů vždy — řádky jsou explicitní přes `line`, ne odvozené |
 | `merged_web_gp` | bool | `true`, pokud data vznikla GP sloučením (Ctrl+M nebo GP-po-textu) — nepovinné, chybí u čistě GP/web dat |
 | `edited_in_timeline` | bool | `true`, pokud JSON prošel `to_json()` editoru časové osy |
+| `audio_file` | str | cesta k MP3/WAV nahrávce pro přehrávač v editoru časové osy (tlačítko „🎵 Načíst MP3/WAV…", synchronizované s playheadem + shuttle ovladač `jog_shuttle.py`) — nepovinné, jen pro editor; cesta je lokální k počítači, kde se soubor vybral, takže se na jiném stroji nemusí najít (editor to ošetří tichým „(žádné audio)", ne pádem). ESP32 firmware toto pole nepoužívá |
 
 ### 3.2 `tempo_map`
 
@@ -234,10 +235,26 @@ přes `source_track` a čas.
 | `lyrics_chords` | text zpěvu s akordy nad ním (výchozí) |
 | `lyrics` | jen text |
 | `chords` | jen akordy (intro/mezihra bez textu) |
+| `count_in` | odpočet před písní — viz níže |
 
 (Módy `tab`/`tab_chords` z dřívějška se už negenerují — žádná stopa nenese
 tabulaturu. Parser je pro jistotu nechá jako fallback na `lyrics_chords`,
 kdyby na ně narazil ve starším souboru.)
+
+**`mode: "count_in"`** — volitelný klip vždy na `[0, meta.count_in_s)`
+(vkládá/upravuje ho tlačítko „🥁⏱ Odpočet…" v editoru časové osy — viz
+`ESP32_KARAOKE_IMPLEMENTATION.md` §6c). Má navíc dvě pole místo obvyklého
+`source_track`/textu ze stopy:
+
+```jsonc
+{ "id": "clip-count-in", "start_s": 0.0, "end_s": 4.0,
+  "source_track": 1, "mode": "count_in",
+  "artist": "Metallica", "title": "One", "label": "Metallica / One" }
+```
+
+`artist`/`title` se zobrazí na pozici akordy/text (stejný layout jako
+`lyrics_chords`); samotné odpočítávací číslo (4,3,2,1…) se NEUKLÁDÁ — displej
+si ho dopočítá z `meta.count_in_s`/`count_in_bars`/`tempo_bpm` (viz §6c).
 
 Parser vezme `mode` + `source_track`, dohledá odpovídající eventy v daném
 časovém okně a vykreslí je. Neznámý `mode` → fallback `lyrics_chords`.

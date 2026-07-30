@@ -307,6 +307,26 @@ if (number >= 1) draw_big_number(number);                // velký, uprostřed d
   `display_timeline` začíná přesně na `count_in_s` (nebo později, pokud má
   song ještě instrumentální úvod navíc).
 
+**Interpret + název během odpočtu (volitelný klip `mode: "count_in"`)** — timeline
+editor umí do `display_timeline` vložit klip přesně na `[0, count_in_s)` s
+`"mode": "count_in"` a poli `"artist"`/`"title"` (např. `"Metallica"` /
+`"One"`). Pokud je tenhle klip přítomný:
+
+```jsonc
+{ "id": "clip-count-in", "start_s": 0.0, "end_s": 4.0,
+  "source_track": 1, "mode": "count_in",
+  "artist": "Metallica", "title": "One", "label": "Metallica / One" }
+```
+
+- Zobraz **interpreta** tam, kde by jinak byl řádek akordů (horní řádek), a
+  **název písně** tam, kde by jinak byl text (spodní řádek) — stejné dvě
+  pozice jako u běžného `lyrics_chords` klipu, žádný nový layout netřeba.
+- **Velké odpočítávací číslo (4,3,2,1…) se kreslí NAVÍC**, nezávisle na
+  těchto dvou textových řádcích (viz kód výše) — typicky uprostřed displeje.
+- Klip `mode: "count_in"` je čistě volitelný — pokud chybí (starší JSON /
+  uživatel ho nevyplnil), přehrávač v okně `[0, count_in_s)` prostě nekreslí
+  žádný text, jen odpočítávací číslo.
+
 ---
 
 ## 7. Idle / mezery / náhled dalšího řádku

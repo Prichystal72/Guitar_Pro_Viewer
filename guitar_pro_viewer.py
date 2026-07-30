@@ -15,7 +15,7 @@ from web_import import WebImportDialog
 from timeline_editor import TimelineEditor
 
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTreeWidget, QTreeWidgetItem, QLabel, QTextEdit,
     QPushButton, QFileDialog, QTabWidget, QTableWidget, QTableWidgetItem,
     QScrollArea, QStatusBar, QHeaderView, QMessageBox,

@@ -1,0 +1,242 @@
+<!doctype html>
+<!--
+  jog_shuttle.html — webová referenční varianta shuttle/jog ovladače.
+
+  Vizuální/interaktivní KOSTRA (bez reálného přehrávání zvuku) — stejný
+  úhlový model a pružinové chování jako desktopový PySide6 widget
+  v jog_shuttle.py. Určeno jako výchozí bod pro pozdější webserver ESP32
+  hardwaru (viz ESP32_KARAOKE_IMPLEMENTATION.md) — tam se na eventy níže
+  napojí reálný audio stream / ovládání přehrávače na zařízení.
+
+  Vysílá CustomEvent na #shuttle elementu:
+    - "shuttlechange"  detail: {value}   -1..+1, 0 = klid
+    - "playrequest"    detail: {}
+    - "pauserequest"   detail: {}
+    - "stoprequest"    detail: {}
+
+  Otevři přímo v prohlížeči — ovladač jde tažením myší/prstem vyzkoušet,
+  živý readout dole ukazuje aktuální stav a poslední přijaté eventy.
+-->
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Jog/Shuttle ovladač — webová varianta</title>
+<style>
+  :root {
+    --bg: #1e1e1e; --fg: #eee; --panel: #2a2a2a; --border: #444;
+    --ring-bg: #3a3a3a; --ring-fwd: #4a9eff; --ring-rev: #ffab40;
+    --btn-bg: #333; --btn-border: #666; --btn-active: #2d7d2d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+    background: var(--bg); color: var(--fg);
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 16px; font-weight: 600; margin: 0; color: #aaa; }
+  #shuttle {
+    width: 180px; height: 180px; position: relative; cursor: pointer;
+    touch-action: none; user-select: none;
+  }
+  #shuttle svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #ring-arc { transition: none; }
+  #ring-arc.spring { transition: stroke-dasharray 220ms ease-out; }
+  #knob { transition: none; }
+  #knob.spring { transition: cx 220ms ease-out, cy 220ms ease-out; }
+  .btn {
+    cursor: pointer;
+  }
+  .btn rect { fill: var(--btn-bg); stroke: var(--btn-border); stroke-width: 1; }
+  .btn.active rect { fill: var(--btn-active); }
+  .btn text { fill: #eee; font-size: 15px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  #readout-value {
+    position: absolute; bottom: 14px; left: 0; right: 0; text-align: center;
+    font-size: 12px; font-weight: 600; pointer-events: none;
+  }
+  #panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; width: 340px; font-size: 13px; line-height: 1.6;
+  }
+  #panel div span { color: #4a9eff; font-family: Consolas, monospace; }
+  #log {
+    max-height: 110px; overflow-y: auto; margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--border); font-family: Consolas, monospace;
+    font-size: 11px; color: #999;
+  }
+  #log div:last-child { color: #ddd; }
+</style>
+</head>
+<body>
+
+<h1>Jog / Shuttle ovladač — web varianta (vizuální kostra, bez zvuku)</h1>
+
+<div id="shuttle" title="Táhni mezikruží = shuttle (doprava/doleva). Uprostřed: ⏹ ▶ ⏸.">
+  <svg viewBox="0 0 180 180">
+    <circle cx="90" cy="90" r="78" fill="var(--ring-bg)" stroke="#555" stroke-width="1"></circle>
+    <circle id="ring-arc" cx="90" cy="90" r="78" fill="none" stroke="var(--ring-fwd)"
+            stroke-width="12" stroke-linecap="round"
+            stroke-dasharray="0 490" transform="rotate(-90 90 90)"></circle>
+    <circle id="knob" cx="90" cy="18" r="7" fill="var(--ring-fwd)" stroke="#222" stroke-width="1"></circle>
+    <circle cx="90" cy="90" r="44" fill="#fff" stroke="#aaa" stroke-width="1"></circle>
+    <g class="btn" data-action="stop">
+      <rect x="52" y="76" width="24" height="28" rx="4"></rect>
+      <text x="64" y="91">⏹</text>
+    </g>
+    <g class="btn" id="btn-play" data-action="play">
+      <rect x="78" y="76" width="24" height="28" rx="4"></rect>
+      <text x="90" y="91">▶</text>
+    </g>
+    <g class="btn" data-action="pause">
+      <rect x="104" y="76" width="24" height="28" rx="4"></rect>
+      <text x="116" y="91">⏸</text>
+    </g>
+  </svg>
+  <div id="readout-value"></div>
+</div>
+
+<div id="panel">
+  <div>Stav: <span id="state">klid</span></div>
+  <div>shuttle value: <span id="val">0.000</span></div>
+  <div id="log"></div>
+</div>
+
+<script>
+(function () {
+  const el = document.getElementById("shuttle");
+  const ringArc = document.getElementById("ring-arc");
+  const knob = document.getElementById("knob");
+  const readout = document.getElementById("readout-value");
+  const stateEl = document.getElementById("state");
+  const valEl = document.getElementById("val");
+  const logEl = document.getElementById("log");
+
+  const CX = 90, CY = 90;
+  const OUTER_R = 78, INNER_R = 44;
+  const MAX_ANGLE = 120;           // ± stupňů
+  const CIRC = 2 * Math.PI * OUTER_R;
+
+  let angle = 0;                   // stupně, 0 = nahoře, + = doprava (CW)
+  let dragging = false;
+  let isPlaying = false;
+  let springTimer = null;
+
+  function log(msg) {
+    const line = document.createElement("div");
+    line.textContent = msg;
+    logEl.appendChild(line);
+    while (logEl.children.length > 6) logEl.removeChild(logEl.firstChild);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function emit(name, detail) {
+    el.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
+  }
+
+  function angleOfEvent(ev) {
+    const rect = el.getBoundingClientRect();
+    const scale = 180 / rect.width;   // viewBox 180 vs. skutečná velikost
+    const x = (ev.clientX - rect.left) * scale;
+    const y = (ev.clientY - rect.top) * scale;
+    const dx = x - CX, dy = y - CY;
+    return Math.atan2(dx, -dy) * 180 / Math.PI;
+  }
+
+  function distOfEvent(ev) {
+    const rect = el.getBoundingClientRect();
+    const scale = 180 / rect.width;
+    const x = (ev.clientX - rect.left) * scale;
+    const y = (ev.clientY - rect.top) * scale;
+    return Math.hypot(x - CX, y - CY);
+  }
+
+  function render() {
+    const value = angle / MAX_ANGLE;
+    const frac = Math.abs(angle) / 360;
+    ringArc.setAttribute("stroke-dasharray", `${frac * CIRC} ${CIRC}`);
+    ringArc.setAttribute("transform", angle >= 0
+      ? "rotate(-90 90 90)"
+      : `rotate(${-90 - Math.abs(angle)} 90 90)`);
+    ringArc.setAttribute("stroke", angle >= 0 ? "var(--ring-fwd)" : "var(--ring-rev)");
+
+    const rad = angle * Math.PI / 180;
+    const kx = CX + (OUTER_R - 6) * Math.sin(rad);
+    const ky = CY - (OUTER_R - 6) * Math.cos(rad);
+    knob.setAttribute("cx", kx);
+    knob.setAttribute("cy", ky);
+    knob.setAttribute("fill", angle >= 0 ? "var(--ring-fwd)" : "var(--ring-rev)");
+
+    if (Math.abs(value) > 0.02) {
+      const spd = value > 0 ? (value * 4).toFixed(1) : (-value * 8).toFixed(1);
+      readout.textContent = (value > 0 ? "▶ " : "◀ ") + spd + "×";
+      readout.style.color = value > 0 ? "var(--ring-fwd)" : "var(--ring-rev)";
+    } else {
+      readout.textContent = "";
+    }
+    valEl.textContent = value.toFixed(3);
+  }
+
+  function setSpringVisual(on) {
+    ringArc.classList.toggle("spring", on);
+    knob.classList.toggle("spring", on);
+  }
+
+  function springToZero() {
+    setSpringVisual(true);
+    angle = 0;
+    render();
+    clearTimeout(springTimer);
+    springTimer = setTimeout(() => setSpringVisual(false), 240);
+  }
+
+  el.addEventListener("pointerdown", (ev) => {
+    const btn = ev.target.closest(".btn");
+    if (btn) {
+      const action = btn.dataset.action;
+      if (action === "play") { isPlaying = true; stateEl.textContent = "přehrává"; emit("playrequest"); log("→ playrequest"); }
+      if (action === "pause") { isPlaying = false; stateEl.textContent = "pauza"; emit("pauserequest"); log("→ pauserequest"); }
+      if (action === "stop") { isPlaying = false; stateEl.textContent = "stop"; emit("stoprequest"); log("→ stoprequest"); }
+      document.getElementById("btn-play").classList.toggle("active", isPlaying);
+      return;
+    }
+    const dist = distOfEvent(ev);
+    if (dist <= INNER_R) return;
+    if (dist <= OUTER_R + 12) {
+      setSpringVisual(false);
+      dragging = true;
+      el.setPointerCapture(ev.pointerId);
+      angle = Math.max(-MAX_ANGLE, Math.min(MAX_ANGLE, angleOfEvent(ev)));
+      render();
+      const v = angle / MAX_ANGLE;
+      emit("shuttlechange", { value: v });
+      log(`→ shuttlechange(${v.toFixed(3)})`);
+      stateEl.textContent = v > 0 ? "shuttle vpřed" : (v < 0 ? "shuttle vzad (tichý posun)" : "klid");
+    }
+  });
+
+  el.addEventListener("pointermove", (ev) => {
+    if (!dragging) return;
+    angle = Math.max(-MAX_ANGLE, Math.min(MAX_ANGLE, angleOfEvent(ev)));
+    render();
+    const v = angle / MAX_ANGLE;
+    emit("shuttlechange", { value: v });
+    stateEl.textContent = v > 0 ? "shuttle vpřed" : (v < 0 ? "shuttle vzad (tichý posun)" : "klid");
+  });
+
+  function endDrag(ev) {
+    if (!dragging) return;
+    dragging = false;
+    emit("shuttlechange", { value: 0.0 });   // okamžité zastavení (logická rychlost)
+    log("→ shuttlechange(0.000) [puštěno]");
+    stateEl.textContent = isPlaying ? "přehrává" : "klid";
+    springToZero();                          // jen vizuální návrat ukazatele
+  }
+  el.addEventListener("pointerup", endDrag);
+  el.addEventListener("pointercancel", endDrag);
+
+  render();
+})();
+</script>
+
+</body>
+</html>
