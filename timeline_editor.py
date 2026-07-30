@@ -1215,7 +1215,9 @@ class TimelineEditor(QWidget):
 
         # --- spodní lišta: přehrávač MP3/WAV + shuttle/jog ovladač ---
         audio_widget = QWidget()
-        audio_widget.setMaximumHeight(96)
+        # musí se vejít celý jog ovladač (128 px) i s okraji layoutu —
+        # nižší strop mu ořezával spodek mezikruží
+        audio_widget.setMaximumHeight(142)
         audio_bar = QHBoxLayout(audio_widget)
         audio_bar.setContentsMargins(8, 4, 8, 4)
 
@@ -1259,8 +1261,7 @@ class TimelineEditor(QWidget):
         audio_bar.addStretch()
 
         self.jog = JogShuttleWidget()
-        self.jog.playRequested.connect(self.play_audio)
-        self.jog.pauseRequested.connect(self.pause_audio)
+        self.jog.playPauseRequested.connect(self.toggle_play_pause)
         self.jog.stopRequested.connect(self.stop_audio)
         self.jog.shuttleChanged.connect(self._on_shuttle)
         audio_bar.addWidget(self.jog)
@@ -1800,6 +1801,15 @@ class TimelineEditor(QWidget):
     def pause_audio(self) -> None:
         self._stop_shuttle_timer()
         self.player.pause()
+
+    def toggle_play_pause(self) -> None:
+        """Spojené tlačítko ▶/⏸ na ovladači — rozhoduje se podle SKUTEČNÉHO
+        stavu přehrávače (ne podle toho, co si pamatuje widget), aby se stav
+        tlačítka nemohl rozejít s realitou."""
+        if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.pause_audio()
+        else:
+            self.play_audio()
 
     def stop_audio(self) -> None:
         """Zastaví přehrávání. Qt `stop()` interně vrací pozici na 0 —

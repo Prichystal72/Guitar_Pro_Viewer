@@ -30,13 +30,15 @@ BTN_BORDER = QColor("#999999")
 
 class JogShuttleWidget(QWidget):
     """Signály:
-    - playRequested / pauseRequested / stopRequested — klik na vnitřní tlačítko.
+    - playPauseRequested — klik na spojené tlačítko ▶/⏸ (přehrát ⇄ pauza).
+      Widget SÁM nerozhoduje, co se stane — jen ohlásí kliknutí; skutečný
+      stav přehrávače zná editor a hlásí ho zpět přes `set_playing()`.
+    - stopRequested — klik na ⏹.
     - shuttleChanged(float) — −1..+1 (0 = klid), průběžně během tažení
       mezikruží; při puštění se ihned pošle 0.0 (pružinový návrat).
     """
 
-    playRequested = Signal()
-    pauseRequested = Signal()
+    playPauseRequested = Signal()
     stopRequested = Signal()
     shuttleChanged = Signal(float)
 
@@ -46,7 +48,7 @@ class JogShuttleWidget(QWidget):
         self.setCursor(Qt.PointingHandCursor)
         self.setToolTip(
             "Táhni mezikruží = přetáčení (doprava = zvuk zrychlený, "
-            "doleva = tichý posun zpět). Uprostřed: ▶ přehrát, ⏸ pauza, ⏹ stop."
+            "doleva = tichý posun zpět). Uprostřed: ▶/⏸ přehrát-pauza, ⏹ stop."
         )
         self._angle = 0.0            # aktuální (zobrazovaný) úhel, stupně
         self._dragging = False
@@ -92,7 +94,13 @@ class JogShuttleWidget(QWidget):
         # mezikruží — oblouk aktuálního natočení (od 0° po _angle)
         if abs(self._angle) > 0.5:
             color = RING_FWD if self._angle > 0 else RING_REV
-            p.setPen(QPen(color, 10, cap=Qt.RoundCap))
+            # POZOR: QPen(...) nepřijímá `cap=` jako pojmenovaný argument —
+            # vyhodilo by to výjimku UPROSTŘED paintEvent (a protože se sem
+            # dostaneme jen při natočeném kroužku, projevilo se to tak, že
+            # mezikruží "zmizelo", jakmile se za něj zatáhlo).
+            pen = QPen(color, 10)
+            pen.setCapStyle(Qt.RoundCap)
+            p.setPen(pen)
             span = self._angle
             # QPainter úhly: 0° = 3h, kladné = proti směru hod. ruč. -> převod:
             start_qt = 90 - 0            # 12h ve stupních QPainteru
@@ -113,24 +121,34 @@ class JogShuttleWidget(QWidget):
         p.setBrush(QBrush(QColor("#ffffff")))
         p.drawEllipse(inner_rect)
 
-        # 3 tlačítka vedle sebe uvnitř vnitřního kruhu
-        btn_w = INNER_R * 2 / 3.0 - 4
-        btn_h = INNER_R * 1.3
+        # 2 tlačítka: spojené ▶/⏸ (větší, hlavní) + ⏹ stop
+        gap = 5.0
+        play_w = INNER_R * 1.05
+        stop_w = INNER_R * 0.62
+        btn_h = INNER_R * 1.25
         y0 = c.y() - btn_h / 2
-        labels = [("stop", "⏹", False), ("play", "▶", self._is_playing), ("pause", "⏸", False)]
-        x = c.x() - (btn_w * 3 + 4 * 2) / 2
+        x = c.x() - (play_w + stop_w + gap) / 2
         self._btn_rects.clear()
-        f = QFont("Segoe UI", 10)
-        p.setFont(f)
-        for key, glyph, active in labels:
-            r = QRectF(x, y0, btn_w, btn_h)
-            self._btn_rects[key] = r
-            p.setPen(QPen(BTN_BORDER, 1))
-            p.setBrush(QBrush(BTN_ACTIVE.lighter(160) if active else BTN_BG))
-            p.drawRoundedRect(r, 4, 4)
-            p.setPen(QPen(BTN_ACTIVE.darker(120) if active else QColor("#333333")))
-            p.drawText(r, Qt.AlignCenter, glyph)
-            x += btn_w + 4
+
+        # spojené přehrát/pauza — ikonka se přepíná podle stavu přehrávače
+        r_play = QRectF(x, y0, play_w, btn_h)
+        self._btn_rects["playpause"] = r_play
+        p.setPen(QPen(BTN_BORDER, 1))
+        p.setBrush(QBrush(BTN_ACTIVE.lighter(165) if self._is_playing else BTN_BG))
+        p.drawRoundedRect(r_play, 5, 5)
+        p.setPen(QPen(BTN_ACTIVE.darker(125) if self._is_playing else QColor("#333333")))
+        p.setFont(QFont("Segoe UI", 12))
+        p.drawText(r_play, Qt.AlignCenter, "⏸" if self._is_playing else "▶")
+
+        # stop
+        r_stop = QRectF(x + play_w + gap, y0, stop_w, btn_h)
+        self._btn_rects["stop"] = r_stop
+        p.setPen(QPen(BTN_BORDER, 1))
+        p.setBrush(QBrush(BTN_BG))
+        p.drawRoundedRect(r_stop, 5, 5)
+        p.setPen(QPen(QColor("#333333")))
+        p.setFont(QFont("Segoe UI", 10))
+        p.drawText(r_stop, Qt.AlignCenter, "⏹")
 
         # číselný readout rychlosti/směru pod ovladačem
         value = self._angle / MAX_ANGLE
@@ -152,10 +170,8 @@ class JogShuttleWidget(QWidget):
         if dist <= INNER_R:
             for key, r in self._btn_rects.items():
                 if r.contains(pos):
-                    if key == "play":
-                        self.playRequested.emit()
-                    elif key == "pause":
-                        self.pauseRequested.emit()
+                    if key == "playpause":
+                        self.playPauseRequested.emit()
                     elif key == "stop":
                         self.stopRequested.emit()
                     break

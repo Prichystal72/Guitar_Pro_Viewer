@@ -9,10 +9,13 @@
   napojí reálný audio stream / ovládání přehrávače na zařízení.
 
   Vysílá CustomEvent na #shuttle elementu:
-    - "shuttlechange"  detail: {value}   -1..+1, 0 = klid
-    - "playrequest"    detail: {}
-    - "pauserequest"   detail: {}
-    - "stoprequest"    detail: {}
+    - "shuttlechange"     detail: {value}     -1..+1, 0 = klid
+    - "playpauserequest"  detail: {}          spojené tlačítko ▶/⏸
+    - "stoprequest"       detail: {}
+
+  Pozn.: ▶ a ⏸ jsou JEDNO přepínací tlačítko. Komponenta sama nerozhoduje,
+  co se stane — jen ohlásí kliknutí; skutečný stav přehrávání zná nadřazená
+  vrstva a hlásí ho zpět voláním setPlaying(true/false) na #shuttle.
 
   Otevři přímo v prohlížeči — ovladač jde tažením myší/prstem vyzkoušet,
   živý readout dole ukazuje aktuální stav a poslední přijaté eventy.
@@ -79,17 +82,13 @@
             stroke-dasharray="0 490" transform="rotate(-90 90 90)"></circle>
     <circle id="knob" cx="90" cy="18" r="7" fill="var(--ring-fwd)" stroke="#222" stroke-width="1"></circle>
     <circle cx="90" cy="90" r="44" fill="#fff" stroke="#aaa" stroke-width="1"></circle>
+    <g class="btn" id="btn-playpause" data-action="playpause">
+      <rect x="60" y="75" width="40" height="30" rx="5"></rect>
+      <text id="playpause-glyph" x="80" y="90">▶</text>
+    </g>
     <g class="btn" data-action="stop">
-      <rect x="52" y="76" width="24" height="28" rx="4"></rect>
-      <text x="64" y="91">⏹</text>
-    </g>
-    <g class="btn" id="btn-play" data-action="play">
-      <rect x="78" y="76" width="24" height="28" rx="4"></rect>
-      <text x="90" y="91">▶</text>
-    </g>
-    <g class="btn" data-action="pause">
-      <rect x="104" y="76" width="24" height="28" rx="4"></rect>
-      <text x="116" y="91">⏸</text>
+      <rect x="104" y="75" width="24" height="30" rx="5"></rect>
+      <text x="116" y="90">⏹</text>
     </g>
   </svg>
   <div id="readout-value"></div>
@@ -189,14 +188,36 @@
     springTimer = setTimeout(() => setSpringVisual(false), 240);
   }
 
+  const playPauseGlyph = document.getElementById("playpause-glyph");
+  const playPauseBtn = document.getElementById("btn-playpause");
+
+  // Nadřazená vrstva (přehrávač) hlásí SKUTEČNÝ stav zpět sem — komponenta
+  // si ho sama nedomýšlí, aby se tlačítko nemohlo rozejít s realitou.
+  function setPlaying(playing) {
+    isPlaying = !!playing;
+    playPauseGlyph.textContent = isPlaying ? "⏸" : "▶";
+    playPauseBtn.classList.toggle("active", isPlaying);
+    stateEl.textContent = isPlaying ? "přehrává" : "pauza";
+  }
+  el.setPlaying = setPlaying;   // veřejné API komponenty
+
   el.addEventListener("pointerdown", (ev) => {
     const btn = ev.target.closest(".btn");
     if (btn) {
       const action = btn.dataset.action;
-      if (action === "play") { isPlaying = true; stateEl.textContent = "přehrává"; emit("playrequest"); log("→ playrequest"); }
-      if (action === "pause") { isPlaying = false; stateEl.textContent = "pauza"; emit("pauserequest"); log("→ pauserequest"); }
-      if (action === "stop") { isPlaying = false; stateEl.textContent = "stop"; emit("stoprequest"); log("→ stoprequest"); }
-      document.getElementById("btn-play").classList.toggle("active", isPlaying);
+      if (action === "playpause") {
+        emit("playpauserequest");
+        log("→ playpauserequest");
+        // v této ukázce si stav přepneme sami, aby šlo tlačítko vyzkoušet
+        // i bez napojeného přehrávače (v ostrém nasazení volej setPlaying())
+        setPlaying(!isPlaying);
+      }
+      if (action === "stop") {
+        emit("stoprequest");
+        log("→ stoprequest");
+        setPlaying(false);
+        stateEl.textContent = "stop";
+      }
       return;
     }
     const dist = distOfEvent(ev);
