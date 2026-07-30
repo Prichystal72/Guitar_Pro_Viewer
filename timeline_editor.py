@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 from jog_shuttle import JogShuttleWidget
+from waveform import WaveformData, WaveformLoader
 
 # --- ikonky bicích (assets/drum_icons/*), klíč = _drum_icon_key() ---
 DRUM_ICON_DIR = os.path.join(os.path.dirname(__file__), "assets", "drum_icons")
@@ -90,6 +91,11 @@ HANDLE_W = 8        # šířka tažného oddělovače řádku
 DRUM_ICON_SIZE = 32     # px — fixní velikost ikonky bubnu v pruhu bicích
 DRUM_ROW_H = 40.0       # px — výška JEDNOHO řádku bicí stopy (ikona + okraj)
 UNDO_LIMIT = 50         # max. počet kroků historie (deepcopy self.data na krok)
+WAVEFORM_MIN_H = 24.0    # px — nejmenší výška stopy vlnovky (tažením dolů)
+WAVEFORM_MAX_H = 200.0   # px — největší výška (ať je vidět i tichý nástup bicích)
+WAVEFORM_DEFAULT_H = 64.0
+AUDIO_STRETCH_MIN = 0.90   # −10 %
+AUDIO_STRETCH_MAX = 1.10   # +10 %
 
 LINE_COLOR = QColor("#9141ac")   # fialová = karaoke řádky
 BREAK_COLOR = QColor("#e5a50a")  # oranžová = tažná hranice řádku
@@ -763,6 +769,145 @@ class DrumRowBackground(QGraphicsRectItem):
         ev.accept()
 
 
+class WaveformItem(QGraphicsRectItem):
+    """„Chlupatá čára" — tvar vlny nahraného MP3/WAV nad zdrojovými stopami
+    (ať je vidět, kdy přesně nastupují bicí apod., proti mřížce tempa).
+
+    Záměrně NEjde stříhat ani editovat jako ostatní prvky — jen:
+      • táhnout celou stopu (posun v čase → `editor.audio_offset_s`),
+      • táhnout dolní okraj (výška řádku → `editor.waveform_h`),
+      • pravým kliknout → dialog s přesným posunem a ±10% roztažením
+        (`editor.waveform_dialog`), pro dolazení na kulaté BPM.
+    """
+
+    def __init__(self, editor: "TimelineEditor", top: float, height: float, total_w: float):
+        super().__init__()
+        self.editor = editor
+        self.top = top
+        self.h = height
+        self.setRect(0, 0, total_w - HEADER_W, height)
+        self.setPos(HEADER_W, top)
+        self.setPen(QPen(Qt.NoPen))
+        self.setZValue(5)
+        self.setAcceptHoverEvents(True)
+        self.setCursor(Qt.OpenHandCursor)
+        self.setToolTip(
+            "Táhni = posuň celou nahrávku v čase. Táhni DOLNÍ okraj = výška "
+            "řádku. Pravý klik = přesný posun/roztažení (±10 %, pro sladění "
+            "s kulatým BPM).")
+        self._dragging_offset = False
+        self._resizing_height = False
+        self._drag_start_x = 0.0
+        self._drag_start_offset = 0.0
+        self._undo_pushed = False
+
+    def paint(self, p: QPainter, option, widget=None):
+        r = self.rect()
+        p.fillRect(r, QBrush(QColor("#eef2f5")))
+        editor = self.editor
+        wf = editor.waveform
+        if not wf or len(wf) == 0:
+            p.setPen(QPen(QColor("#8a97a3")))
+            p.setFont(QFont("Segoe UI", 8))
+            msg = ("načítám tvar vlny…" if editor._waveform_loading else
+                  "(bez náhledu vlny — „🎵 Načíst MP3/WAV…“)")
+            p.drawText(r, Qt.AlignCenter, msg)
+            return
+
+        exposed = option.exposedRect if option is not None else r
+        x0 = max(0.0, exposed.left())
+        x1 = min(r.width(), exposed.right())
+        if x1 <= x0:
+            return
+        pps = editor.pps
+        mid = self.h / 2
+        amp = self.h / 2 * 0.92
+        max_lines = 2000.0   # strop na počet čar bez ohledu na zoom/délku
+        step = max(1.0, (x1 - x0) / max_lines)
+
+        p.setPen(QPen(QColor("#2f6690"), 1))
+        x = x0
+        while x < x1:
+            t0 = x / pps
+            t1 = (x + step) / pps
+            a0 = editor._timeline_to_audio_t(t0)
+            a1 = editor._timeline_to_audio_t(t1)
+            if a1 >= 0 and a0 <= wf.duration_s:
+                mn, mx = wf.peak_range(max(0.0, a0), max(a0 + 1e-4, a1))
+                p.drawLine(QPointF(x, mid - mx * amp), QPointF(x, mid - mn * amp))
+            x += step
+
+        p.setPen(QPen(QColor("#c8d6e0"), 1))
+        p.drawLine(QPointF(x0, mid), QPointF(x1, mid))
+
+    # --- interakce: posun celé stopy (tělo) / výška (dolní okraj) ---
+    def hoverMoveEvent(self, ev):
+        near_bottom = ev.pos().y() >= self.h - EDGE
+        self.setCursor(Qt.SizeVerCursor if near_bottom else Qt.OpenHandCursor)
+        super().hoverMoveEvent(ev)
+
+    def mousePressEvent(self, ev):
+        if ev.button() != Qt.LeftButton:
+            super().mousePressEvent(ev)
+            return
+        self._undo_pushed = False
+        if ev.pos().y() >= self.h - EDGE:
+            self._resizing_height = True
+            ev.accept()
+            return
+        self._dragging_offset = True
+        self._drag_start_x = ev.scenePos().x()
+        self._drag_start_offset = self.editor.audio_offset_s
+        ev.accept()
+
+    def mouseMoveEvent(self, ev):
+        if self._resizing_height:
+            new_h = max(WAVEFORM_MIN_H, min(WAVEFORM_MAX_H, ev.pos().y()))
+            self.h = new_h
+            self.prepareGeometryChange()
+            self.setRect(0, 0, self.rect().width(), new_h)
+            self.update()
+            ev.accept()
+            return
+        if self._dragging_offset:
+            if not self._undo_pushed:
+                self.editor._push_undo()
+                self._undo_pushed = True
+            dt = (ev.scenePos().x() - self._drag_start_x) / self.editor.pps
+            new_offset = max(0.0, self._drag_start_offset + dt)
+            self.editor.set_audio_offset(new_offset, relayout=False)
+            self.update()
+            ev.accept()
+            return
+        super().mouseMoveEvent(ev)
+
+    def mouseReleaseEvent(self, ev):
+        if self._resizing_height:
+            self._resizing_height = False
+            self.editor.waveform_h = self.h
+            self.editor.data.setdefault("meta", {})["waveform_track_height"] = self.h
+            self.editor._relayout()   # přepočítá pozice stop POD vlnovkou
+            ev.accept()
+            return
+        if self._dragging_offset:
+            self._dragging_offset = False
+            ev.accept()
+            return
+        super().mouseReleaseEvent(ev)
+
+    def mouseDoubleClickEvent(self, ev):
+        self.editor.waveform_dialog()
+        ev.accept()
+
+    def contextMenuEvent(self, ev):
+        menu = QMenu()
+        act = menu.addAction("✎ Poloha/roztažení zvuku…")
+        chosen = menu.exec(ev.screenPos())
+        if chosen is act:
+            self.editor.waveform_dialog()
+        ev.accept()
+
+
 class PropertiesPanel(QWidget):
     """Postranní panel — přesné (parametrické) zadání hodnot vybraného prvku
     časové osy: čas/délka/text/buben/režim na desetiny/tisíciny, ne jen
@@ -1079,6 +1224,17 @@ class TimelineEditor(QWidget):
         self._test_sound.setSource(QUrl.fromLocalFile(_beep_wav()))
         self._test_sound.setVolume(1.0)
 
+        # --- vlnovka nahrávky (WaveformItem) nad zdrojovými stopami ---
+        self.waveform: Optional[WaveformData] = None
+        self._waveform_loading = False
+        self.waveform_item: Optional[WaveformItem] = None
+        self.waveform_h: float = WAVEFORM_DEFAULT_H
+        self.audio_offset_s: float = 0.0     # posun celé nahrávky v čase
+        self.audio_stretch: float = 1.0      # ±10 % natažení/stlačení délky
+        self._waveform_loader = WaveformLoader(self)
+        self._waveform_loader.finished.connect(self._on_waveform_ready)
+        self._waveform_loader.failed.connect(self._on_waveform_failed)
+
         self._setup_ui()
         self.scene.selectionChanged.connect(self._on_selection_changed)
 
@@ -1258,6 +1414,15 @@ class TimelineEditor(QWidget):
         test_btn.clicked.connect(self._play_test_tone)
         audio_bar.addWidget(test_btn)
 
+        waveform_btn = QPushButton("🎚 Poloha/roztažení…")
+        waveform_btn.setStyleSheet(btn_style)
+        waveform_btn.setToolTip(
+            "Přesný posun nahrávky v čase a ±10% roztažení délky (pro "
+            "sladění s kulatým BPM) — totéž, co jde tažením myší po "
+            "vlnovce nad zdrojovými stopami.")
+        waveform_btn.clicked.connect(self.waveform_dialog)
+        audio_bar.addWidget(waveform_btn)
+
         audio_bar.addStretch()
 
         self.jog = JogShuttleWidget()
@@ -1281,6 +1446,9 @@ class TimelineEditor(QWidget):
         self._stop_shuttle_timer()
         self.player.stop()
         self.audio_path = None
+        self.waveform = None
+        self._waveform_loading = False
+        self._waveform_loader.cancel()
         if hasattr(self, "audio_label"):
             self.audio_label.setText("(žádné audio)")
             self.audio_label.setStyleSheet("color:#777;")
@@ -1296,6 +1464,12 @@ class TimelineEditor(QWidget):
         self.bar_s = self.beat_s * self.beats_per_measure
         self.count_in_s = float(meta.get("count_in_s", 0.0) or 0.0)
         self.default_chord_dur = round(self.beat_s, 3)
+        # poloha/roztažení nahrávky + výška vlnovky — perzistentní přes meta
+        # (viz set_audio_offset/set_audio_stretch/WaveformItem)
+        self.audio_offset_s = float(meta.get("audio_offset_s", 0.0) or 0.0)
+        self.audio_stretch = float(meta.get("audio_stretch", 1.0) or 1.0)
+        self.waveform_h = float(meta.get("waveform_track_height", WAVEFORM_DEFAULT_H)
+                                or WAVEFORM_DEFAULT_H)
         self._update_snap_s()
         self._seed_line_starts()
         self._seed_display()
@@ -1517,6 +1691,7 @@ class TimelineEditor(QWidget):
         self.blocks.clear()
         self.clips.clear()
         self.drum_hit_items.clear()
+        self.waveform_item = None
         self._track_lane.clear()
 
         order = self._track_order()
@@ -1532,6 +1707,8 @@ class TimelineEditor(QWidget):
             max_t = max(max_t, float(ev.get("time_s", 0)))
         for ev in self.data.get("bass_timeline", []):
             max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 0)))
+        if self.waveform is not None:
+            max_t = max(max_t, self._audio_to_timeline_t(self.waveform.duration_s))
 
         # výška stopy: normální stopy PER_TRACK; bicí rostou podle počtu
         # RŮZNÝCH bubnů — fixní kompaktní výška řádku (ikona 32×32 + okraj),
@@ -1544,7 +1721,7 @@ class TimelineEditor(QWidget):
             else:
                 lane_h[ti] = PER_TRACK
 
-        total_h = RULER_H + DISPLAY_ROW_H + sum(lane_h.values()) + 20
+        total_h = RULER_H + DISPLAY_ROW_H + self.waveform_h + sum(lane_h.values()) + 20
         total_w = HEADER_W + max_t * self.pps + 200
         self.scene.setSceneRect(0, 0, total_w, total_h)
 
@@ -1557,8 +1734,12 @@ class TimelineEditor(QWidget):
         for clip in self.data.get("display_timeline", []):
             self._add_clip_item(clip)
 
-        # zdrojové stopy (posunuté pod master stopu, proměnná výška řádku)
-        top = RULER_H + DISPLAY_ROW_H
+        # vlnovka nahrávky — NAD všemi zdrojovými stopami (tedy i nad bicími),
+        # aby šlo očima porovnat nástup bicích/zpěvu proti mřížce tempa
+        self._draw_waveform_lane(RULER_H + DISPLAY_ROW_H, total_w)
+
+        # zdrojové stopy (posunuté pod master + vlnovku, proměnná výška řádku)
+        top = RULER_H + DISPLAY_ROW_H + self.waveform_h
         for ti in order:
             h_slot = lane_h[ti]
             if self._track_is_drums(ti):
@@ -1649,6 +1830,13 @@ class TimelineEditor(QWidget):
         self.bar_s = self.beat_s * self.beats_per_measure
         self.count_in_s = float(meta.get("count_in_s", 0.0) or 0.0)
         self.default_chord_dur = round(self.beat_s, 3)
+        # posun/roztažení nahrávky + výška vlnovky jsou taky v meta (viz
+        # load_data) — undo/redo musí i tyhle vrátit, jinak by se offset po
+        # Ctrl+Z rozjel od dat (přesně tenhle případ chytá test_waveform_track.py)
+        self.audio_offset_s = float(meta.get("audio_offset_s", 0.0) or 0.0)
+        self.audio_stretch = float(meta.get("audio_stretch", 1.0) or 1.0)
+        self.waveform_h = float(meta.get("waveform_track_height", self.waveform_h)
+                                or self.waveform_h)
         self._update_snap_s()
         self.scene.clearSelection()
         self._relayout()
@@ -1752,12 +1940,34 @@ class TimelineEditor(QWidget):
     def load_audio(self, path: str) -> None:
         """Nastaví zdroj přehrávače a uloží cestu do `meta.audio_file`
         (perzistence mezi otevřeními — viz `load_data`). Volba souboru
-        NENÍ editace karaoke dat → nejde do undo historie."""
+        NENÍ editace karaoke dat → nejde do undo historie.
+
+        Vedle přehrávače spustí i ASYNCHRONNÍ načtení tvaru vlny
+        (`WaveformLoader`) pro vlnovku nad zdrojovými stopami — viz
+        `_on_waveform_ready`/`WaveformItem`."""
         self.audio_path = path
         self.player.setSource(QUrl.fromLocalFile(path))
         self.audio_label.setText(os.path.basename(path))
         self.audio_label.setStyleSheet("color:#2d7d2d;")
         self.data.setdefault("meta", {})["audio_file"] = path
+
+        self.waveform = None
+        self._waveform_loading = True
+        if self.waveform_item is not None:
+            self.waveform_item.update()
+        self._waveform_loader.load(path)
+
+    def _on_waveform_ready(self, data: WaveformData) -> None:
+        self.waveform = data
+        self._waveform_loading = False
+        if self.waveform_item is not None:
+            self.waveform_item.update()
+
+    def _on_waveform_failed(self, msg: str) -> None:
+        self.waveform = None
+        self._waveform_loading = False
+        if self.waveform_item is not None:
+            self.waveform_item.update()
 
     def _on_audio_error(self, error, error_string: str) -> None:
         if error == QMediaPlayer.Error.NoError:
@@ -1778,9 +1988,92 @@ class TimelineEditor(QWidget):
         else:
             self._playback_ui_timer.stop()
 
+    # --- mapování ČAS NA ČASOVÉ OSE ↔ ČAS UVNITŘ MP3/WAV SOUBORU ---
+    # Nahrávku lze na časové ose CELOU posunout (`audio_offset_s`) a mírně
+    # natáhnout/stlačit (`audio_stretch`, ±10 % — viz `waveform_dialog`) kvůli
+    # sladění s kulatým BPM. Střih/dělení nahrávky NEJDE — jen tohle dvojí.
+
+    def _timeline_to_audio_t(self, t: float) -> float:
+        return (t - self.audio_offset_s) / (self.audio_stretch or 1.0)
+
+    def _audio_to_timeline_t(self, audio_t: float) -> float:
+        return self.audio_offset_s + audio_t * (self.audio_stretch or 1.0)
+
+    def set_audio_offset(self, offset_s: float, relayout: bool = True) -> None:
+        self.audio_offset_s = max(0.0, round(offset_s, 3))
+        self.data.setdefault("meta", {})["audio_offset_s"] = self.audio_offset_s
+        if relayout and self.waveform_item is not None:
+            self.waveform_item.update()
+
+    def set_audio_stretch(self, stretch: float, relayout: bool = True) -> None:
+        self.audio_stretch = max(AUDIO_STRETCH_MIN, min(AUDIO_STRETCH_MAX, stretch))
+        self.data.setdefault("meta", {})["audio_stretch"] = round(self.audio_stretch, 4)
+        if relayout and self.waveform_item is not None:
+            self.waveform_item.update()
+
+    def waveform_dialog(self) -> None:
+        """Přesný (parametrický) posun + roztažení nahrávky — totéž, co jde
+        tažením myší po `WaveformItem`, ale na čísla, ne od oka. Cíl: dolaď
+        offset/roztažení tak, ať BPM z GP/webu vyjde na kulaté číslo proti
+        reálné nahrávce."""
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Poloha a roztažení nahrávky")
+        form = QFormLayout(dlg)
+
+        info = QLabel(
+            "Posune/roztáhne CELOU nahrávku na časové ose (žádný střih). "
+            "Roztažení mění i rychlost přehrávání, aby zvuk a vlnovka "
+            "zůstaly synchronní.")
+        info.setWordWrap(True)
+        info.setStyleSheet("color:#555;")
+        form.addRow(info)
+
+        offset_sb = QDoubleSpinBox()
+        offset_sb.setRange(0.0, 99999.0)
+        offset_sb.setDecimals(3)
+        offset_sb.setSuffix(" s")
+        offset_sb.setValue(self.audio_offset_s)
+        form.addRow("Posun (kdy v písni začíná t=0 nahrávky):", offset_sb)
+
+        stretch_sb = QDoubleSpinBox()
+        stretch_sb.setRange(AUDIO_STRETCH_MIN * 100.0, AUDIO_STRETCH_MAX * 100.0)
+        stretch_sb.setDecimals(2)
+        stretch_sb.setSingleStep(0.1)
+        stretch_sb.setSuffix(" %")
+        stretch_sb.setValue(self.audio_stretch * 100.0)
+        form.addRow("Roztažení délky (100 % = beze změny, ±10 %):", stretch_sb)
+
+        dur = self.waveform.duration_s if self.waveform else None
+        preview = QLabel()
+        form.addRow(preview)
+
+        def refresh_preview():
+            if dur:
+                new_dur = dur * (stretch_sb.value() / 100.0)
+                preview.setText(f"Délka nahrávky: {dur:.1f} s → po roztažení {new_dur:.1f} s "
+                                f"(rychlost přehrávání ×{100.0 / stretch_sb.value():.3f})")
+            else:
+                preview.setText("(délka nahrávky se ještě zjišťuje…)")
+        stretch_sb.valueChanged.connect(refresh_preview)
+        refresh_preview()
+
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        form.addRow(bb)
+
+        if dlg.exec():
+            self._push_undo()
+            self.set_audio_offset(offset_sb.value(), relayout=False)
+            self.set_audio_stretch(stretch_sb.value() / 100.0, relayout=False)
+            self._relayout()
+
     def _seek_audio(self, t: float) -> None:
+        """`t` je čas na ČASOVÉ OSE — převede se na čas uvnitř souboru
+        (`_timeline_to_audio_t`, respektuje posun i roztažení nahrávky)."""
         if self.player.source().isValid():
-            self.player.setPosition(int(round(max(0.0, t) * 1000)))
+            audio_t = max(0.0, self._timeline_to_audio_t(t))
+            self.player.setPosition(int(round(audio_t * 1000)))
 
     def _ensure_device_alive(self) -> None:
         """Zkontroluje, že zařízení, na které hrajeme, v systému pořád je —
@@ -1794,7 +2087,7 @@ class TimelineEditor(QWidget):
             return
         self._ensure_device_alive()
         self._stop_shuttle_timer()
-        self.player.setPlaybackRate(1.0)
+        self.player.setPlaybackRate(1.0 / (self.audio_stretch or 1.0))
         self._seek_audio(self.playhead_s)
         self.player.play()
 
@@ -1836,7 +2129,8 @@ class TimelineEditor(QWidget):
             if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
                 self._seek_audio(self.playhead_s)
                 self.player.play()
-            self.player.setPlaybackRate(1.0 + value * 3.0)   # 1×–4×
+            base_rate = 1.0 / (self.audio_stretch or 1.0)
+            self.player.setPlaybackRate(base_rate * (1.0 + value * 3.0))   # 1×–4× nad rámec roztažení
         else:
             self.player.pause()
             self._start_shuttle_timer(value * 8.0)           # tichý posun, až 8×
@@ -1862,7 +2156,8 @@ class TimelineEditor(QWidget):
         zařízení/backendů může chodit mnohem častěji, než je pro plynulé
         oko potřeba — a každý navíc tik znamená zátěž hlavního vlákna,
         která může způsobit zvukové zádrhele/cukání)."""
-        self.set_playhead(self.player.position() / 1000.0, seek_audio=False)
+        t = self._audio_to_timeline_t(self.player.position() / 1000.0)
+        self.set_playhead(t, seek_audio=False)
         self._ensure_playhead_visible()
 
     def _ensure_playhead_visible(self) -> None:
@@ -1907,6 +2202,32 @@ class TimelineEditor(QWidget):
         item = DisplayClipItem(self, clip, self._display_lane_y, DISPLAY_H)
         self.scene.addItem(item)
         self.clips.append(item)
+
+    def _draw_waveform_lane(self, top: float, total_w: float) -> None:
+        """„Chlupatá čára" nahrávky nad zdrojovými stopami — viz `WaveformItem`.
+        Vykreslí se VŽDY (i bez načteného audia — ukáže placeholder), ať je
+        vidět, že prvek existuje a jde tam přetáhnout/vybrat soubor."""
+        h = self.waveform_h
+        # hlavička
+        self.scene.addRect(0, top, HEADER_W, h,
+                           QPen(QColor("#a3c2e6")), QBrush(QColor("#eef2f5")))
+        nm = self.scene.addSimpleText("🌊 Nahrávka")
+        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm.setPos(6, top + 3)
+        nm.setBrush(QBrush(QColor("#2f6690")))
+        if self.audio_path:
+            sub = self.scene.addSimpleText(os.path.basename(self.audio_path))
+            sub.setFont(QFont("Segoe UI", 7))
+            sub.setPos(6, top + h - 15)
+            sub.setBrush(QBrush(QColor("#6a8aa8")))
+            if abs(self.audio_stretch - 1.0) > 0.001:
+                st = self.scene.addSimpleText(f"×{self.audio_stretch * 100:.1f}%")
+                st.setFont(QFont("Segoe UI", 7, QFont.Bold))
+                st.setPos(6, top + 18)
+                st.setBrush(QBrush(QColor("#c64600")))
+
+        self.waveform_item = WaveformItem(self, top, h, total_w)
+        self.scene.addItem(self.waveform_item)
 
     def _draw_ruler(self, max_t: float, total_h: float) -> None:
         """Pravidelná hudební osnova: silná čára + číslo na KAŽDÉM taktu, tenká

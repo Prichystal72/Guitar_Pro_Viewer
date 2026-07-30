@@ -84,6 +84,9 @@ na starší soubor, který je má, ignoruj je (dopředná kompatibilita).
 | `merged_web_gp` | bool | `true`, pokud data vznikla GP sloučením (Ctrl+M nebo GP-po-textu) — nepovinné, chybí u čistě GP/web dat |
 | `edited_in_timeline` | bool | `true`, pokud JSON prošel `to_json()` editoru časové osy |
 | `audio_file` | str | cesta k MP3/WAV nahrávce pro přehrávač v editoru časové osy (tlačítko „🎵 Načíst MP3/WAV…", synchronizované s playheadem + shuttle ovladač `jog_shuttle.py`) — nepovinné, jen pro editor; cesta je lokální k počítači, kde se soubor vybral, takže se na jiném stroji nemusí najít (editor to ošetří tichým „(žádné audio)", ne pádem). ESP32 firmware toto pole nepoužívá |
+| `audio_offset_s` | float | posun CELÉ nahrávky (`audio_file`) na časové ose — v kolikáté sekundě timeline začíná t=0 souboru. Nastavuje se tažením vlnovky (`WaveformItem`) nebo dialogem „🎚 Poloha/roztažení…". Výchozí `0.0`. Jen pro editor |
+| `audio_stretch` | float | ±10 % natažení/stlačení DÉLKY nahrávky (0.90–1.10, výchozí `1.0`) kvůli sladění reálné nahrávky s kulatým BPM — mění i rychlost přehrávání (`setPlaybackRate`), aby zvuk a vlnovka zůstaly synchronní. Jen pro editor, karaoke časy (`lyrics_timeline` apod.) se tím NEPŘEPOČÍTAJÍ |
+| `waveform_track_height` | float | výška řádku vlnovky v editoru (px, tažením dolního okraje) — čistě UI preference, výchozí `64` |
 
 ### 3.2 `tempo_map`
 
