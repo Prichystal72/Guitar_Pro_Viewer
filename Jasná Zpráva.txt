@@ -1,7 +1,6 @@
-   G, Gmaj7, Emi, C, 
-   D, Ami, C, G
-   G, Gmaj7, Emi,
-    C, D, Ami, C, G
+   G
+   G, Gmaj7, Emi, C, D, Ami, C, G
+   G, Gmaj7, Emi, C, D, Ami, C, G
 
    G                    Gmaj7
 1. Skončili jsme, jasná zpráva,
@@ -17,16 +16,12 @@
    Ami            C           G
    kam se kouknu, kousek Tebe mám.
   
-     Emi         Hmi        
-Ref: Pěnu s vůní jablečnou,
-     Emi      Hmi
-     vyvanulý sprej, 
+     Emi         Hmi        Emi      Hmi
+Ref: Pěnu s vůní jablečnou, vyvanulý sprej, 
      Emi          G           D
      telefon, cos ustřihla mu šňůru.
-     Emi           Hmi        
-     Knížku krásně zbytečnou,
-     Emi         Hmi
-     co má lživý děj,
+     Emi           Hmi        Emi         Hmi
+     Knížku krásně zbytečnou, co má lživý děj,
      Emi           G           D
      píše se v ní, jak se lítá vzhůru,
           Ami            

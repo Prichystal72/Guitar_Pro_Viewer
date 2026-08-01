@@ -577,6 +577,18 @@ class GuitarProViewer(QMainWindow):
         export_btn.clicked.connect(self.export_json)
         left_layout.addWidget(export_btn)
 
+        # ---- Mix časové osy: VŽDY viditelný (na rozdíl od hlaviček uvnitř
+        # scény, které při vodorovném rolování odjedou pryč — proto sem, do
+        # levého docku), s hlasitostí/mute nahrávky+GP mixu bicích a
+        # skrýt/zobrazit pro jednotlivé stopy. Viz TrackMixPanel. ----
+        mix_label = QLabel("Mix časové osy")
+        mix_label.setStyleSheet("font-weight: bold; margin-top: 8px;")
+        left_layout.addWidget(mix_label)
+        mix_scroll = QScrollArea()
+        mix_scroll.setWidgetResizable(True)
+        mix_scroll.setWidget(self.timeline.mix_panel)
+        left_layout.addWidget(mix_scroll, 1)
+
         self.dock_tracks = QDockWidget("Stopy", self)
         self.dock_tracks.setWidget(left)
         self.dock_tracks.setMinimumWidth(200)

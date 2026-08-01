@@ -1,0 +1,8148 @@
+{
+  "meta": {
+    "format_version": 2,
+    "title": "Unknown",
+    "artist": "",
+    "tempo_bpm": 65,
+    "ticks_per_beat": 960,
+    "beats_per_measure": 4,
+    "time_signature": "4/4",
+    "bars_per_line": 2,
+    "count_in_bars": 1,
+    "count_in_s": 3.692,
+    "source": "web_import",
+    "duration_seconds": 210.5,
+    "total_measures": 57,
+    "track_count": 1,
+    "has_line_structure": true,
+    "source_file": "Olympic - Jasná Zpráva.gp5",
+    "merged_web_gp": true,
+    "edited_in_timeline": true,
+    "audio_file": "C:/Users/prich/Documents/Arduino/Guitar_Pro_Viewer/jasna_zprava.wav",
+    "audio_offset_s": 5.767
+  },
+  "tempo_map": [
+    {
+      "tick": 960,
+      "bpm": 65
+    }
+  ],
+  "tracks": [
+    {
+      "index": 1,
+      "name": "Voice",
+      "type": "vocal",
+      "is_drums": false,
+      "instrument_midi": 25
+    },
+    {
+      "index": 2,
+      "name": "Drums",
+      "type": "drums",
+      "is_drums": true,
+      "instrument_midi": 0
+    }
+  ],
+  "lyrics_timeline": [
+    {
+      "time_s": 51.692,
+      "duration_s": 3.693,
+      "text": "1. Skončili jsme, jasná zpráva,",
+      "measure": 8,
+      "line": 0,
+      "track_index": 1,
+      "line_start": false
+    },
+    {
+      "time_s": 55.385,
+      "duration_s": 3.692,
+      "text": "proč o Tebe zakopávám dál,",
+      "measure": 10,
+      "line": 1,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 62.769,
+      "duration_s": 3.693,
+      "text": "projít bytem já abych se bál.",
+      "measure": 12,
+      "line": 2,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 71.077,
+      "duration_s": 3.692,
+      "text": "2. Dík tobě se vidím zvenčí,",
+      "measure": 14,
+      "line": 3,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 74.769,
+      "duration_s": 2.769,
+      "text": "připadám si starší, menší sám,",
+      "measure": 16,
+      "line": 3,
+      "track_index": 1,
+      "line_start": false
+    },
+    {
+      "time_s": 81.231,
+      "duration_s": 3.692,
+      "text": "kam se kouknu, kousek Tebe mám.",
+      "measure": 18,
+      "line": 4,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 88.615,
+      "duration_s": 7.385,
+      "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
+      "measure": 20,
+      "line": 5,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 96.0,
+      "duration_s": 7.385,
+      "text": "telefon, cos ustřihla mu šňůru.",
+      "measure": 22,
+      "line": 6,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 103.385,
+      "duration_s": 7.385,
+      "text": "Knížku krásně zbytečnou, co má lživý děj,",
+      "measure": 24,
+      "line": 7,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 110.769,
+      "duration_s": 7.384,
+      "text": "píše se v ní, jak se lítá vzhůru,",
+      "measure": 26,
+      "line": 8,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 118.154,
+      "duration_s": 2.769,
+      "text": "lítá vzhůru,",
+      "measure": 28,
+      "line": 9,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 120.923,
+      "duration_s": 4.615,
+      "text": "ve dvou vzhůru.",
+      "measure": 30,
+      "line": 10,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 125.538,
+      "duration_s": 3.693,
+      "text": "3. Odešla's mi před úsvitem,",
+      "measure": 32,
+      "line": 11,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 129.231,
+      "duration_s": 3.692,
+      "text": "mám snad bloudit vlastním bytem sám,",
+      "measure": 34,
+      "line": 12,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 136.615,
+      "duration_s": 7.384,
+      "text": "kam se kouknu, kousek Tebe mám. Óooo",
+      "measure": 36,
+      "line": 13,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 162.462,
+      "duration_s": 7.384,
+      "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
+      "measure": 40,
+      "line": 14,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 169.846,
+      "duration_s": 7.384,
+      "text": "telefon, cos ustřihla mu šňůru.",
+      "measure": 42,
+      "line": 15,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 177.231,
+      "duration_s": 7.385,
+      "text": "Knížku krásně zbytečnou, co má lživý děj,",
+      "measure": 44,
+      "line": 16,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 184.615,
+      "duration_s": 7.384,
+      "text": "píše se v ní, jak se lítá vzhůru,",
+      "measure": 46,
+      "line": 16,
+      "track_index": 1,
+      "line_start": false
+    },
+    {
+      "time_s": 192.0,
+      "duration_s": 7.385,
+      "text": "lítá vzhůru, ve dvou vzhůru.",
+      "measure": 48,
+      "line": 17,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 199.385,
+      "duration_s": 3.692,
+      "text": "4. Skončili jsme jasná zpráva,",
+      "measure": 50,
+      "line": 18,
+      "track_index": 1,
+      "line_start": true
+    },
+    {
+      "time_s": 203.077,
+      "duration_s": 3.693,
+      "text": "není komu z okna mávat víc,",
+      "measure": 52,
+      "line": 18,
+      "track_index": 1,
+      "line_start": false
+    },
+    {
+      "time_s": 210.462,
+      "duration_s": 7.385,
+      "text": "jasná zpráva, rub, co nemá líc. Óooo",
+      "measure": 54,
+      "line": 19,
+      "track_index": 1,
+      "line_start": true
+    }
+  ],
+  "chords_timeline": [
+    {
+      "time_s": 7.385,
+      "chord": "G",
+      "measure": 2,
+      "line": null,
+      "track_index": 1,
+      "duration_s": 7.384
+    },
+    {
+      "time_s": 14.769,
+      "chord": "Gmaj7",
+      "measure": 4,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 15.692,
+      "chord": "Emi",
+      "measure": 4,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 16.615,
+      "chord": "C",
+      "measure": 4,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 17.538,
+      "chord": "D",
+      "measure": 5,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 18.462,
+      "chord": "Ami",
+      "measure": 5,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 19.385,
+      "chord": "C",
+      "measure": 5,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 20.308,
+      "chord": "G",
+      "measure": 5,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 33.231,
+      "chord": "Gmaj7",
+      "measure": 6,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 34.154,
+      "chord": "Emi",
+      "measure": 6,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 35.077,
+      "chord": "C",
+      "measure": 6,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.0,
+      "chord": "D",
+      "measure": 7,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 36.923,
+      "chord": "Ami",
+      "measure": 7,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 37.846,
+      "chord": "C",
+      "measure": 7,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 38.769,
+      "chord": "G",
+      "measure": 7,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 52.615,
+      "chord": "G",
+      "measure": 8,
+      "line": 0,
+      "track_index": 1
+    },
+    {
+      "time_s": 53.538,
+      "chord": "Gmaj7",
+      "measure": 8,
+      "line": 0,
+      "track_index": 1
+    },
+    {
+      "time_s": 55.385,
+      "chord": "Emi",
+      "measure": 10,
+      "line": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 56.308,
+      "chord": "C",
+      "measure": 10,
+      "line": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 58.154,
+      "chord": "D",
+      "measure": 10,
+      "line": 1,
+      "track_index": 1
+    },
+    {
+      "time_s": 62.769,
+      "chord": "Ami",
+      "measure": 12,
+      "line": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 63.692,
+      "chord": "C",
+      "measure": 12,
+      "line": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 65.538,
+      "chord": "G",
+      "measure": 12,
+      "line": 2,
+      "track_index": 1
+    },
+    {
+      "time_s": 71.077,
+      "chord": "G",
+      "measure": 14,
+      "line": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 72.923,
+      "chord": "Gmaj7",
+      "measure": 14,
+      "line": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 74.769,
+      "chord": "Emi",
+      "measure": 16,
+      "line": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 75.692,
+      "chord": "C",
+      "measure": 16,
+      "line": 3,
+      "track_index": 1,
+      "duration_s": 1.086
+    },
+    {
+      "time_s": 76.615,
+      "chord": "D",
+      "measure": 16,
+      "line": 3,
+      "track_index": 1
+    },
+    {
+      "time_s": 81.231,
+      "chord": "Ami",
+      "measure": 18,
+      "line": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 82.154,
+      "chord": "C",
+      "measure": 18,
+      "line": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 83.077,
+      "chord": "G",
+      "measure": 18,
+      "line": 4,
+      "track_index": 1
+    },
+    {
+      "time_s": 88.615,
+      "chord": "Emi",
+      "measure": 20,
+      "line": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 90.462,
+      "chord": "Hmi",
+      "measure": 20,
+      "line": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 92.308,
+      "chord": "Emi",
+      "measure": 20,
+      "line": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 94.154,
+      "chord": "Hmi",
+      "measure": 20,
+      "line": 5,
+      "track_index": 1
+    },
+    {
+      "time_s": 96.0,
+      "chord": "Emi",
+      "measure": 22,
+      "line": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 96.923,
+      "chord": "G",
+      "measure": 22,
+      "line": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 100.615,
+      "chord": "D",
+      "measure": 22,
+      "line": 6,
+      "track_index": 1
+    },
+    {
+      "time_s": 103.385,
+      "chord": "Emi",
+      "measure": 24,
+      "line": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 105.231,
+      "chord": "Hmi",
+      "measure": 24,
+      "line": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 106.154,
+      "chord": "Emi",
+      "measure": 24,
+      "line": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 108.923,
+      "chord": "Hmi",
+      "measure": 24,
+      "line": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 110.769,
+      "chord": "Emi",
+      "measure": 26,
+      "line": 7,
+      "track_index": 1
+    },
+    {
+      "time_s": 114.462,
+      "chord": "G",
+      "measure": 26,
+      "line": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 117.231,
+      "chord": "D",
+      "measure": 26,
+      "line": 8,
+      "track_index": 1
+    },
+    {
+      "time_s": 119.077,
+      "chord": "Ami",
+      "measure": 28,
+      "line": 9,
+      "track_index": 1
+    },
+    {
+      "time_s": 122.769,
+      "chord": "D",
+      "measure": 30,
+      "line": 10,
+      "track_index": 1
+    },
+    {
+      "time_s": 125.538,
+      "chord": "G",
+      "measure": 32,
+      "line": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 127.385,
+      "chord": "Gmaj7",
+      "measure": 32,
+      "line": 11,
+      "track_index": 1
+    },
+    {
+      "time_s": 129.231,
+      "chord": "Emi",
+      "measure": 34,
+      "line": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 130.154,
+      "chord": "C",
+      "measure": 34,
+      "line": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 132.0,
+      "chord": "D",
+      "measure": 34,
+      "line": 12,
+      "track_index": 1
+    },
+    {
+      "time_s": 136.615,
+      "chord": "Ami",
+      "measure": 36,
+      "line": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 139.385,
+      "chord": "C",
+      "measure": 36,
+      "line": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 141.231,
+      "chord": "G",
+      "measure": 36,
+      "line": 13,
+      "track_index": 1
+    },
+    {
+      "time_s": 144.923,
+      "chord": "Gmaj7",
+      "measure": 38,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 145.846,
+      "chord": "Emi",
+      "measure": 38,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 146.769,
+      "chord": "C",
+      "measure": 38,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 147.692,
+      "chord": "D",
+      "measure": 39,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 148.615,
+      "chord": "Ami",
+      "measure": 39,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 149.538,
+      "chord": "C",
+      "measure": 39,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 150.462,
+      "chord": "G",
+      "measure": 39,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 162.462,
+      "chord": "Emi",
+      "measure": 40,
+      "line": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 164.308,
+      "chord": "Hmi",
+      "measure": 40,
+      "line": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 166.154,
+      "chord": "Emi",
+      "measure": 40,
+      "line": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 168.0,
+      "chord": "Hmi",
+      "measure": 40,
+      "line": 14,
+      "track_index": 1
+    },
+    {
+      "time_s": 169.846,
+      "chord": "Emi",
+      "measure": 42,
+      "line": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 171.692,
+      "chord": "G",
+      "measure": 42,
+      "line": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 174.462,
+      "chord": "D",
+      "measure": 42,
+      "line": 15,
+      "track_index": 1
+    },
+    {
+      "time_s": 177.231,
+      "chord": "Emi",
+      "measure": 44,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 179.077,
+      "chord": "Hmi",
+      "measure": 44,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 180.0,
+      "chord": "Emi",
+      "measure": 44,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 182.769,
+      "chord": "Hmi",
+      "measure": 44,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 184.615,
+      "chord": "Emi",
+      "measure": 46,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 188.308,
+      "chord": "G",
+      "measure": 46,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 191.077,
+      "chord": "D",
+      "measure": 46,
+      "line": 16,
+      "track_index": 1
+    },
+    {
+      "time_s": 192.0,
+      "chord": "Ami",
+      "measure": 48,
+      "line": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 196.615,
+      "chord": "D",
+      "measure": 48,
+      "line": 17,
+      "track_index": 1
+    },
+    {
+      "time_s": 199.385,
+      "chord": "G",
+      "measure": 50,
+      "line": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 201.231,
+      "chord": "Gmaj7",
+      "measure": 50,
+      "line": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 203.077,
+      "chord": "Emi",
+      "measure": 52,
+      "line": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 204.0,
+      "chord": "C",
+      "measure": 52,
+      "line": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 205.846,
+      "chord": "D",
+      "measure": 52,
+      "line": 18,
+      "track_index": 1
+    },
+    {
+      "time_s": 210.462,
+      "chord": "Ami",
+      "measure": 54,
+      "line": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 212.308,
+      "chord": "C",
+      "measure": 54,
+      "line": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 215.077,
+      "chord": "G",
+      "measure": 54,
+      "line": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 217.846,
+      "chord": "Gmaj7",
+      "measure": 56,
+      "line": 19,
+      "track_index": 1
+    },
+    {
+      "time_s": 218.769,
+      "chord": "Emi",
+      "measure": 56,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 219.692,
+      "chord": "C",
+      "measure": 56,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 220.615,
+      "chord": "D",
+      "measure": 57,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 221.538,
+      "chord": "Ami",
+      "measure": 57,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 222.462,
+      "chord": "C",
+      "measure": 57,
+      "line": null,
+      "track_index": 1
+    },
+    {
+      "time_s": 223.385,
+      "chord": "G",
+      "measure": 57,
+      "line": null,
+      "track_index": 1
+    }
+  ],
+  "karaoke_lines": [
+    {
+      "line": 0,
+      "start_s": 51.692,
+      "end_s": 55.385,
+      "chords": [
+        "G",
+        "Gmaj7"
+      ],
+      "text": "1. Skončili jsme, jasná zpráva,",
+      "words": [
+        {
+          "time_s": 51.692,
+          "duration_s": 3.693,
+          "text": "1. Skončili jsme, jasná zpráva,",
+          "line": 0,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1,
+      "section": "Sloka 1"
+    },
+    {
+      "line": 1,
+      "start_s": 55.385,
+      "end_s": 59.077,
+      "chords": [
+        "Emi",
+        "C",
+        "D"
+      ],
+      "text": "proč o Tebe zakopávám dál,",
+      "words": [
+        {
+          "time_s": 55.385,
+          "duration_s": 3.692,
+          "text": "proč o Tebe zakopávám dál,",
+          "line": 1,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 2,
+      "start_s": 62.769,
+      "end_s": 66.462,
+      "chords": [
+        "Ami",
+        "C",
+        "G"
+      ],
+      "text": "projít bytem já abych se bál.",
+      "words": [
+        {
+          "time_s": 62.769,
+          "duration_s": 3.693,
+          "text": "projít bytem já abych se bál.",
+          "line": 2,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 3,
+      "start_s": 71.077,
+      "end_s": 77.538,
+      "chords": [
+        "G",
+        "Gmaj7",
+        "Emi",
+        "C",
+        "D"
+      ],
+      "text": "2. Dík tobě se vidím zvenčí, připadám si starší, menší sám,",
+      "words": [
+        {
+          "time_s": 71.077,
+          "duration_s": 3.692,
+          "text": "2. Dík tobě se vidím zvenčí,",
+          "line": 3,
+          "track_index": 1
+        },
+        {
+          "time_s": 74.769,
+          "duration_s": 2.769,
+          "text": "připadám si starší, menší sám,",
+          "line": 3,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1,
+      "section": "Sloka 2"
+    },
+    {
+      "line": 4,
+      "start_s": 81.231,
+      "end_s": 84.923,
+      "chords": [
+        "Ami",
+        "C",
+        "G"
+      ],
+      "text": "kam se kouknu, kousek Tebe mám.",
+      "words": [
+        {
+          "time_s": 81.231,
+          "duration_s": 3.692,
+          "text": "kam se kouknu, kousek Tebe mám.",
+          "line": 4,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 5,
+      "start_s": 88.615,
+      "end_s": 96.0,
+      "chords": [
+        "Emi",
+        "Hmi"
+      ],
+      "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
+      "words": [
+        {
+          "time_s": 88.615,
+          "duration_s": 7.385,
+          "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
+          "line": 5,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1,
+      "section": "Refrén"
+    },
+    {
+      "line": 6,
+      "start_s": 96.0,
+      "end_s": 103.385,
+      "chords": [
+        "Emi",
+        "G",
+        "D"
+      ],
+      "text": "telefon, cos ustřihla mu šňůru.",
+      "words": [
+        {
+          "time_s": 96.0,
+          "duration_s": 7.385,
+          "text": "telefon, cos ustřihla mu šňůru.",
+          "line": 6,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 7,
+      "start_s": 103.385,
+      "end_s": 110.77,
+      "chords": [
+        "Emi",
+        "Hmi"
+      ],
+      "text": "Knížku krásně zbytečnou, co má lživý děj,",
+      "words": [
+        {
+          "time_s": 103.385,
+          "duration_s": 7.385,
+          "text": "Knížku krásně zbytečnou, co má lživý děj,",
+          "line": 7,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 8,
+      "start_s": 110.769,
+      "end_s": 118.153,
+      "chords": [
+        "G",
+        "D"
+      ],
+      "text": "píše se v ní, jak se lítá vzhůru,",
+      "words": [
+        {
+          "time_s": 110.769,
+          "duration_s": 7.384,
+          "text": "píše se v ní, jak se lítá vzhůru,",
+          "line": 8,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 9,
+      "start_s": 118.154,
+      "end_s": 120.923,
+      "chords": [
+        "Ami"
+      ],
+      "text": "lítá vzhůru,",
+      "words": [
+        {
+          "time_s": 118.154,
+          "duration_s": 2.769,
+          "text": "lítá vzhůru,",
+          "line": 9,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 10,
+      "start_s": 120.923,
+      "end_s": 125.538,
+      "chords": [
+        "D"
+      ],
+      "text": "ve dvou vzhůru.",
+      "words": [
+        {
+          "time_s": 120.923,
+          "duration_s": 4.615,
+          "text": "ve dvou vzhůru.",
+          "line": 10,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 11,
+      "start_s": 125.538,
+      "end_s": 129.231,
+      "chords": [
+        "G",
+        "Gmaj7"
+      ],
+      "text": "3. Odešla's mi před úsvitem,",
+      "words": [
+        {
+          "time_s": 125.538,
+          "duration_s": 3.693,
+          "text": "3. Odešla's mi před úsvitem,",
+          "line": 11,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1,
+      "section": "Sloka 3"
+    },
+    {
+      "line": 12,
+      "start_s": 129.231,
+      "end_s": 132.923,
+      "chords": [
+        "Emi",
+        "C",
+        "D"
+      ],
+      "text": "mám snad bloudit vlastním bytem sám,",
+      "words": [
+        {
+          "time_s": 129.231,
+          "duration_s": 3.692,
+          "text": "mám snad bloudit vlastním bytem sám,",
+          "line": 12,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 13,
+      "start_s": 136.615,
+      "end_s": 143.999,
+      "chords": [
+        "Ami",
+        "C",
+        "G"
+      ],
+      "text": "kam se kouknu, kousek Tebe mám. Óooo",
+      "words": [
+        {
+          "time_s": 136.615,
+          "duration_s": 7.384,
+          "text": "kam se kouknu, kousek Tebe mám. Óooo",
+          "line": 13,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 14,
+      "start_s": 162.462,
+      "end_s": 169.846,
+      "chords": [
+        "Emi",
+        "Hmi"
+      ],
+      "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
+      "words": [
+        {
+          "time_s": 162.462,
+          "duration_s": 7.384,
+          "text": "Ref: Pěnu s vůní jablečnou, vyvanulý sprej,",
+          "line": 14,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1,
+      "section": "Refrén"
+    },
+    {
+      "line": 15,
+      "start_s": 169.846,
+      "end_s": 177.23,
+      "chords": [
+        "Emi",
+        "G",
+        "D"
+      ],
+      "text": "telefon, cos ustřihla mu šňůru.",
+      "words": [
+        {
+          "time_s": 169.846,
+          "duration_s": 7.384,
+          "text": "telefon, cos ustřihla mu šňůru.",
+          "line": 15,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 16,
+      "start_s": 177.231,
+      "end_s": 191.999,
+      "chords": [
+        "Emi",
+        "Hmi",
+        "G",
+        "D"
+      ],
+      "text": "Knížku krásně zbytečnou, co má lživý děj, píše se v ní, jak se lítá vzhůru,",
+      "words": [
+        {
+          "time_s": 177.231,
+          "duration_s": 7.385,
+          "text": "Knížku krásně zbytečnou, co má lživý děj,",
+          "line": 16,
+          "track_index": 1
+        },
+        {
+          "time_s": 184.615,
+          "duration_s": 7.384,
+          "text": "píše se v ní, jak se lítá vzhůru,",
+          "line": 16,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 17,
+      "start_s": 192.0,
+      "end_s": 199.385,
+      "chords": [
+        "Ami",
+        "D"
+      ],
+      "text": "lítá vzhůru, ve dvou vzhůru.",
+      "words": [
+        {
+          "time_s": 192.0,
+          "duration_s": 7.385,
+          "text": "lítá vzhůru, ve dvou vzhůru.",
+          "line": 17,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    },
+    {
+      "line": 18,
+      "start_s": 199.385,
+      "end_s": 206.77,
+      "chords": [
+        "G",
+        "Gmaj7",
+        "Emi",
+        "C",
+        "D"
+      ],
+      "text": "4. Skončili jsme jasná zpráva, není komu z okna mávat víc,",
+      "words": [
+        {
+          "time_s": 199.385,
+          "duration_s": 3.692,
+          "text": "4. Skončili jsme jasná zpráva,",
+          "line": 18,
+          "track_index": 1
+        },
+        {
+          "time_s": 203.077,
+          "duration_s": 3.693,
+          "text": "není komu z okna mávat víc,",
+          "line": 18,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1,
+      "section": "Sloka 4"
+    },
+    {
+      "line": 19,
+      "start_s": 210.462,
+      "end_s": 217.847,
+      "chords": [
+        "Ami",
+        "C",
+        "G",
+        "Gmaj7"
+      ],
+      "text": "jasná zpráva, rub, co nemá líc. Óooo",
+      "words": [
+        {
+          "time_s": 210.462,
+          "duration_s": 7.385,
+          "text": "jasná zpráva, rub, co nemá líc. Óooo",
+          "line": 19,
+          "track_index": 1
+        }
+      ],
+      "track_index": 1
+    }
+  ],
+  "display_timeline": [
+    {
+      "id": "clip-1",
+      "start_s": 7.385,
+      "end_s": 14.769,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G",
+      "line": 0
+    },
+    {
+      "id": "clip-2",
+      "start_s": 14.769,
+      "end_s": 33.231,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C D Ami",
+      "line": 1
+    },
+    {
+      "id": "clip-8",
+      "start_s": 29.538,
+      "end_s": 36.923,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "připadám si starší, menš",
+      "line": 7
+    },
+    {
+      "id": "clip-3",
+      "start_s": 39.692,
+      "end_s": 58.153,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C D Ami",
+      "line": 2
+    },
+    {
+      "id": "clip-4",
+      "start_s": 51.692,
+      "end_s": 55.385,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "1. Skončili jsme, jasná ",
+      "line": 3
+    },
+    {
+      "id": "clip-5",
+      "start_s": 55.385,
+      "end_s": 62.769,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "proč o Tebe zakopávám dá",
+      "line": 4
+    },
+    {
+      "id": "clip-6",
+      "start_s": 62.769,
+      "end_s": 70.154,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "projít bytem já abych se",
+      "line": 5
+    },
+    {
+      "id": "clip-15",
+      "start_s": 65.538,
+      "end_s": 70.153,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "ve dvou vzhůru.",
+      "line": 14
+    },
+    {
+      "id": "clip-7",
+      "start_s": 70.154,
+      "end_s": 73.846,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "2. Dík tobě se vidím zve",
+      "line": 6
+    },
+    {
+      "id": "clip-9",
+      "start_s": 73.846,
+      "end_s": 81.23,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "kam se kouknu, kousek Te",
+      "line": 8
+    },
+    {
+      "id": "clip-10",
+      "start_s": 78.462,
+      "end_s": 85.846,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Ref: Pěnu s vůní jablečn",
+      "line": 9
+    },
+    {
+      "id": "clip-13",
+      "start_s": 87.692,
+      "end_s": 95.076,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "píše se v ní, jak se lít",
+      "line": 12
+    },
+    {
+      "id": "clip-11",
+      "start_s": 96.0,
+      "end_s": 103.385,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "telefon, cos ustřihla mu",
+      "line": 10
+    },
+    {
+      "id": "clip-12",
+      "start_s": 103.385,
+      "end_s": 110.77,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Knížku krásně zbytečnou,",
+      "line": 11
+    },
+    {
+      "id": "clip-14",
+      "start_s": 118.154,
+      "end_s": 120.923,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "lítá vzhůru,",
+      "line": 13
+    },
+    {
+      "id": "clip-16",
+      "start_s": 125.538,
+      "end_s": 129.231,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "3. Odešla's mi před úsvi",
+      "line": 15
+    },
+    {
+      "id": "clip-17",
+      "start_s": 129.231,
+      "end_s": 132.923,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "mám snad bloudit vlastní",
+      "line": 16
+    },
+    {
+      "id": "clip-18",
+      "start_s": 136.615,
+      "end_s": 143.999,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "kam se kouknu, kousek Te",
+      "line": 17
+    },
+    {
+      "id": "clip-19",
+      "start_s": 147.692,
+      "end_s": 162.461,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C D Ami",
+      "line": 18
+    },
+    {
+      "id": "clip-20",
+      "start_s": 161.538,
+      "end_s": 168.923,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Ref: Pěnu s vůní jablečn",
+      "line": 19
+    },
+    {
+      "id": "clip-21",
+      "start_s": 173.538,
+      "end_s": 180.922,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "telefon, cos ustřihla mu",
+      "line": 20
+    },
+    {
+      "id": "clip-22",
+      "start_s": 180.923,
+      "end_s": 188.308,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "Knížku krásně zbytečnou,",
+      "line": 21
+    },
+    {
+      "id": "clip-23",
+      "start_s": 180.923,
+      "end_s": 188.307,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "píše se v ní, jak se lít",
+      "line": 22
+    },
+    {
+      "id": "clip-24",
+      "start_s": 203.077,
+      "end_s": 210.462,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "lítá vzhůru, ve dvou vzh",
+      "line": 23
+    },
+    {
+      "id": "clip-25",
+      "start_s": 210.462,
+      "end_s": 217.847,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "4. Skončili jsme jasná z",
+      "line": 24
+    },
+    {
+      "id": "clip-26",
+      "start_s": 217.846,
+      "end_s": 225.23,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "není komu z okna mávat v",
+      "line": 25
+    },
+    {
+      "id": "clip-27",
+      "start_s": 225.231,
+      "end_s": 232.616,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "jasná zpráva, rub, co ne",
+      "line": 26
+    },
+    {
+      "id": "clip-28",
+      "start_s": 232.615,
+      "end_s": 240.0,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C D Ami",
+      "line": 27
+    }
+  ],
+  "drums_timeline": [
+    {
+      "time_s": 5.538,
+      "duration_s": 0.9231,
+      "drum": "Low Floor Tom",
+      "midi": 41,
+      "track_index": 2
+    },
+    {
+      "time_s": 6.461,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 6.692,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 6.923,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 7.384,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 7.384,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 7.846,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 8.307,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 8.769,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 9.23,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 9.23,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 9.692,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 10.153,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 10.615,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 10.615,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 11.076,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 11.076,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 11.538,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 11.999,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 12.461,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 12.922,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 12.922,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 13.384,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 13.845,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 14.076,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 14.307,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 14.768,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 14.768,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 15.23,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 15.691,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 16.153,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 16.153,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 16.614,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 16.614,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 17.076,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 17.537,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 17.999,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 17.999,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 18.46,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 18.46,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 18.922,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 19.383,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 19.845,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 19.845,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 20.306,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 20.306,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 20.768,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 21.229,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 21.691,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 21.691,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 22.152,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 22.152,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 22.614,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 23.075,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 23.537,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 23.998,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 23.998,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 24.46,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 24.921,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 25.383,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 25.383,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 25.844,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 25.844,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 26.306,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 26.767,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 27.229,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 27.229,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 27.69,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 27.69,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 28.152,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 28.613,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 29.075,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 29.075,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 29.536,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 29.536,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 2",
+      "midi": 57,
+      "track_index": 2
+    },
+    {
+      "time_s": 29.536,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 29.998,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 30.459,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 30.921,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 30.921,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 31.382,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 31.382,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 31.844,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 32.305,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 32.536,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 32.767,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 33.228,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 33.228,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 33.69,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 34.151,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 34.613,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 34.613,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 35.074,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 35.074,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 35.536,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 35.997,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 36.459,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 36.459,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 36.92,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 36.92,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 37.382,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 37.843,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 38.305,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 38.305,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 38.766,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 38.766,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 39.228,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 39.689,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 40.151,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 40.151,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 40.612,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 40.612,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 41.074,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 41.535,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 41.997,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 42.458,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 42.458,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 42.92,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 43.381,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 43.843,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 43.843,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 44.304,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 44.304,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 44.766,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 45.227,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 45.689,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 45.689,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 46.15,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 46.15,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 46.612,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 47.073,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 47.535,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 47.535,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 47.996,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 47.996,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 2",
+      "midi": 57,
+      "track_index": 2
+    },
+    {
+      "time_s": 47.996,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 48.458,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 48.919,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 49.381,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 49.381,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 49.842,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 49.842,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 50.304,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 50.765,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 50.996,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 51.227,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 51.689,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 51.689,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 52.15,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 52.612,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 52.612,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 53.073,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 53.535,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 53.535,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 53.996,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 54.458,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 54.458,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 54.919,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 54.919,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 55.381,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 55.381,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 55.842,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 56.304,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 56.304,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 56.765,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 57.227,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 57.227,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 57.688,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 58.15,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 58.15,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 58.611,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 58.611,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 59.073,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 59.073,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 59.534,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 59.996,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 59.996,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 60.457,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 60.919,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 60.919,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 61.38,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 61.842,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 61.842,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 62.303,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 62.303,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 62.765,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 62.765,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 63.226,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 63.688,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 63.688,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 64.149,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 64.611,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 64.611,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 65.072,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 65.534,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 65.534,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 65.995,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 65.995,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 66.457,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 66.457,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 66.918,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 67.38,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 67.38,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 67.841,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 68.303,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 68.303,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 68.764,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 69.226,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 69.226,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 69.687,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 69.687,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 70.149,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 70.149,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 70.61,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 71.072,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 71.072,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 71.533,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 71.995,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 71.995,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 72.456,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 72.918,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 72.918,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 73.379,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 73.379,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 73.841,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 73.841,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 74.302,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 74.764,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 74.764,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 75.225,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 75.687,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 75.687,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 76.148,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 76.61,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 76.61,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 77.071,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 77.071,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 77.533,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 77.533,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 77.994,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 78.456,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 78.456,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 78.917,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 79.379,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 79.379,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 79.84,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 80.302,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 80.302,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 80.763,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 80.763,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 81.225,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 81.225,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 81.686,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 82.148,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 82.148,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 82.609,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 83.071,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 83.071,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 83.532,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 83.994,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 83.994,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 84.455,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 84.455,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 84.917,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 84.917,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 85.378,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 85.84,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 85.84,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 86.301,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 86.763,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 86.763,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 87.224,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 87.686,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 87.916,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 88.147,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 88.609,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 88.609,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 89.07,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 89.532,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 89.532,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 89.993,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 90.455,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 90.455,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 90.916,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 91.378,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 91.378,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 91.839,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 91.839,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 92.301,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 92.301,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 92.762,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 93.224,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 93.224,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 93.685,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 94.147,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 94.147,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 94.608,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 95.07,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 95.07,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 95.531,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 95.531,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 95.993,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 95.993,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 96.454,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 96.916,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 96.916,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 97.377,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 97.839,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 97.839,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 98.3,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 98.762,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 98.762,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 99.223,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 99.223,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 99.685,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 99.685,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 100.146,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 100.608,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 100.608,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 101.069,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 101.531,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 101.531,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 101.992,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 102.454,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 102.454,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 102.915,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 102.915,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 103.377,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 103.377,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 103.838,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 104.3,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 104.3,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 104.761,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 105.223,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 105.223,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 105.684,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 106.146,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 106.146,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 106.607,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 106.607,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 107.069,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 107.069,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 107.53,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 107.992,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 107.992,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 108.453,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 108.915,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 108.915,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 109.376,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 109.838,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 109.838,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 110.299,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 110.299,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 110.761,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 110.761,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 111.222,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 111.684,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 111.684,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 112.145,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 112.607,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 112.607,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 113.068,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 113.53,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 113.53,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 113.991,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 113.991,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 114.453,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 114.453,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 114.914,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 115.376,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 115.376,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 115.837,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 116.299,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 116.299,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 116.76,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 117.222,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 117.222,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 117.683,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 117.683,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 118.145,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 118.145,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 118.606,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 119.068,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 119.068,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 119.529,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 119.991,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 119.991,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 120.452,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 120.914,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 120.914,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 121.375,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 121.375,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 121.837,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 121.837,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 122.298,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 122.76,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 122.76,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 123.221,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 123.683,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 123.683,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 124.144,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 124.606,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 124.606,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 125.067,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 125.067,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 125.529,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 125.529,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 125.99,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 126.452,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 126.452,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 126.913,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 127.375,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 127.375,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 127.836,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 128.298,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 128.298,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 128.759,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 128.759,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 129.221,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 129.221,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 129.682,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 130.144,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 130.144,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 130.605,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 131.067,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 131.067,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 131.528,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 131.99,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 131.99,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 132.451,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 132.451,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 132.913,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 132.913,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 133.374,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 133.836,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 133.836,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 134.297,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 134.759,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 134.759,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 135.22,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 135.682,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 135.682,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 136.143,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 136.143,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 136.605,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 136.605,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 137.066,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 137.528,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 137.528,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 137.989,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 138.451,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 138.451,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 138.912,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 139.374,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 139.374,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 139.835,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 139.835,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 140.297,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 140.297,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 140.758,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 141.22,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 141.22,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 141.681,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 142.143,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 142.143,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 142.604,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 143.066,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 143.066,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 143.527,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 143.527,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 143.989,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 143.989,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 144.45,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 144.912,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 144.912,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 145.373,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 145.835,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 145.835,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 146.296,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 146.758,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 146.758,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 147.219,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 147.219,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 147.681,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 147.681,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 148.142,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 148.604,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 148.604,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 149.065,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 149.527,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 149.527,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 149.988,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 150.45,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 150.45,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 150.911,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 150.911,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 151.373,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 151.373,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 151.834,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 152.296,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 152.296,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 152.757,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 153.219,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 153.219,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 153.68,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 154.142,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 154.142,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 154.603,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 154.603,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 155.065,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 155.065,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 155.526,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 155.988,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 155.988,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 156.449,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 156.911,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 156.911,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 157.372,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 157.834,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 157.834,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 158.295,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 158.295,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 158.757,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 158.757,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 159.218,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 159.68,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 159.68,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 160.141,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 160.603,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 160.603,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 161.064,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 161.526,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 161.756,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 161.987,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 162.449,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 162.449,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 162.91,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 163.372,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 163.372,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 163.833,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 164.295,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 164.295,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 164.756,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 165.218,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 165.218,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 165.679,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 165.679,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 166.141,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 166.141,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 166.602,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 167.064,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 167.064,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 167.525,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 167.987,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 167.987,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 168.448,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 168.91,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 168.91,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 169.371,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 169.371,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 169.833,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 169.833,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 170.294,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 170.756,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 170.756,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 171.217,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 171.679,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 171.679,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 172.14,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 172.602,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 172.602,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 173.063,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 173.063,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 173.525,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 173.525,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 173.986,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 174.448,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 174.448,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 174.909,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 175.371,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 175.371,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 175.832,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 176.294,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 176.294,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 176.755,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 176.755,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 177.217,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 177.217,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 177.678,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 178.14,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 178.14,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 178.601,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 179.063,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 179.063,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 179.524,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 179.986,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 180.217,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 180.447,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 180.909,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 180.909,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 181.37,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 181.832,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 181.832,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 182.293,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 182.755,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 182.755,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 183.216,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 183.678,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 183.678,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 184.139,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 184.139,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 184.601,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 184.601,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 185.062,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 185.524,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 185.524,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 185.985,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 186.447,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 186.447,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 186.908,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 187.37,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 187.37,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 187.831,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 187.831,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 188.293,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 188.293,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 188.754,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 189.216,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 189.216,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 189.677,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 190.139,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 190.139,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 190.6,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 191.062,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 191.062,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 191.523,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 191.523,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 191.985,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 191.985,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 192.446,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 192.908,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 192.908,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 193.369,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 193.831,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 193.831,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 194.292,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 194.754,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 194.754,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 195.215,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 195.215,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 195.677,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 195.677,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 196.138,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 196.6,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 196.6,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 197.061,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 197.523,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 197.523,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 197.984,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 198.446,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 198.446,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 198.907,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 198.907,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 199.369,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 199.369,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 199.83,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 200.292,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 200.292,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 200.753,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 201.215,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 201.215,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 201.676,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 202.138,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 202.138,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 202.599,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 202.599,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 203.061,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 203.061,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 203.522,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 203.984,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 203.984,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 204.445,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 204.907,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 204.907,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 205.368,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 205.83,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 205.83,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 206.291,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 206.291,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 206.753,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 206.753,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 207.214,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 207.676,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 207.676,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 208.137,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 208.599,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 208.599,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 209.06,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 209.522,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 209.522,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 209.983,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 209.983,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 210.445,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 210.445,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 210.906,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 211.368,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 211.368,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 211.829,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 212.291,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 212.291,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 212.752,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 213.214,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 213.214,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 213.675,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 213.675,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 214.137,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 214.137,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 214.598,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 215.06,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 215.06,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 215.521,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 215.983,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 215.983,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 216.444,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 216.906,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 216.906,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 217.367,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 217.367,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 217.829,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 217.829,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 218.29,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 218.752,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 218.752,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 219.213,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 219.675,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 219.675,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 220.136,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 220.598,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 220.598,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 221.059,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 221.059,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 221.521,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 221.521,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 221.982,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 222.444,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 222.444,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 222.905,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 223.367,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 223.367,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 223.828,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 224.29,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 224.29,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 224.751,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 224.751,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 225.213,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 225.213,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 225.674,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 226.136,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 226.136,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 226.597,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 227.059,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 227.059,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 227.52,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 227.982,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 227.982,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 228.443,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 228.443,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 228.905,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 228.905,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 229.366,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 229.828,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 229.828,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 230.289,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 230.751,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 230.751,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 231.212,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 231.674,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 231.674,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 232.135,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 232.135,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 232.597,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 232.597,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 233.058,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 233.52,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 233.52,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 233.981,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 234.443,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 234.443,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 234.904,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 235.366,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 235.366,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 235.827,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 235.827,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 236.289,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 236.289,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 236.75,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 237.212,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 237.212,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 237.673,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 238.135,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 238.135,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 238.596,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 239.058,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 239.058,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 239.519,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 239.519,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 239.981,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 239.981,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 240.442,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 240.904,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 240.904,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 241.365,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 241.827,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 241.827,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 242.288,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 242.75,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 242.75,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 243.211,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 243.211,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 243.673,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 243.673,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 244.134,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 244.596,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 244.596,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 245.057,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 245.519,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 245.519,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 245.98,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 246.442,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 246.442,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 246.903,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 246.903,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 247.365,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 247.365,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 247.826,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 248.288,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 248.288,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 248.749,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 249.211,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 249.211,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 249.672,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 250.134,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 250.134,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 250.595,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 250.595,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 251.057,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 251.057,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 251.518,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 251.98,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 251.98,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 252.441,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 252.903,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 252.903,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 253.364,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 253.826,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 254.057,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 254.287,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 254.749,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 254.749,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 255.21,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 255.672,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 255.672,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 256.133,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 256.595,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 256.595,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 257.056,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 257.518,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 257.518,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 257.979,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 257.979,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 258.441,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 258.441,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 258.902,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 259.364,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 259.364,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 259.825,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 260.287,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 260.287,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 260.748,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 261.21,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 261.21,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 261.671,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 261.671,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 262.133,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 262.133,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 262.594,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 263.056,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 263.056,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 263.517,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 263.979,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 263.979,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 264.44,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 264.902,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 264.902,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 265.363,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 265.363,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 265.825,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 265.825,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 266.286,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 266.748,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 266.748,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 267.209,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 267.671,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 267.671,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 268.132,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 268.594,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 268.594,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 269.055,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 269.055,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 269.517,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 269.517,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 269.978,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 270.44,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 270.44,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 270.901,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 271.363,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 271.363,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 271.824,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 272.286,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 272.517,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 272.748,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 273.209,
+      "duration_s": 0.4615,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    },
+    {
+      "time_s": 273.209,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 273.671,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 274.132,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 274.132,
+      "duration_s": 0.4615,
+      "drum": "Hi-Mid Tom",
+      "midi": 48,
+      "track_index": 2
+    },
+    {
+      "time_s": 274.594,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 275.055,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 275.055,
+      "duration_s": 0.4615,
+      "drum": "Bass Drum 1",
+      "midi": 36,
+      "track_index": 2
+    },
+    {
+      "time_s": 275.517,
+      "duration_s": 0.4615,
+      "drum": "Closed Hi-Hat",
+      "midi": 42,
+      "track_index": 2
+    },
+    {
+      "time_s": 275.978,
+      "duration_s": 0.2308,
+      "drum": "Low-Mid Tom",
+      "midi": 47,
+      "track_index": 2
+    },
+    {
+      "time_s": 276.209,
+      "duration_s": 0.2308,
+      "drum": "Low Tom",
+      "midi": 45,
+      "track_index": 2
+    },
+    {
+      "time_s": 276.44,
+      "duration_s": 0.4615,
+      "drum": "High Floor Tom",
+      "midi": 43,
+      "track_index": 2
+    },
+    {
+      "time_s": 276.901,
+      "duration_s": 3.6923,
+      "drum": "Crash Cymbal 1",
+      "midi": 49,
+      "track_index": 2
+    }
+  ]
+}
