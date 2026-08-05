@@ -8,7 +8,7 @@ Použití:
     register_tr(label.setText, "some.key")
 
     act = tr_action(self, "file.open", tooltip_key="file.open.tooltip",
-                     shortcut="Ctrl+O", slot=self.open_file)
+                     shortcut="Ctrl+O", slot=self.open_json)
 
 Retranslace funguje přes REGISTR naplněný PŘI KONSTRUKCI widgetu (ne pár
 _build_ui()/retranslate_ui() metod, které by se dřív nebo později rozešly) —
@@ -174,9 +174,28 @@ _STRINGS: dict[str, dict[str, str]] = {
     "file.merge_web.tooltip": {
         "cs": "Sloučí text/akordy z webu s bicí (a případně basou) z Guitar Pro souboru.",
         "en": "Merges lyrics/chords from the web with drums (and optionally bass) from a Guitar Pro file."},
-    "file.open_gp": {"cs": "Otevřít Guitar Pro soubor…", "en": "Open Guitar Pro File…"},
-    "file.open_json": {"cs": "Otevřít Karaoke JSON…", "en": "Open Karaoke JSON…"},
-    "file.export": {"cs": "Exportovat Karaoke JSON…", "en": "Export Karaoke JSON…"},
+    "file.open": {"cs": "📂 Otevřít…", "en": "📂 Open…"},
+    "file.open.tooltip": {
+        "cs": "Otevře uloženou karaoke píseň (JSON) — vlastní souborový formát appky.",
+        "en": "Opens a saved karaoke song (JSON) — the app's own file format."},
+    "file.import_gp": {"cs": "📥 Importovat z Guitar Pro…", "en": "📥 Import from Guitar Pro…"},
+    "file.import_gp.tooltip": {
+        "cs": "Guitar Pro soubor se jen IMPORTUJE (tabulatura/bicí/basa) — appka do něj "
+              "nikdy nezapisuje zpátky. Uložit/Uložit jako vždy zapisuje JSON.",
+        "en": "A Guitar Pro file is only IMPORTED (tablature/drums/bass) — the app never "
+              "writes back to it. Save/Save As always write JSON."},
+    "file.save": {"cs": "💾 Uložit", "en": "💾 Save"},
+    "file.save.tooltip": {
+        "cs": "Přepíše aktuální JSON soubor rovnou, beze ptaní. Píseň, která zatím nemá "
+              "žádný JSON cíl (nová/jen importovaná z GP), se zeptá na cestu (jako „Uložit jako…“).",
+        "en": "Overwrites the current JSON file directly, no prompt. A song with no JSON "
+              "target yet (new/only imported from GP) asks for a path (like \"Save As…\")."},
+    "file.save_as": {"cs": "💾 Uložit jako…", "en": "💾 Save As…"},
+    "file.save_as.tooltip": {
+        "cs": "Vždy nabídne dialog s cestou — i když už je píseň uložená (uložení kopie "
+              "pod jiným jménem).",
+        "en": "Always shows a save-path dialog — even for an already-saved song (save a "
+              "copy under a different name)."},
     "file.quit": {"cs": "Konec", "en": "Quit"},
 
     # --- menu: Úpravy / Edit ---
@@ -185,6 +204,23 @@ _STRINGS: dict[str, dict[str, str]] = {
     "edit.undo.tooltip": {"cs": "Zpět (Ctrl+Z)", "en": "Undo (Ctrl+Z)"},
     "edit.redo": {"cs": "↷ Znovu", "en": "↷ Redo"},
     "edit.redo.tooltip": {"cs": "Znovu (Ctrl+Y / Ctrl+Shift+Z)", "en": "Redo (Ctrl+Y / Ctrl+Shift+Z)"},
+    "edit.select_all": {"cs": "☰ Vybrat vše", "en": "☰ Select All"},
+    "edit.select_all.tooltip": {
+        "cs": "Vybere všechny prvky na všech stopách najednou (text, akordy, bicí, "
+              "basa, klipy displeje) — Ctrl+A.",
+        "en": "Selects every element on every track at once (lyrics, chords, drums, "
+              "bass, display clips) — Ctrl+A."},
+    "edit.copy": {"cs": "📋 Kopírovat", "en": "📋 Copy"},
+    "edit.cut": {"cs": "✂ Vyjmout", "en": "✂ Cut"},
+    "edit.paste": {"cs": "📌 Vložit", "en": "📌 Paste"},
+    "edit.paste.tooltip": {
+        "cs": "Vloží zkopírované/vyjmuté prvky na pozici kurzoru — celá skupina se "
+              "posune najednou, vzájemné časové rozestupy zůstanou zachované. "
+              "Rychlejší cesta: pravý klik na prázdné místo stopy → „📌 Vložit sem“ "
+              "(vloží přesně tam, kam se kliklo).",
+        "en": "Pastes the copied/cut elements at the playhead — the whole group moves "
+              "together, keeping the original spacing between them. Faster: right-click "
+              "an empty spot on a track → \"📌 Paste Here\" (pastes exactly there)."},
     "edit.split": {"cs": "✂ Rozdělit v kurzoru", "en": "✂ Split at Playhead"},
     "edit.split.tooltip": {"cs": "Rozdělí vybraný klip v pozici kurzoru (klávesa S)",
                              "en": "Splits the selected clip at the playhead position (key S)"},
@@ -197,10 +233,44 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Shifts ALL selected elements by an exact amount of time (parametric, not by dragging).\n"
               "First select multiple elements: Shift/Ctrl+click, rubber-band select, or right-click "
               "an element → \"Select from here FORWARD/BACKWARD in time\" (shortcuts ]/[)."},
+    "edit.rewrite_text": {"cs": "✎ Upravit text a akordy…", "en": "✎ Edit Text && Chords…"},
+    "edit.rewrite_text.tooltip": {
+        "cs": "Načte aktuální text/akordy zpět do editoru (stejný jako u „Nová píseň“), "
+              "necháš opravit chybu a poskládáš zpátky. Nahradí JEN text a akordy — "
+              "bicí, basa, napojení na audio i Displej stopa zůstanou beze změny.",
+        "en": "Loads the current lyrics/chords back into the editor (same one used for "
+              "\"New Song\"), lets you fix a mistake, and reassembles it. Replaces ONLY the "
+              "lyrics/chords — drums, bass, audio linkage and the Display track stay unchanged."},
+    "edit_text.none_title": {"cs": "Není co upravit", "en": "Nothing to Edit"},
+    "edit_text.none_body": {"cs": "Píseň zatím nemá žádný text/akordy.",
+                             "en": "The song has no lyrics/chords yet."},
+    "edit_text.multi_track_title": {"cs": "Text byl na více stopách", "en": "Text Was on Multiple Tracks"},
+    "edit_text.multi_track_body": {
+        "cs": "Původní text/akordy byly rozdělené na víc stop — po uložení úprav budou "
+              "všechny na jedné stopě (1). Zkontroluj prosím výsledek.",
+        "en": "The original lyrics/chords were split across multiple tracks — after saving "
+              "the edit, they will all be on a single track (1). Please check the result."},
+    "edit_text.resync_title": {"cs": "Přeskládat Displej stopu?", "en": "Rebuild Display Track?"},
+    "edit_text.resync_body": {
+        "cs": "Text/akordy byly nahrazeny — čísla řádků se mohla přeskupit, takže klipy "
+              "na Displej stopě teď můžou ukazovat starý/špatný obsah.\n\n"
+              "Přeskládat Displej stopu podle nového textu hned teď (doporučeno)?",
+        "en": "The lyrics/chords were replaced — line numbers may have shifted, so clips "
+              "on the Display track might now show old/wrong content.\n\n"
+              "Rebuild the Display track from the new text right now (recommended)?"},
 
     # --- menu: Časová osa / Timeline ---
     "menu.timeline": {"cs": "Č&asová osa", "en": "&Timeline"},
     "timeline.add_clip": {"cs": "＋ Klip displeje", "en": "＋ Display Clip"},
+    "timeline.add_clip.tooltip": {
+        "cs": "Vloží klip na Displej stopu na pozici kurzoru (nebo přesně na blízký "
+              "osamocený akordový takt bez klipu, když nějaký je poblíž). Rychlejší "
+              "cesta: pravý klik přímo na prázdné místo Displej stopy — vloží klip "
+              "přesně tam, kam se kliklo.",
+        "en": "Inserts a clip on the Display track at the playhead (or exactly onto a "
+              "nearby chord-only bar that has no clip yet, if one is close). Faster: "
+              "right-click directly on an empty spot on the Display track — inserts "
+              "the clip exactly there."},
     "timeline.align_song": {"cs": "🔄 Zarovnat displej (celá píseň)", "en": "🔄 Re-sync Display (whole song)"},
     "timeline.align_song.tooltip": {
         "cs": "U VŠECH klipů na Displej stopě zruší ruční posun a obnoví "
@@ -257,19 +327,213 @@ _STRINGS: dict[str, dict[str, str]] = {
     # --- menu: Nápověda / Help ---
     "menu.help": {"cs": "Nápo&věda", "en": "&Help"},
     "help.timeline_help": {"cs": "Nápověda k časové ose", "en": "Timeline Help"},
-    "help.timeline_help.body": {
-        "cs": "Displej = master stopa (co uvidí karaoke) · dvojklik klip = zdroj+režim · "
-              "táhni okraje = délka · pravý klik = režim/smazat · Ctrl+kolečko = zoom\n"
-              "] / [ nebo pravý klik → „Vybrat od zde DÁL/DŘÍV v čase“ = vyber prvek a "
-              "vše odpovídající po/před ním na stejné stopě (text+akordy dohromady) "
-              "→ táhni myší nebo „↔ Posunout vybrané…“ pro přesný posun "
-              "(hromadné přeřazení zbytku)",
-        "en": "Display = master track (what karaoke shows) · double-click clip = source+mode · "
-              "drag edges = length · right-click = mode/delete · Ctrl+wheel = zoom\n"
-              "] / [ or right-click → \"Select from here FORWARD/BACKWARD in time\" = select an "
-              "element and everything matching after/before it on the same track (lyrics+chords "
-              "together) → drag with mouse or \"↔ Shift Selected…\" for an exact shift "
-              "(bulk-move the rest)"},
+    "help.full.html": {
+        "cs": """
+<style>
+ body { font-family: 'Segoe UI', sans-serif; font-size: 13px; color: #e0e0e0; }
+ h2 { color: #6fa8ff; margin-top: 4px; }
+ h3 { color: #c58aef; margin-top: 18px; margin-bottom: 4px; }
+ code { background: #3a3a3a; color: #e6c07b; padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; }
+ ul { margin-top: 4px; }
+ li { margin-bottom: 5px; }
+ table { border-collapse: collapse; margin-top: 6px; }
+ th, td { border: 1px solid #555; padding: 3px 10px; text-align: left; color: #e0e0e0; }
+ th { background: #3a3a3a; }
+</style>
+<h2>📖 Guitar Pro Viewer &amp; Karaoke Exporter — nápověda</h2>
+<p>Otevři uloženou píseň (<code>Ctrl+O</code>, JSON — vlastní formát appky) nebo
+importuj Guitar Pro soubor (<code>Ctrl+I</code> — tabulatura/bicí/basa, appka do
+něj nikdy nezapisuje zpátky), uprav časovou osu níže, ulož (<code>Ctrl+S</code>).</p>
+
+<h3>🖱️ Výběr prvků</h3>
+<ul>
+ <li><b>Klik</b> = vybrat jeden prvek. <b>Shift/Ctrl+klik</b> = přidat/odebrat ze výběru.</li>
+ <li><b>Tažení obdélníku</b> (na prázdném místě) = výběr více prvků najednou — klidně
+     napříč VÍCE stopami zároveň (text, akordy, bicí, basa, Displej).</li>
+ <li><code>]</code> / <code>[</code> nebo v pravém menu „Vybrat od zde DÁL/DŘÍV v čase“ =
+     vyber jeden prvek a vše odpovídající PO/PŘED ním na STEJNÉ stopě (text+akordy
+     dohromady jako jedna skupina; bicí/basa zvlášť podle konkrétní stopy; Displej
+     klipy všechny najednou, je to jen jedna master stopa).</li>
+ <li><b>„☰ Vybrat celou stopu“</b> (v pravém menu) = totéž jako výše, ale OBĚMA
+     směry najednou — celý obsah dané stopy/druhu.</li>
+ <li><code>Ctrl+A</code> = vybrat úplně VŠECHNO na VŠECH stopách najednou.</li>
+</ul>
+
+<h3>➕ Přidávání nových prvků</h3>
+<ul>
+ <li><b>Text / akord:</b> menu <i>Časová osa</i> → ＋ Text / ＋ Akord.</li>
+ <li><b>Bicí:</b> pravý klik na prázdné místo v řádku konkrétního bubnu → „➕ Přidat
+     … zde“. Na úplně prázdné stopě (žádný úder zatím neexistuje) se nabídne
+     základní sada řádků (Closed Hi-Hat, Snare, Kick), aby bylo na co kliknout.</li>
+ <li><b>Basa:</b> pravý klik na prázdné místo v řádku struny → „➕ Přidat notu…“,
+     zadáš jen číslo pražce (basa se nikde nepřehrává, je to čistě referenční
+     stopa pro zarovnání s bicími/textem).</li>
+ <li><b>Klip displeje:</b> <code>Ctrl+D</code> (na pozici kurzoru, trefí se na blízký
+     osamocený akordový takt bez klipu) — nebo rychleji: pravý klik přímo na Displej
+     stopu = klip přesně tam, kam se kliklo.</li>
+</ul>
+
+<h3>📋 Kopírování, vyjmutí, vložení</h3>
+<ul>
+ <li><code>Ctrl+C</code> kopírovat / <code>Ctrl+X</code> vyjmout / <code>Ctrl+V</code>
+     vložit na pozici kurzoru — funguje na LIBOVOLNĚ smíšený výběr (text, akordy,
+     bicí, basa i Displej klipy najednou).</li>
+ <li>Celá zkopírovaná skupina se vloží NAJEDNOU se zachovanými vzájemnými
+     časovými rozestupy (ne každý prvek zvlášť zaokrouhlený na mřížku).</li>
+ <li>Rychlejší cesta: pravý klik na prázdné místo stopy (bicí/basa/Displej) →
+     „📌 Vložit sem“ — vloží přesně tam, kam se kliklo.</li>
+ <li>Vložené Displej klipy se odpojí od auto-sledování (jsou to teď nezávislé
+     kopie, ne odkaz na konkrétní řádek).</li>
+</ul>
+
+<h3>↔ Posun a zarovnání</h3>
+<ul>
+ <li>„↔ Posunout vybrané…“ = přesný, parametrický posun celého výběru o zadaný
+     počet sekund (ekvivalent tažení myší, ale na milimetr přesně).</li>
+ <li>„🔄 Zarovnat displej“ / „🔄🗑 Znovu poskládat Displej stopu“ = obnoví klipy
+     na Displej stopě podle AKTUÁLNÍHO textu/akordů (druhé jmenované kompletně
+     zahodí a poskládá úplně od nuly, i smazané/přeskupené řádky).</li>
+</ul>
+
+<h3>🟣 Displej stopa (co uvidí karaoke)</h3>
+<p>Master stopa navrchu — přesně to, co se pošle na karaoke displej. Dvojklik na
+klip = zdroj + režim zobrazení. Táhni okraje = délka klipu. Dokud klip
+auto-sleduje obsah (výchozí stav), drží se přesně toho, co je skutečně na ose;
+jakmile ho ručně přetáhneš, odpojí se a zůstane nezávislý.</p>
+
+<h3>✎ Oprava textu a akordů</h3>
+<p><code>Ctrl+Shift+T</code> — načte AKTUÁLNÍ text/akordy zpět do stejného
+editoru jako při vkládání nové písně, necháš opravit chybu (např. chybějící
+akordový takt) a poskládáš zpátky. Bicí, basa, audio i Displej stopa zůstanou
+beze změny — nahradí se jen text a akordy.</p>
+
+<h3>🎵 Zvuk / vlnovka nahrávky</h3>
+<p>Pravý klik na vlnovku = posun/roztažení (živý náhled při psaní), body A/B
+pro automatické zarovnání podle rytmu bicích. Tlačítka pod stopami: nahrát
+MP3/WAV, přehrát, porovnat s GP mixem.</p>
+
+<h3>⌨️ Klávesové zkratky</h3>
+<table>
+<tr><th>Zkratka</th><th>Akce</th></tr>
+<tr><td><code>Ctrl+N</code></td><td>Nová píseň (web/text)</td></tr>
+<tr><td><code>Ctrl+M</code></td><td>Sloučit s webem</td></tr>
+<tr><td><code>Ctrl+O</code></td><td>Otevřít… (JSON)</td></tr>
+<tr><td><code>Ctrl+I</code></td><td>Importovat z Guitar Pro…</td></tr>
+<tr><td><code>Ctrl+S</code> / <code>Ctrl+Shift+S</code></td><td>Uložit / Uložit jako…</td></tr>
+<tr><td><code>Ctrl+Z</code> / <code>Ctrl+Shift+Z</code></td><td>Zpět / Znovu</td></tr>
+<tr><td><code>Ctrl+A</code></td><td>Vybrat vše</td></tr>
+<tr><td><code>Ctrl+C</code> / <code>Ctrl+X</code> / <code>Ctrl+V</code></td><td>Kopírovat / Vyjmout / Vložit</td></tr>
+<tr><td><code>S</code></td><td>Rozdělit v kurzoru</td></tr>
+<tr><td><code>Del</code></td><td>Smazat vybrané</td></tr>
+<tr><td><code>]</code> / <code>[</code></td><td>Vybrat od zde dál/dřív v čase</td></tr>
+<tr><td><code>Ctrl+D</code></td><td>Klip displeje na pozici kurzoru</td></tr>
+<tr><td><code>Ctrl+Shift+T</code></td><td>Upravit text a akordy…</td></tr>
+<tr><td><code>Ctrl+=</code> / <code>Ctrl+-</code></td><td>Přiblížit / Oddálit</td></tr>
+</table>
+""",
+        "en": """
+<style>
+ body { font-family: 'Segoe UI', sans-serif; font-size: 13px; color: #e0e0e0; }
+ h2 { color: #6fa8ff; margin-top: 4px; }
+ h3 { color: #c58aef; margin-top: 18px; margin-bottom: 4px; }
+ code { background: #3a3a3a; color: #e6c07b; padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; }
+ ul { margin-top: 4px; }
+ li { margin-bottom: 5px; }
+ table { border-collapse: collapse; margin-top: 6px; }
+ th, td { border: 1px solid #555; padding: 3px 10px; text-align: left; color: #e0e0e0; }
+ th { background: #3a3a3a; }
+</style>
+<h2>📖 Guitar Pro Viewer &amp; Karaoke Exporter — Help</h2>
+<p>Open a saved song (<code>Ctrl+O</code>, JSON — the app's own file format) or
+import a Guitar Pro file (<code>Ctrl+I</code> — tablature/drums/bass, the app never
+writes back to it), edit the timeline below, save (<code>Ctrl+S</code>).</p>
+
+<h3>🖱️ Selecting elements</h3>
+<ul>
+ <li><b>Click</b> = select one element. <b>Shift/Ctrl+click</b> = add/remove from selection.</li>
+ <li><b>Rubber-band drag</b> (on empty space) = select multiple elements at once — even
+     across MULTIPLE tracks at the same time (lyrics, chords, drums, bass, Display).</li>
+ <li><code>]</code> / <code>[</code> or right-click → "Select from here FORWARD/BACKWARD
+     in time" = select one element and everything matching AFTER/BEFORE it on the SAME
+     track (lyrics+chords together as one group; drums/bass per their own track;
+     Display clips all together, since it's a single master track).</li>
+ <li><b>"☰ Select Whole Track"</b> (right-click menu) = same as above but in BOTH
+     directions at once — the entire content of that track/kind.</li>
+ <li><code>Ctrl+A</code> = select absolutely everything on every track at once.</li>
+</ul>
+
+<h3>➕ Adding new elements</h3>
+<ul>
+ <li><b>Lyrics / chord:</b> <i>Timeline</i> menu → ＋ Lyric / ＋ Chord.</li>
+ <li><b>Drums:</b> right-click an empty spot in a specific drum's row → "➕ Add … here".
+     On a completely empty track (no hits yet) a default set of rows (Closed Hi-Hat,
+     Snare, Kick) is offered so there's always something to click.</li>
+ <li><b>Bass:</b> right-click an empty spot in a string's row → "➕ Add note…", just
+     enter the fret number (bass is never played back — it's a purely visual
+     reference track for aligning with drums/lyrics).</li>
+ <li><b>Display clip:</b> <code>Ctrl+D</code> (at the playhead, snaps onto a nearby
+     chord-only bar with no clip yet) — or faster: right-click directly on the
+     Display track = clip exactly where you clicked.</li>
+</ul>
+
+<h3>📋 Copy, cut, paste</h3>
+<ul>
+ <li><code>Ctrl+C</code> copy / <code>Ctrl+X</code> cut / <code>Ctrl+V</code> paste at
+     the playhead — works on ANY mixed selection (lyrics, chords, drums, bass and
+     Display clips together).</li>
+ <li>The whole copied group is pasted AT ONCE, keeping the original spacing between
+     elements (not each one separately snapped to the grid).</li>
+ <li>Faster: right-click an empty spot on a track (drums/bass/Display) →
+     "📌 Paste Here" — pastes exactly where you clicked.</li>
+ <li>Pasted Display clips detach from auto-follow (they're independent copies now,
+     not a reference to a specific line).</li>
+</ul>
+
+<h3>↔ Shifting and aligning</h3>
+<ul>
+ <li>"↔ Shift Selected…" = an exact, parametric shift of the whole selection by a
+     given number of seconds (equivalent to dragging, but pixel-perfect).</li>
+ <li>"🔄 Re-sync Display" / "🔄🗑 Rebuild Display Track" = refreshes clips on the
+     Display track from the CURRENT lyrics/chords (the latter completely discards
+     and rebuilds from scratch, including deleted/reshuffled lines).</li>
+</ul>
+
+<h3>🟣 Display track (what karaoke shows)</h3>
+<p>The master track at the top — exactly what gets sent to the karaoke display.
+Double-click a clip = source + display mode. Drag edges = clip length. While a
+clip auto-follows its content (the default), it always matches what's actually
+on the timeline; once you drag it manually it detaches and stays independent.</p>
+
+<h3>✎ Fixing text and chords</h3>
+<p><code>Ctrl+Shift+T</code> — loads the CURRENT lyrics/chords back into the same
+editor used for importing a new song, lets you fix a mistake (e.g. a missing
+chord-only bar), and reassembles it. Drums, bass, audio and the Display track
+stay unchanged — only the lyrics/chords get replaced.</p>
+
+<h3>🎵 Audio / waveform</h3>
+<p>Right-click the waveform = position/stretch (live preview while typing), A/B
+points for automatic alignment to the drum rhythm. Buttons below the tracks:
+load MP3/WAV, play, compare against the GP mix.</p>
+
+<h3>⌨️ Keyboard shortcuts</h3>
+<table>
+<tr><th>Shortcut</th><th>Action</th></tr>
+<tr><td><code>Ctrl+N</code></td><td>New song (web/text)</td></tr>
+<tr><td><code>Ctrl+M</code></td><td>Merge with web</td></tr>
+<tr><td><code>Ctrl+O</code></td><td>Open… (JSON)</td></tr>
+<tr><td><code>Ctrl+I</code></td><td>Import from Guitar Pro…</td></tr>
+<tr><td><code>Ctrl+S</code> / <code>Ctrl+Shift+S</code></td><td>Save / Save As…</td></tr>
+<tr><td><code>Ctrl+Z</code> / <code>Ctrl+Shift+Z</code></td><td>Undo / Redo</td></tr>
+<tr><td><code>Ctrl+A</code></td><td>Select all</td></tr>
+<tr><td><code>Ctrl+C</code> / <code>Ctrl+X</code> / <code>Ctrl+V</code></td><td>Copy / Cut / Paste</td></tr>
+<tr><td><code>S</code></td><td>Split at playhead</td></tr>
+<tr><td><code>Del</code></td><td>Delete selected</td></tr>
+<tr><td><code>]</code> / <code>[</code></td><td>Select from here forward/backward in time</td></tr>
+<tr><td><code>Ctrl+D</code></td><td>Display clip at the playhead</td></tr>
+<tr><td><code>Ctrl+Shift+T</code></td><td>Edit Text &amp; Chords…</td></tr>
+<tr><td><code>Ctrl+=</code> / <code>Ctrl+-</code></td><td>Zoom in / out</td></tr>
+</table>
+"""},
     "help.about": {"cs": "O aplikaci", "en": "About"},
     # --- export (sdíleno mezi menu, toolbarem i tlačítky v editoru) ---
     "export.warn_nothing_loaded": {
@@ -307,7 +571,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "left.track_tree_name": {"cs": "Název", "en": "Name"},
     "left.track_tree_type": {"cs": "Typ", "en": "Type"},
     "left.export_all_tracks": {"cs": "Exportovat všechny stopy", "en": "Export all tracks"},
-    "left.export_button": {"cs": "💾  Export Karaoke JSON", "en": "💾  Export Karaoke JSON"},
+    "left.export_button": {"cs": "💾  Uložit Karaoke JSON", "en": "💾  Save Karaoke JSON"},
     "left.mix_title": {"cs": "Mix časové osy", "en": "Timeline Mix"},
     "tab.chord_chart": {"cs": "🎸 Chord Chart", "en": "🎸 Chord Chart"},
     "tab.tab_notation": {"cs": "Noty / Tabulatura", "en": "Notation / Tab"},
@@ -315,8 +579,9 @@ _STRINGS: dict[str, dict[str, str]] = {
     "tab.lyrics": {"cs": "Text / Slova", "en": "Lyrics"},
     "tab.chords": {"cs": "Akordy", "en": "Chords"},
     "tab.json_preview": {"cs": "JSON náhled", "en": "JSON Preview"},
-    "status.ready": {"cs": "Připraven — Otevřete Guitar Pro soubor (Ctrl+O)",
-                       "en": "Ready — Open a Guitar Pro file (Ctrl+O)"},
+    "status.ready": {
+        "cs": "Připraven — Nová píseň (Ctrl+N), Otevřít JSON (Ctrl+O) nebo Import z Guitar Pro (Ctrl+I)",
+        "en": "Ready — New Song (Ctrl+N), Open JSON (Ctrl+O), or Import from Guitar Pro (Ctrl+I)"},
     "toolbar.main": {"cs": "Hlavní panel", "en": "Main Toolbar"},
     "toolbar.timeline": {"cs": "Časová osa", "en": "Timeline"},
 
@@ -381,13 +646,13 @@ _STRINGS: dict[str, dict[str, str]] = {
 
     # --- otevírání/import souborů, sloučení s webem ---
     "web.new_song_desc": {"cs": "Nová píseň (web/text)", "en": "New song (web/text)"},
-    "file.open_gp.dialog_title": {"cs": "Otevřít Guitar Pro soubor", "en": "Open Guitar Pro File"},
-    "file.open_gp.dialog_filter": {
+    "file.import_gp.dialog_title": {"cs": "Importovat z Guitar Pro", "en": "Import from Guitar Pro"},
+    "file.import_gp.dialog_filter": {
         "cs": "Guitar Pro (*.gp3 *.gp4 *.gp5 *.gpx *.gp);;Všechny soubory (*)",
         "en": "Guitar Pro (*.gp3 *.gp4 *.gp5 *.gpx *.gp);;All files (*)"},
     "status.loading": {"cs": "Načítám: {path} …", "en": "Loading: {path} …"},
-    "file.open_json.dialog_title": {"cs": "Otevřít Karaoke JSON", "en": "Open Karaoke JSON"},
-    "file.open_json.dialog_filter": {
+    "file.open.dialog_title": {"cs": "Otevřít Karaoke JSON", "en": "Open Karaoke JSON"},
+    "file.open.dialog_filter": {
         "cs": "Karaoke JSON (*.json);;Všechny soubory (*)",
         "en": "Karaoke JSON (*.json);;All files (*)"},
     "json.load_error_body": {"cs": "Nelze načíst JSON:\n\n{ex}", "en": "Could not load JSON:\n\n{ex}"},
@@ -403,9 +668,9 @@ _STRINGS: dict[str, dict[str, str]] = {
                               "en": "Loaded ({source}) — {n_lines} karaoke lines"},
     "merge.need_gp_title": {"cs": "Nejdřív Guitar Pro soubor", "en": "Guitar Pro File First"},
     "merge.need_gp_body": {
-        "cs": "Nejprve otevři Guitar Pro soubor (Ctrl+O) — z něj se vezmou "
+        "cs": "Nejprve importuj Guitar Pro soubor (Ctrl+I) — z něj se vezmou "
               "bicí a časování.\nPak sem vlož URL písně z webu (text + akordy).",
-        "en": "First open a Guitar Pro file (Ctrl+O) — drums and timing are taken "
+        "en": "First import a Guitar Pro file (Ctrl+I) — drums and timing are taken "
               "from it.\nThen paste the song's URL from the web here (lyrics + chords)."},
     "merge.url_dialog_title": {"cs": "Sloučit s webem", "en": "Merge with Web"},
     "merge.url_dialog_label": {"cs": "URL písně (např. pisnicky-akordy.cz/…):",
@@ -420,13 +685,13 @@ _STRINGS: dict[str, dict[str, str]] = {
               "  Akordů: {n_chords}\n"
               "  Úderů bicích: {n_drums}\n"
               "  Not basy: {n_bass}\n\n"
-              "Uprav řádky/akordy v editoru a exportuj (Ctrl+E).",
+              "Uprav řádky/akordy v editoru a ulož (Ctrl+S).",
         "en": "Merged with web:\n\n"
               "  Lines: {n_lines}\n"
               "  Chords: {n_chords}\n"
               "  Drum hits: {n_drums}\n"
               "  Bass notes: {n_bass}\n\n"
-              "Edit lines/chords in the editor and export (Ctrl+E)."},
+              "Edit lines/chords in the editor and save (Ctrl+S)."},
     "status.loaded_file": {"cs": "Načteno: {path}", "en": "Loaded: {path}"},
     "source.web_gp_drums_bass": {"cs": "web+GP bicí/basa: {gp_name}", "en": "web+GP drums/bass: {gp_name}"},
     "source.gp_web": {"cs": "GP+web: {url}", "en": "GP+web: {url}"},
@@ -525,6 +790,26 @@ _STRINGS: dict[str, dict[str, str]] = {
     "timeline.align_song.result_body_none": {
         "cs": "Všechny textové klipy už byly zarovnané, nic se neměnilo.",
         "en": "All text clips were already in sync, nothing changed."},
+    # --- popisky uvnitř hlaviček stop na časové ose ---
+    "lane.rows": {"cs": "řádky", "en": "lines"},
+    "lane.chords": {"cs": "akordy", "en": "chords"},
+    "lane.lyrics": {"cs": "text", "en": "lyrics"},
+    "lane.display": {"cs": "🖥 DISPLEJ", "en": "🖥 DISPLAY"},
+    "lane.display_sub": {"cs": "výstup na karaoke", "en": "karaoke output"},
+    "lane.recording": {"cs": "🌊 Nahrávka", "en": "🌊 Recording"},
+    "lane.string": {"cs": "struna {n}", "en": "string {n}"},
+    "ruler.count_in": {"cs": "🎵 count-in (metronom)", "en": "🎵 count-in (metronome)"},
+    "ruler.bar_label": {"cs": "Takt {bar}  ·  {t}s", "en": "Bar {bar}  ·  {t}s"},
+    "drum_shift.earlier.tooltip": {
+        "cs": "Posunout celou stopu bicích dřív o krok mřížky (Přichytit)",
+        "en": "Shift the whole drum track earlier by one grid step (Snap)"},
+    "drum_shift.later.tooltip": {
+        "cs": "Posunout celou stopu bicích později o krok mřížky (Přichytit)",
+        "en": "Shift the whole drum track later by one grid step (Snap)"},
+    "drum_shift.exact.tooltip": {
+        "cs": "Posunout celou stopu bicích o přesný čas…",
+        "en": "Shift the whole drum track by an exact amount…"},
+
     "timeline.rebuild_display": {"cs": "🔄🗑 Znovu poskládat Displej stopu",
                                    "en": "🔄🗑 Rebuild Display Track"},
     "timeline.rebuild_display.tooltip": {

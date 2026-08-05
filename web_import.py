@@ -1032,9 +1032,19 @@ class WebImportDialog(QDialog):
     Změna v kterémkoli panelu se hned promítne do zbylých dvou.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, edit_mode: bool = False,
+                 initial_text: str = "", initial_meta: dict | None = None):
+        """`edit_mode=True` — použito z "✎ Upravit text a akordy…" (viz
+        `guitar_pro_viewer.py::_edit_text_and_chords`): dialog se předvyplní
+        `initial_text` (rekonstruovaný z aktuální písně přes
+        `TimelineEditor.export_chord_chart_text()`) a `initial_meta`
+        (aktuální meta písně), tempo a úvodní takty se v tomhle režimu
+        NEUPRAVUJÍ (patří dedikovaným nástrojům v hlavním okně — Tempo…/
+        Odpočet…, aby zůstaly bicí/basa v synchronu), jen text/akordy."""
         super().__init__(parent)
-        self.setWindowTitle("Nová píseň — text z webu nebo vlastní")
+        self._edit_mode = edit_mode
+        self.setWindowTitle("Upravit text a akordy" if edit_mode
+                             else "Nová píseň — text z webu nebo vlastní")
         self.setMinimumSize(1360, 760)
         self._worker: FetchWorker | None = None
         self._artist_worker: ArtistDownloadWorker | None = None
@@ -1042,13 +1052,53 @@ class WebImportDialog(QDialog):
         self._row_map: list[int] = []     # řádek tabulky → index v self._detected
         self._syncing = False             # ochrana proti zacyklení signálů
         self._preview_json: dict = {}     # poslední spočítaný náhled
-        self.result_json: dict | None = None   # nastaví se po „Použít v editoru" (OK)
+        self.result_json: dict | None = None   # nastaví se po OK
         self._setup_ui()
+        if edit_mode:
+            self._apply_edit_mode(initial_text, initial_meta or {})
+
+    def _apply_edit_mode(self, initial_text: str, meta: dict) -> None:
+        """Předvyplní dialog aktuální písní a uzamkne pole, která by tuhle
+        akci proměnila v něco jiného, než jen opravu textu/akordů (tempo
+        a úvodní takty mají svoje vlastní, dedikované nástroje v hlavním
+        okně, které navíc správně přepočítají i bicí/basu)."""
+        self.title_input.setText(str(meta.get("title", "")))
+        self.artist_input.setText(str(meta.get("artist", "")))
+        tempo = meta.get("tempo_bpm")
+        if tempo:
+            self.tempo_input.setText(str(int(tempo)))
+        self.tempo_input.setEnabled(False)
+        self.tempo_input.setToolTip(
+            "Tempo se tu neupravuje — použij „✏️ Tempo…“ v hlavním okně, "
+            "aby se správně přepočítaly i bicí a basa.")
+        bpl = meta.get("bars_per_line")
+        if bpl:
+            self.bars_per_line_spin.setValue(int(bpl))
+        self.count_in_spin.setValue(0)
+        self.count_in_spin.setEnabled(False)
+        self.count_in_spin.setToolTip(
+            "Úvodní odpočet se tu nepřidává — použij „🥁⏱ Odpočet…“ v hlavním "
+            "okně (tahle akce mění jen text a akordy).")
+        self.ok_btn.setText("✅  Uložit opravu textu/akordů")
+        self.ok_btn.setToolTip(
+            "Zavře dialog a nahradí text/akordy v aktuální písni tímhle opraveným "
+            "zněním. Bicí, basa, napojení na audio a Displej stopa zůstanou beze změny.")
+        self._syncing = True
+        try:
+            self.raw_text.setPlainText(initial_text)
+        finally:
+            self._syncing = False
+        self._parse()
 
     def _setup_ui(self) -> None:
         root = QVBoxLayout(self)
 
         steps_lbl = QLabel(
+            "<b>Oprava textu/akordů:</b> uprav řádky/akordy vlevo (nebo v tabulce "
+            "uprostřed) &nbsp;→&nbsp; zkontroluj náhled JSONu vpravo &nbsp;→&nbsp; "
+            "<b>✅ Uložit opravu textu/akordů</b> — nahradí se JEN text a akordy "
+            "aktuální písně, bicí/basa/audio/Displej zůstanou beze změny."
+            if self._edit_mode else
             "<b>Kompletní postup:</b> 1) načti text z webu (URL) <b>nebo</b> ho rovnou vlož/napiš "
             "vlevo dole &nbsp;→&nbsp; 2) uprav řádky/akordy (typ i obsah jde editovat) "
             "&nbsp;→&nbsp; 3) zkontroluj náhled JSONu vpravo &nbsp;→&nbsp; "
@@ -1057,8 +1107,8 @@ class WebImportDialog(QDialog):
         )
         steps_lbl.setWordWrap(True)
         steps_lbl.setStyleSheet(
-            "background:#eef3fb; border:1px solid #c9dcf0; border-radius:4px; "
-            "padding:6px 10px; color:#1a3a5c;"
+            "background:#213040; border:1px solid #3a5570; border-radius:4px; "
+            "padding:6px 10px; color:#cfe0f0;"
         )
         root.addWidget(steps_lbl)
 
@@ -1162,7 +1212,7 @@ class WebImportDialog(QDialog):
         self.preview_tabs.addTab(self.preview_raw, "{ } JSON")
         rl.addWidget(self.preview_tabs)
         self.preview_info = QLabel("—")
-        self.preview_info.setStyleSheet("color:#555;")
+        self.preview_info.setStyleSheet("color:#aaaaaa;")
         rl.addWidget(self.preview_info)
         splitter.addWidget(right_box)
 
@@ -1433,13 +1483,17 @@ class WebImportDialog(QDialog):
         if combo is None or cell is None:
             return
         code = combo.currentData()
+        # Barvy jen pro POPŘEDÍ (pozadí buňky necháváme na paletě/tmavém
+        # tématu appky — viz `guitar_pro_viewer._dark_palette`), takže
+        # musí být dost světlé na tmavý podklad — ne tmavé odstíny psané
+        # kdysi jen pro bílé pozadí (přesně nahlášený bug nečitelnosti).
         colors = {
-            'chord':   (QColor('#1a5fb4'), True,  False),   # modrá, tučně
-            'lyric':   (QColor('#1a1a1a'), False, False),
-            'section': (QColor('#888888'), True,  True),    # šedá, kurzíva
-            'ignore':  (QColor('#c01c28'), False, True),    # červená, kurzíva
+            'chord':   (QColor('#5b9bff'), True,  False),   # modrá, tučně
+            'lyric':   (QColor('#e2e2e2'), False, False),
+            'section': (QColor('#aaaaaa'), True,  True),    # šedá, kurzíva
+            'ignore':  (QColor('#e0645f'), False, True),    # červená, kurzíva
         }
-        color, bold, italic = colors.get(code, (QColor('#1a1a1a'), False, False))
+        color, bold, italic = colors.get(code, (QColor('#e2e2e2'), False, False))
         cell.setForeground(QBrush(color))
         f = QFont("Courier New", 11)
         f.setBold(bold)

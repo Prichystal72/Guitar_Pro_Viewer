@@ -1,8 +1,8 @@
 {
   "meta": {
     "format_version": 2,
-    "title": "Jasná zpráva",
-    "artist": "Olympic",
+    "title": "Unknown",
+    "artist": "",
     "tempo_bpm": 65,
     "ticks_per_beat": 960,
     "beats_per_measure": 4,
@@ -1354,34 +1354,22 @@
   ],
   "display_timeline": [
     {
-      "id": "clip-count-in",
-      "start_s": 1.846,
-      "end_s": 5.539,
-      "source_track": 1,
-      "mode": "count_in",
-      "artist": "Olympic",
-      "title": "Jasná zpráva",
-      "label": "Olympic / Jasná zpráva",
-      "auto_track": false
-    },
-    {
-      "id": "clip-29",
-      "start_s": 7.385,
-      "end_s": 14.769,
-      "source_track": 1,
-      "mode": "chords",
-      "label": "G",
-      "auto_track": false
-    },
-    {
       "id": "clip-1",
-      "start_s": 14.769,
+      "start_s": 7.385,
       "end_s": 20.808,
       "source_track": 1,
       "mode": "chords",
       "label": "G Gmaj7 Emi C D Ami",
-      "line": 0,
-      "auto_track": false
+      "line": 0
+    },
+    {
+      "id": "clip-2",
+      "start_s": 7.385,
+      "end_s": 20.808,
+      "source_track": 1,
+      "mode": "chords",
+      "label": "G Gmaj7 Emi C D Ami",
+      "line": 1
     },
     {
       "id": "clip-3",
@@ -1619,34 +1607,6 @@
     }
   ],
   "drums_timeline": [
-    {
-      "time_s": 2.769,
-      "duration_s": 0.277,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 3.692,
-      "duration_s": 0.277,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 4.615,
-      "duration_s": 0.277,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
-      "time_s": 5.538,
-      "duration_s": 0.277,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
     {
       "time_s": 5.538,
       "duration_s": 0.9231,

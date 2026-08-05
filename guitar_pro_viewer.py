@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QPushButton, QFileDialog, QTabWidget, QTableWidget, QTableWidgetItem,
     QScrollArea, QStatusBar, QHeaderView, QMessageBox,
     QCheckBox, QFrame, QLineEdit, QComboBox, QToolBar, QSizePolicy,
-    QTextBrowser, QDockWidget, QInputDialog, QDialog, QStyle,
+    QTextBrowser, QDockWidget, QInputDialog, QDialog, QStyle, QDialogButtonBox,
 )
 from PySide6.QtCore import Qt, QSize, QThread, Signal
 from PySide6.QtGui import QFont, QColor, QAction, QActionGroup, QIcon, QBrush, QPalette
@@ -440,21 +440,53 @@ class TrackDetailWidget(QWidget):
             self.table.setItem(ri, 6, cell(r["text"]))
             self.table.setItem(ri, 7, cell(r["midi"]))
 
-            # Zvýraznění
+            # Zvýraznění — vždy nastav i POPŘEDÍ (ne jen pozadí): tyhle
+            # pastelové zvýraznění zůstávají SVĚTLÉ i v tmavém tématu
+            # (schválně, ať vynikne), takže bez explicitního tmavého textu
+            # by na nich byl nečitelný světlý text z tmavé palety.
+            dark_fg = QBrush(QColor(20, 20, 20))
             if r["text"]:
                 for col in range(8):
                     it = self.table.item(ri, col)
                     if it:
                         it.setBackground(QBrush(QColor(180, 255, 180)))
+                        it.setForeground(dark_fg)
             elif r["chord"]:
                 for col in [5]:
                     it = self.table.item(ri, col)
                     if it:
                         it.setBackground(QBrush(QColor(180, 210, 255)))
+                        it.setForeground(dark_fg)
             if r["effects"]:
                 it = self.table.item(ri, 4)
                 if it:
                     it.setBackground(QBrush(QColor(255, 240, 180)))
+                    it.setForeground(dark_fg)
+
+
+class HelpDialog(QDialog):
+    """Čitelná nápověda — nahrazuje starý jednořádkový `QMessageBox`
+    ("tohle se nedá číst"): jedno srolovatelné okno se strukturovanými
+    sekcemi (výběr, přidávání objektů, kopírování, zkratky…) místo jednoho
+    odstavce splývajícího textu. Obsah je bohaté HTML (nadpisy, seznamy,
+    tabulka zkratek) z `i18n.help.full.html` — postavený JEDNOU při
+    otevření (ne přes `register_tr`, který by tu při opakovaném
+    otevírání/zavírání dialogu hromadil odkazy na už zaniklé C++ objekty —
+    stejné riziko jako u dřívějšího teardown race u přimrazených hlaviček)."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(tr("help.timeline_help"))
+        self.resize(820, 680)
+        layout = QVBoxLayout(self)
+        browser = QTextBrowser()
+        browser.setOpenExternalLinks(False)
+        browser.setHtml(tr("help.full.html"))
+        layout.addWidget(browser, 1)
+        bb = QDialogButtonBox(QDialogButtonBox.Close)
+        bb.rejected.connect(self.reject)
+        bb.accepted.connect(self.accept)
+        layout.addWidget(bb)
 
 
 # ---------------------------------------------------------------------------
@@ -465,7 +497,11 @@ class GuitarProViewer(QMainWindow):
     def __init__(self):
         super().__init__()
         self.song: Optional[Any] = None
-        self.current_file: Optional[str] = None
+        # Dřív jedno `current_file` pro GP i JSON dohromady — matlo to "Uložit"
+        # (přepsat cestu k GP souboru JSONem nedává smysl, GP se jen importuje,
+        # viz plán "Oprava New/Open/Save/Save As"). Rozděleno na dvě:
+        self.current_gp_file: Optional[str] = None     # jen import (bicí/basa/tabulatura)
+        self.current_json_file: Optional[str] = None   # SKUTEČNÝ cíl pro "Uložit"
         self.tempo_map: list = []
         self._worker: Optional[LoadWorker] = None
         self._loaded_json: Optional[dict] = None
@@ -499,9 +535,9 @@ class GuitarProViewer(QMainWindow):
         self.lbl_title = QLabel("—")
         self.lbl_title.setStyleSheet("font-weight: bold; font-size: 15px;")
         self.lbl_artist = QLabel("")
-        self.lbl_artist.setStyleSheet("font-size: 13px; color: #555;")
+        self.lbl_artist.setStyleSheet("font-size: 13px; color: #aaaaaa;")
         self.lbl_meta = QLabel("")
-        self.lbl_meta.setStyleSheet("font-size: 12px; color: #777;")
+        self.lbl_meta.setStyleSheet("font-size: 12px; color: #999999;")
         info_layout.addWidget(self.lbl_title)
         info_layout.addWidget(QLabel(" — "))
         info_layout.addWidget(self.lbl_artist)
@@ -535,7 +571,7 @@ class GuitarProViewer(QMainWindow):
             "border-radius: 4px; font-weight: bold; }"
             "QPushButton:hover { background: #3a9e3a; }"
         )
-        export_btn.clicked.connect(self.export_json)
+        export_btn.clicked.connect(self.save_json)
         left_layout.addWidget(export_btn)
 
         # ---- Mix časové osy: VŽDY viditelný (na rozdíl od hlaviček uvnitř
@@ -646,15 +682,28 @@ class GuitarProViewer(QMainWindow):
                                shortcut="Ctrl+M", slot=self.merge_with_web, icon=icon("merge"))
         file_menu.addAction(act_merge)
         file_menu.addSeparator()
-        act_open = tr_action(self, "file.open_gp", shortcut="Ctrl+O", slot=self.open_file,
-                              icon=std_icon(self, QStyle.StandardPixmap.SP_DialogOpenButton))
-        file_menu.addAction(act_open)
-        act_open_json = tr_action(self, "file.open_json", shortcut="Ctrl+J", slot=self.open_json,
-                                   icon=std_icon(self, QStyle.StandardPixmap.SP_FileIcon))
+        # "Otevřít"/"Uložit"/"Uložit jako" se týkají VÝHRADNĚ JSONu (vlastní
+        # formát appky) — Guitar Pro se do appky jen IMPORTUJE (tabulatura/
+        # bicí/basa), appka do něj nikdy nezapisuje zpátky, takže nepatří
+        # mezi rovnocenné "Otevřít"/"Uložit" akce (dřív matlo uživatele —
+        # viz oprava "New/Open/Save/Save As").
+        act_open_json = tr_action(self, "file.open", tooltip_key="file.open.tooltip",
+                                   shortcut="Ctrl+O", slot=self.open_json,
+                                   icon=std_icon(self, QStyle.StandardPixmap.SP_DialogOpenButton))
         file_menu.addAction(act_open_json)
-        act_export = tr_action(self, "file.export", shortcut="Ctrl+E", slot=self.export_json,
-                                icon=std_icon(self, QStyle.StandardPixmap.SP_DialogSaveButton))
-        file_menu.addAction(act_export)
+        act_import_gp = tr_action(self, "file.import_gp", tooltip_key="file.import_gp.tooltip",
+                                   shortcut="Ctrl+I", slot=self.open_file,
+                                   icon=std_icon(self, QStyle.StandardPixmap.SP_ArrowDown))
+        file_menu.addAction(act_import_gp)
+        file_menu.addSeparator()
+        act_save = tr_action(self, "file.save", tooltip_key="file.save.tooltip",
+                              shortcut="Ctrl+S", slot=self.save_json,
+                              icon=std_icon(self, QStyle.StandardPixmap.SP_DialogSaveButton))
+        file_menu.addAction(act_save)
+        act_save_as = tr_action(self, "file.save_as", tooltip_key="file.save_as.tooltip",
+                                 shortcut="Ctrl+Shift+S", slot=self.save_json_as,
+                                 icon=icon("save_as"))
+        file_menu.addAction(act_save_as)
         file_menu.addSeparator()
         act_quit = tr_action(self, "file.quit", shortcut="Ctrl+Q", slot=self.close,
                               icon=std_icon(self, QStyle.StandardPixmap.SP_TitleBarCloseButton))
@@ -671,6 +720,22 @@ class GuitarProViewer(QMainWindow):
                               icon=icon("redo"))
         edit_menu.addAction(act_redo)
         edit_menu.addSeparator()
+        act_select_all = tr_action(self, "edit.select_all", tooltip_key="edit.select_all.tooltip",
+                                    shortcut="Ctrl+A", slot=self.timeline.select_all,
+                                    icon=icon("select_all"))
+        edit_menu.addAction(act_select_all)
+        act_copy = tr_action(self, "edit.copy", shortcut="Ctrl+C", slot=self.timeline.copy_selected,
+                              icon=icon("copy"))
+        edit_menu.addAction(act_copy)
+        act_cut = tr_action(self, "edit.cut", shortcut="Ctrl+X", slot=self.timeline.cut_selected,
+                             icon=icon("cut"))
+        edit_menu.addAction(act_cut)
+        act_paste = tr_action(self, "edit.paste", tooltip_key="edit.paste.tooltip",
+                               shortcut="Ctrl+V",
+                               slot=lambda: self.timeline.paste_at(self.timeline.playhead_s),
+                               icon=icon("paste"))
+        edit_menu.addAction(act_paste)
+        edit_menu.addSeparator()
         act_split = tr_action(self, "edit.split", tooltip_key="edit.split.tooltip",
                                shortcut="S", slot=lambda: self.timeline.split_at_playhead(),
                                icon=icon("split"))
@@ -682,11 +747,17 @@ class GuitarProViewer(QMainWindow):
         act_shift_sel = tr_action(self, "edit.shift_selected", tooltip_key="edit.shift_selected.tooltip",
                                    slot=self.timeline.shift_selected_dialog, icon=icon("shift_selected"))
         edit_menu.addAction(act_shift_sel)
+        edit_menu.addSeparator()
+        act_rewrite_text = tr_action(self, "edit.rewrite_text", tooltip_key="edit.rewrite_text.tooltip",
+                                      shortcut="Ctrl+Shift+T", slot=self._edit_text_and_chords,
+                                      icon=icon("edit_text_chords"))
+        edit_menu.addAction(act_rewrite_text)
 
         # --- Časová osa / Timeline ---
         timeline_menu = menubar.addMenu("")
         register_tr(timeline_menu.setTitle, "menu.timeline")
-        act_add_clip = tr_action(self, "timeline.add_clip", slot=self.timeline.add_clip,
+        act_add_clip = tr_action(self, "timeline.add_clip", tooltip_key="timeline.add_clip.tooltip",
+                                  shortcut="Ctrl+D", slot=self.timeline.add_clip,
                                   icon=icon("add_display_clip"))
         timeline_menu.addAction(act_add_clip)
         act_align_song = tr_action(self, "timeline.align_song", tooltip_key="timeline.align_song.tooltip",
@@ -775,8 +846,7 @@ class GuitarProViewer(QMainWindow):
         # --- Nápověda / Help ---
         help_menu = menubar.addMenu("")
         register_tr(help_menu.setTitle, "menu.help")
-        act_help = tr_action(self, "help.timeline_help", slot=lambda: QMessageBox.information(
-            self, tr("help.timeline_help"), tr("help.timeline_help.body")),
+        act_help = tr_action(self, "help.timeline_help", slot=lambda: HelpDialog(self).exec(),
             icon=std_icon(self, QStyle.StandardPixmap.SP_MessageBoxInformation))
         help_menu.addAction(act_help)
         act_about = tr_action(self, "help.about", slot=lambda: QMessageBox.information(
@@ -793,10 +863,11 @@ class GuitarProViewer(QMainWindow):
         tb.addAction(act_web)
         tb.addAction(act_merge)
         tb.addSeparator()
-        tb.addAction(act_open)
         tb.addAction(act_open_json)
+        tb.addAction(act_import_gp)
         tb.addSeparator()
-        tb.addAction(act_export)
+        tb.addAction(act_save)
+        tb.addAction(act_save_as)
         tb.addSeparator()
         tb.addAction(act_previews)
 
@@ -816,6 +887,11 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addAction(act_undo)
         tb_timeline.addAction(act_redo)
         tb_timeline.addSeparator()
+        tb_timeline.addAction(act_select_all)
+        tb_timeline.addAction(act_copy)
+        tb_timeline.addAction(act_cut)
+        tb_timeline.addAction(act_paste)
+        tb_timeline.addSeparator()
         tb_timeline.addAction(act_add_clip)
         tb_timeline.addAction(act_align_song)
         tb_timeline.addAction(act_split)
@@ -826,6 +902,8 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addAction(act_add_chord)
         tb_timeline.addAction(act_delete)
         tb_timeline.addAction(act_shift_sel)
+        tb_timeline.addSeparator()
+        tb_timeline.addAction(act_rewrite_text)
 
     # ------------------------------------------------------------------
     # Načítání souboru
@@ -838,13 +916,39 @@ class GuitarProViewer(QMainWindow):
         dialogu, dialog se tím nezavírá."""
         dlg = WebImportDialog(self)
         if dlg.exec() == QDialog.Accepted and dlg.result_json:
-            self.current_file = None
+            self.current_gp_file = None
+            self.current_json_file = None   # nová píseň — zatím nikam neuložená
             self._present_karaoke_data(dlg.result_json, source_desc=tr("web.new_song_desc"))
+
+    def _edit_text_and_chords(self) -> None:
+        """NE 'Nová píseň' — tohle je krok zpět jen pro text/akordy AKTUÁLNĚ
+        načtené písně: znovu se otevře stejný dialog, předvyplněný
+        rekonstruovaným textem z `self.timeline.export_chord_chart_text()`,
+        oprava se pak vrátí přes `replace_text_and_chords()`, která nahradí
+        JEN lyrics_timeline/chords_timeline/karaoke_lines — bicí, basa,
+        napojení na audio i Displej stopa zůstanou beze změny (na výslovné
+        přání uživatele: 'bicí, basa zůstane')."""
+        if not self.timeline.data or not self.timeline.data.get("lyrics_timeline"):
+            QMessageBox.warning(self, tr("edit_text.none_title"), tr("edit_text.none_body"))
+            return
+        initial_text = self.timeline.export_chord_chart_text()
+        dlg = WebImportDialog(self, edit_mode=True, initial_text=initial_text,
+                               initial_meta=dict(self.timeline.data.get("meta", {})))
+        if dlg.exec() != QDialog.Accepted or not dlg.result_json:
+            return
+        old_tracks = self.timeline.replace_text_and_chords(dlg.result_json)
+        if len(old_tracks) > 1:
+            QMessageBox.warning(self, tr("edit_text.multi_track_title"), tr("edit_text.multi_track_body"))
+        reply = QMessageBox.question(
+            self, tr("edit_text.resync_title"), tr("edit_text.resync_body"),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.timeline.rebuild_display_track()
 
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, tr("file.open_gp.dialog_title"), "",
-            tr("file.open_gp.dialog_filter")
+            self, tr("file.import_gp.dialog_title"), "",
+            tr("file.import_gp.dialog_filter")
         )
         if path:
             self._load_file(path)
@@ -862,8 +966,8 @@ class GuitarProViewer(QMainWindow):
 
     def open_json(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, tr("file.open_json.dialog_title"), "",
-            tr("file.open_json.dialog_filter")
+            self, tr("file.open.dialog_title"), "",
+            tr("file.open.dialog_filter")
         )
         if path:
             self._load_karaoke_json(path)
@@ -878,7 +982,8 @@ class GuitarProViewer(QMainWindow):
             return
 
         # JSON nemá GP song (tabulatury/detaily), pracujeme jen s karaoke daty
-        self.current_file = path
+        self.current_gp_file = None
+        self.current_json_file = path
         self._present_karaoke_data(data, source_desc=tr("source.json", path=path))
 
     def _present_karaoke_data(self, data: dict, source_desc: str = "") -> None:
@@ -889,7 +994,8 @@ class GuitarProViewer(QMainWindow):
         self._loaded_json = data
 
         meta = data.get("meta", {}) or {}
-        self.lbl_title.setText(meta.get("title") or (self.current_file and Path(self.current_file).stem) or "")
+        display_path = self.current_json_file or self.current_gp_file
+        self.lbl_title.setText(meta.get("title") or (display_path and Path(display_path).stem) or "")
         self.lbl_artist.setText(meta.get("artist") or "")
         bass_n = len(data.get("bass_timeline", []))
         meta_line = tr("present.meta_line", tempo=meta.get('tempo_bpm', '?'),
@@ -909,7 +1015,7 @@ class GuitarProViewer(QMainWindow):
         note = tr("present.no_gp_note")
         for w in (self.overview_text, self.lyrics_text, self.chords_text):
             w.setPlainText(note)
-        self.chord_chart_browser.setHtml(f"<p style='color:#888'>{note}</p>")
+        self.chord_chart_browser.setHtml(f"<p>{note}</p>")
         self.json_preview.setText(json.dumps(data, indent=2, ensure_ascii=False))
 
         self.timeline.load_data(data)
@@ -952,13 +1058,14 @@ class GuitarProViewer(QMainWindow):
             W.attach_drums(web, drums, drum_track)
             W.attach_bass(web, bass, bass_track)
             web.setdefault("meta", {})
-            web["meta"]["source_file"] = Path(self.current_file).name if self.current_file else ""
+            web["meta"]["source_file"] = Path(self.current_gp_file).name if self.current_gp_file else ""
             web["meta"]["merged_web_gp"] = True
         except Exception as ex:
             QMessageBox.critical(self, tr("merge.error_title"), str(ex))
             self.status.showMessage(tr("status.merge_error"))
             return
 
+        self.current_json_file = None   # nová kombinace GP+web — zatím nikam neuložená
         self._present_karaoke_data(web, source_desc=tr("source.gp_web", url=url))
         QMessageBox.information(
             self, tr("merge.done_title"),
@@ -975,10 +1082,11 @@ class GuitarProViewer(QMainWindow):
             self._merge_gp_tracks_into_current(song, path)
             return
         self.song = song
-        self.current_file = path
+        self.current_gp_file = path
+        self.current_json_file = None   # GP je jen import — zatím žádný JSON k přepsání
         self.tempo_map = build_tempo_map(song)
         self._populate_ui()
-        self.status.showMessage(tr("status.loaded_file", path=self.current_file))
+        self.status.showMessage(tr("status.loaded_file", path=self.current_gp_file))
 
     def _merge_gp_tracks_into_current(self, song, path: str) -> None:
         """GP otevřený AŽ PO existujících karaoke datech (web/JSON) — text a
@@ -999,7 +1107,7 @@ class GuitarProViewer(QMainWindow):
         meta = data.setdefault("meta", {})
         meta["source_file"] = Path(path).name
         meta["merged_web_gp"] = True
-        self.current_file = path
+        self.current_gp_file = path   # jen import — self.current_json_file (cíl "Uložit") se NEMĚNÍ
 
         gp_name = Path(path).name
         self._present_karaoke_data(data, source_desc=tr("source.web_gp_drums_bass", gp_name=gp_name))
@@ -1027,7 +1135,7 @@ class GuitarProViewer(QMainWindow):
 
     def _populate_ui(self):
         song = self.song
-        title = song.title or (Path(self.current_file).stem if self.current_file else "")
+        title = song.title or (Path(self.current_gp_file).stem if self.current_gp_file else "")
         artist = song.artist or "—"
         album = song.album or ""
         tempo = song.tempo
@@ -1055,9 +1163,9 @@ class GuitarProViewer(QMainWindow):
             item = QTreeWidgetItem([f"{i+1}. {t.name}", typ])
             item.setData(0, Qt.UserRole, i)
             if t.isPercussionTrack:
-                item.setForeground(0, QBrush(QColor("#8B4513")))
+                item.setForeground(0, QBrush(QColor("#d99a5b")))   # světlejší "saddle brown" pro tmavý podklad
             elif is_solo:
-                item.setForeground(0, QBrush(QColor("#8B0000")))
+                item.setForeground(0, QBrush(QColor("#e07a7a")))   # světlejší tmavě červená pro tmavý podklad
             self.track_tree.addTopLevelItem(item)
         self.track_tree.expandAll()
 
@@ -1387,7 +1495,7 @@ class GuitarProViewer(QMainWindow):
                 "ticks_per_beat": TICKS_PER_BEAT,
                 "total_measures": len(song.tracks[0].measures) if song.tracks else 0,
                 "track_count": len(song.tracks),
-                "source_file": Path(self.current_file).name if self.current_file else "",
+                "source_file": Path(self.current_gp_file).name if self.current_gp_file else "",
                 "has_line_structure": True,
             },
             "tempo_map": [{"tick": t, "bpm": v} for t, v in self.tempo_map],
@@ -1658,47 +1766,73 @@ class GuitarProViewer(QMainWindow):
     # Export
     # ------------------------------------------------------------------
 
-    def export_json(self):
-        """Exportuje AKTUÁLNÍ (živě upravená) data z editoru časové osy —
-        bez ohledu na to, jestli se píseň dřív načetla přímo z .gp souboru,
-        z JSONu nebo z webu. Dřív se tu při přímém otevření .gp souboru
-        volalo `_build_karaoke_json()`, které přestavovalo JSON OD NULA z
-        původního `guitarpro.Song` objektu — tiše to zahodilo VŠECHNY úpravy
-        udělané v editoru (přidaný text, splity, posuny, tempo…). Teď je tu
-        jen JEDNA cesta ven, stejná jako z tlačítka „💾 Export JSON“ přímo
-        v editoru časové osy — `_build_karaoke_json()` zůstává jen pro
-        PRVOTNÍ naplnění editoru (`_populate_ui`), nikdy pro re-export."""
+    def save_json(self) -> None:
+        """„💾 Uložit“ (Ctrl+S) — přepíše AKTUÁLNÍ JSON soubor rovnou, TICHE
+        (jen stavový řádek, žádný popup), pokud už je nějaký cíl známý
+        (`self.current_json_file` — píseň byla otevřena/uložena jako JSON).
+
+        GP soubor se do appky jen IMPORTUJE (tabulatura/bicí/basa) — nikdy
+        se do něj nezapisuje zpátky, takže samotné otevření/sloučení GP
+        (`self.current_gp_file`) nikdy neurčuje, KAM se má ukládat. Píseň
+        načtená/sloučená jen z GP tedy zatím žádný JSON cíl nemá a „Uložit“
+        se v tom případě chová jako „Uložit jako…“ (musí se nejdřív zeptat,
+        kam) — přesně stejná logika jako Ctrl+S vs. Ctrl+Shift+S v běžných
+        aplikacích."""
         if not self.timeline.data:
             QMessageBox.warning(self, tr("common.warning_title"),
                                tr("export.warn_nothing_loaded"))
             return
-        self.timeline._do_export()   # push_undo (bezpečnostní krok) + export_callback(to_json())
+        self.timeline._do_export(self.current_json_file, silent=bool(self.current_json_file))
 
-    def _export_timeline_json(self, data: dict) -> None:
-        """Uloží JSON upravený v časové ose (volá se z menu/toolbaru hlavního
-        okna i z tlačítka přímo v editoru časové osy — JEDNA sdílená cesta)."""
-        default_name = ""
-        if self.current_file:
-            default_name = Path(self.current_file).stem + "_karaoke.json"
-        out_path, _ = QFileDialog.getSaveFileName(
-            self, tr("export.save_dialog_title"), default_name,
-            tr("export.save_dialog_filter"))
-        if not out_path:
+    def save_json_as(self) -> None:
+        """„💾 Uložit jako…“ (Ctrl+Shift+S) — VŽDY nabídne dialog s cestou,
+        i když už JSON cíl existuje (uložení kopie/varianty pod jiným
+        jménem). Exportuje AKTUÁLNÍ (živě upravená) data z editoru časové
+        osy — bez ohledu na to, jestli se píseň dřív načetla přímo z .gp
+        souboru, z JSONu nebo z webu. `_build_karaoke_json()` se používá
+        JEN pro prvotní naplnění editoru po importu GP (`_populate_ui`),
+        nikdy pro re-export — jinak by se tiše zahodily všechny úpravy
+        udělané v editoru (přidaný text, splity, posuny, tempo…)."""
+        if not self.timeline.data:
+            QMessageBox.warning(self, tr("common.warning_title"),
+                               tr("export.warn_nothing_loaded"))
             return
-        self.status.showMessage(tr("export.status_exporting"))
+        self.timeline._do_export(None, silent=False)
+
+    def _export_timeline_json(self, data: dict, path: str | None = None, silent: bool = False) -> None:
+        """Uloží JSON upravený v časové ose (volá se z `save_json`/
+        `save_json_as` — JEDNA sdílená cesta). `path=None` → dialog
+        (Uložit jako…); jinak zapíše rovnou (Uložit)."""
+        if not path:
+            default_name = ""
+            if self.current_json_file:
+                default_name = self.current_json_file
+            elif self.current_gp_file:
+                default_name = Path(self.current_gp_file).stem + "_karaoke.json"
+            path, _ = QFileDialog.getSaveFileName(
+                self, tr("export.save_dialog_title"), default_name,
+                tr("export.save_dialog_filter"))
+            if not path:
+                return
+        if not silent:
+            self.status.showMessage(tr("export.status_exporting"))
         try:
-            with open(out_path, "w", encoding="utf-8") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
-            n_tracks = len(data.get("tracks", []))
-            n_lyrics = len(data.get("lyrics_timeline", []))
-            n_chords = len(data.get("chords_timeline", []))
-            n_drums = len(data.get("drums_timeline", []))
-            n_lines = len(data.get("karaoke_lines", []))
-            QMessageBox.information(
-                self, tr("export.done_title"),
-                tr("export.done_body", path=out_path, n_tracks=n_tracks,
-                   n_lyrics=n_lyrics, n_chords=n_chords, n_drums=n_drums, n_lines=n_lines))
-            self.status.showMessage(tr("export.status_done", path=out_path))
+            self.current_json_file = path
+            if silent:
+                self.status.showMessage(tr("export.status_done", path=path))
+            else:
+                n_tracks = len(data.get("tracks", []))
+                n_lyrics = len(data.get("lyrics_timeline", []))
+                n_chords = len(data.get("chords_timeline", []))
+                n_drums = len(data.get("drums_timeline", []))
+                n_lines = len(data.get("karaoke_lines", []))
+                QMessageBox.information(
+                    self, tr("export.done_title"),
+                    tr("export.done_body", path=path, n_tracks=n_tracks,
+                       n_lyrics=n_lyrics, n_chords=n_chords, n_drums=n_drums, n_lines=n_lines))
+                self.status.showMessage(tr("export.status_done", path=path))
         except Exception as ex:
             QMessageBox.critical(self, tr("export.error_title"), str(ex))
             self.status.showMessage(tr("export.status_error"))
@@ -1708,11 +1842,44 @@ class GuitarProViewer(QMainWindow):
 # main
 # ---------------------------------------------------------------------------
 
+def _dark_palette() -> QPalette:
+    """Pevná TMAVÁ paleta, bez ohledu na systémové téma (na přání — viz
+    zrušená `_light_palette`, která řešila stejnou věc opačně).
+
+    Nejde jen o paletu samotnou — spousta míst v appce nastavuje jen
+    POPŘEDÍ nebo jen POZADÍ textu (ne obojí najednou) a spoléhá na to, že
+    to druhé doplní právě tahle paleta (`WebImportDialog._recolor_row`,
+    zvýrazněné buňky v `TrackDetailWidget`, `HelpDialog` HTML…). Tyhle
+    barvy byly napsané pro SVĚTLÉ pozadí, takže je potřeba je zesvětlit
+    / ztmavit společně s přechodem palety na tmavou — jinak by zase vyšly
+    nečitelné kombinace, jen obráceně (světlý text na světlém zvýraznění
+    apod.). Viz doprovodné opravy v `web_import.py`/`timeline_editor.py`
+    (`color:#555/#777/#888/#999/#aaa` → zesvětleno) a `i18n.py`
+    (`help.full.html`)."""
+    pal = QPalette()
+    pal.setColor(QPalette.ColorRole.Window, QColor(45, 45, 48))
+    pal.setColor(QPalette.ColorRole.WindowText, QColor(225, 225, 225))
+    pal.setColor(QPalette.ColorRole.Base, QColor(30, 30, 32))
+    pal.setColor(QPalette.ColorRole.AlternateBase, QColor(42, 42, 46))
+    pal.setColor(QPalette.ColorRole.ToolTipBase, QColor(60, 60, 40))
+    pal.setColor(QPalette.ColorRole.ToolTipText, QColor(225, 225, 225))
+    pal.setColor(QPalette.ColorRole.Text, QColor(225, 225, 225))
+    pal.setColor(QPalette.ColorRole.Button, QColor(55, 55, 58))
+    pal.setColor(QPalette.ColorRole.ButtonText, QColor(225, 225, 225))
+    pal.setColor(QPalette.ColorRole.BrightText, QColor(255, 90, 90))
+    pal.setColor(QPalette.ColorRole.Link, QColor(110, 170, 255))
+    pal.setColor(QPalette.ColorRole.Highlight, QColor(51, 133, 255))
+    pal.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
+    for role in (QPalette.ColorRole.Text, QPalette.ColorRole.WindowText, QPalette.ColorRole.ButtonText):
+        pal.setColor(QPalette.ColorGroup.Disabled, role, QColor(120, 120, 120))
+    return pal
+
+
 def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
+    app.setPalette(_dark_palette())
 
-    # Tmavá/světlá paleta dle systému (Fusion respektuje systémové téma)
     window = GuitarProViewer()
     window.show()
 

@@ -33,11 +33,12 @@ Aplikace je **dvojjazyčná (česky / anglicky)** — přepínač je v menu
   nahraje na časovou osu na pravidelné hudební mřížce. Uložení GP4+JSON na
   disk zůstává volitelné tlačítko uvnitř dialogu.
 - 🎵➕🥁🎸 **GP + web — dvě různé cesty kombinace**, podle toho, co chceš:
-  - **Otevři GP AŽ PO tom, co už máš text/akordy** (z Ctrl+N, Ctrl+J nebo
+  - **Importuj GP AŽ PO tom, co už máš text/akordy** (z Ctrl+N, Ctrl+O nebo
     předchozího mergu) → GP se **automaticky jen přidá** (bicí + basa), text
     a akordy zůstanou **beze změny**. Žádné potvrzování, žádné URL — funguje
-    to prostě tak, že otevřeš GP soubor (Ctrl+O) v okamžiku, kdy editor už
-    karaoke data má.
+    to prostě tak, že importuješ GP soubor (Ctrl+I) v okamžiku, kdy editor už
+    karaoke data má. GP se do appky vždy jen IMPORTUJE — appka do něj nikdy
+    nezapisuje zpátky, jediný formát pro Otevřít/Uložit je JSON.
   - **Sloučit s webem** (Ctrl+M) — *na vyžádání, jednorázově.* Vyžaduje už
     otevřený GP soubor; vlož URL písně z webu a text/řádky/akordy/sloky se
     z ní **čerstvě stáhnou a PŘEPÍŠOU** to, co bylo v editoru předtím —
@@ -158,19 +159,22 @@ python guitar_pro_viewer.py
 4. V **časové ose** (hlavní plocha) doladíš akordy/konce řádků tažením, **⏱ Na
    mřížku** přichytí bloky na takt/beat. Detailní náhledy (stopy, text, akordy,
    JSON) jsou v docku **Zobrazit → Panel náhledů**.
-5. **Soubor ▸ Exportovat Karaoke JSON…** (`Ctrl+E`) — vyexportuje strukturu vč.
-   `display_timeline` podle [JSON_FORMAT.md](JSON_FORMAT.md). Tento výstup čte
-   přehrávač na ESP32 (viz
+5. **Soubor ▸ Uložit** (`Ctrl+S`) — přepíše aktuální JSON soubor rovnou (bez
+   dialogu, pokud už nějaký je znám); **Uložit jako…** (`Ctrl+Shift+S`) vždy
+   nabídne dialog s cestou. Struktura vč. `display_timeline` podle
+   [JSON_FORMAT.md](JSON_FORMAT.md) — tento výstup čte přehrávač na ESP32 (viz
    [ESP32_KARAOKE_IMPLEMENTATION.md](ESP32_KARAOKE_IMPLEMENTATION.md)).
-   Export **vždy uloží aktuální, živě upravená data z editoru** — bez ohledu
+   Ukládá se **vždy aktuální, živě upravená data z editoru** — bez ohledu
    na to, jestli píseň přišla z GP souboru, JSONu nebo z webu.
 
 ### Prohlížení GP souborů (doplňkově)
-**Otevřít** GP soubor (`.gp3/.gp4/.gp5`, `Ctrl+O`) zobrazí stopy/takty/tabulatury
-v docku náhledů. Pro karaoke export z GP samotného ale GP nemá dost informací
-(žádná řádková struktura, často ani akordy) — pro text+akordy použij **Nová
-píseň**/web. **Otevřít Karaoke JSON** (`Ctrl+J`) načte už hotový karaoke JSON
-(např. dřívější export) rovnou do editoru.
+**Guitar Pro se do appky vždy jen IMPORTUJE** (`.gp3/.gp4/.gp5`, **Soubor ▸
+Importovat z Guitar Pro…**, `Ctrl+I`) — appka do něj nikdy nezapisuje zpátky,
+jen zobrazí stopy/takty/tabulatury v docku náhledů. Pro karaoke export z GP
+samotného ale GP nemá dost informací (žádná řádková struktura, často ani
+akordy) — pro text+akordy použij **Nová píseň**/web. **Soubor ▸ Otevřít…**
+(`Ctrl+O`) načte už hotový karaoke JSON (např. dřívější uložení) rovnou do
+editoru — to je jediný formát, který appka doopravdy "otevírá"/"ukládá".
 
 ### Stažení celého interpreta
 1. Do URL vlož stránku interpreta (např. `pisnicky-akordy.cz/olympic`).
@@ -210,14 +214,19 @@ Všechny akce jsou v hlavním menu (a zároveň jako ikony v toolbarech
 
 | Menu | Obsah |
 |------|-------|
-| **Soubor** | Nová píseň z webu/textu (`Ctrl+N`), Sloučit s webem (`Ctrl+M`) · Otevřít GP (`Ctrl+O`), Otevřít JSON (`Ctrl+J`), Exportovat JSON (`Ctrl+E`) · Konec (`Ctrl+Q`) |
-| **Úpravy** | Zpět (`Ctrl+Z`), Znovu (`Ctrl+Shift+Z`/`Ctrl+Y`) · Rozdělit v kurzoru (`S`), Smazat vybrané (`Del`), Posunout vybrané… |
-| **Časová osa** | ＋ Klip displeje, 🔄 Zarovnat displej, 🔄🗑 Znovu poskládat Displej stopu · ＋ Text, ＋ Akord · ⏱ Na mřížku…, ✏️ Tempo…, 🥁⏱ Odpočet…, Přichytit k mřížce ▸ |
+| **Soubor** | Nová píseň z webu/textu (`Ctrl+N`), Sloučit s webem (`Ctrl+M`) · Otevřít… (`Ctrl+O`, JSON), Importovat z Guitar Pro… (`Ctrl+I`) · Uložit (`Ctrl+S`), Uložit jako… (`Ctrl+Shift+S`) · Konec (`Ctrl+Q`) |
+| **Úpravy** | Zpět (`Ctrl+Z`), Znovu (`Ctrl+Shift+Z`/`Ctrl+Y`) · Vybrat vše (`Ctrl+A`), Kopírovat (`Ctrl+C`), Vyjmout (`Ctrl+X`), Vložit (`Ctrl+V`) · Rozdělit v kurzoru (`S`), Smazat vybrané (`Del`), Posunout vybrané… · ✎ Upravit text a akordy… (`Ctrl+Shift+T`) |
+| **Časová osa** | ＋ Klip displeje (`Ctrl+D`, nebo pravý klik přímo na Displej stopu = klip přesně tam), 🔄 Zarovnat displej, 🔄🗑 Znovu poskládat Displej stopu · ＋ Text, ＋ Akord · ⏱ Na mřížku…, ✏️ Tempo…, 🥁⏱ Odpočet…, Přichytit k mřížce ▸ |
 | **Zobrazit** | Panel stop, Panel náhledů · Přiblížit (`Ctrl+=`), Oddálit (`Ctrl+-`) · **Jazyk ▸ Čeština / English** |
-| **Nápověda** | Nápověda k časové ose, O aplikaci |
+| **Nápověda** | Nápověda k časové ose (strukturovaná, s tabulkou zkratek), O aplikaci |
 
 Přímo v ose navíc: `]` / `[` = hromadný výběr od prvku dál/dříve v čase,
-`Ctrl+kolečko` = zoom.
+„☰ Vybrat celou stopu“ = totéž oběma směry najednou, `Ctrl+kolečko` = zoom.
+Pravý klik na prázdné místo stopy (bicí/basa/Displej) = přidat prvek zde
+(bicí/basa nabídnou i „📌 Vložit sem“, když je něco zkopírované). Basová
+stopa se dá editovat stejně jako bicí (přidat notu zadáním pražce, přesunout
+tažením, smazat) — je to čistě vizuální referenční stopa, nikam se
+nepřehrává.
 
 ---
 

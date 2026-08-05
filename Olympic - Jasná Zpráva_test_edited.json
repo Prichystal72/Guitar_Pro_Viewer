@@ -1493,13 +1493,6 @@
       "track_index": 2
     },
     {
-      "time_s": 7.0,
-      "duration_s": 0.3,
-      "drum": "Closed Hi-Hat",
-      "midi": 42,
-      "track_index": 2
-    },
-    {
       "time_s": 9.0,
       "duration_s": 0.3,
       "drum": "Closed Hi-Hat",
@@ -8076,223 +8069,197 @@
       "mode": "count_in",
       "artist": "Olympic",
       "title": "Jasná zpráva",
-      "label": "Olympic / Jasná zpráva"
+      "label": "Olympic / Jasná zpráva",
+      "auto_track": false
     },
     {
       "id": "clip-1",
-      "start_s": 10.0,
-      "end_s": 14.0,
+      "start_s": 9.0,
+      "end_s": 14.45,
       "source_track": 1,
       "mode": "chords",
-      "label": "G Gmaj7 Emi C",
+      "label": "Gmaj7 Emi C G",
       "line": 0
     },
     {
       "id": "clip-2",
       "start_s": 20.0,
-      "end_s": 21.1,
+      "end_s": 31.5,
       "source_track": 1,
       "mode": "chords",
-      "label": "D Ami C G",
+      "label": "D Ami C G Gmaj7 Emi",
       "line": 1
     },
     {
-      "id": "clip-3",
-      "start_s": 21.0,
-      "end_s": 25.4,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "1. Skončili jsme, jasná ",
-      "line": 4
-    },
-    {
-      "id": "clip-4",
-      "start_s": 26.0,
-      "end_s": 28.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "proč o Tebe zakopávám dá",
-      "line": 5
-    },
-    {
       "id": "clip-5",
-      "start_s": 28.0,
-      "end_s": 33.5,
+      "start_s": 20.0,
+      "end_s": 31.5,
       "source_track": 1,
       "mode": "chords",
-      "label": "G Gmaj7 Emi",
+      "label": "D Ami C G Gmaj7 Emi",
       "line": 2
     },
     {
-      "id": "clip-6",
-      "start_s": 34.0,
-      "end_s": 36.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "projít bytem já abych se",
-      "line": 6
-    },
-    {
       "id": "clip-7",
-      "start_s": 36.0,
-      "end_s": 38.5,
+      "start_s": 34.0,
+      "end_s": 39.5,
       "source_track": 1,
       "mode": "chords",
-      "label": "C D Ami G",
+      "label": "Ami C G D",
       "line": 3
     },
     {
-      "id": "clip-8",
-      "start_s": 38.0,
-      "end_s": 45.0,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "2. Dík tobě se vidím zve",
-      "line": 7
-    },
-    {
-      "id": "clip-9",
+      "id": "clip-3",
       "start_s": 46.0,
       "end_s": 54.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "připadám si starší, menš",
-      "line": 8
+      "line": 4
     },
     {
-      "id": "clip-10",
+      "id": "clip-4",
       "start_s": 54.0,
       "end_s": 59.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "kam se kouknu, kousek Te",
-      "line": 9
+      "line": 5
     },
     {
-      "id": "clip-11",
+      "id": "clip-6",
       "start_s": 58.0,
       "end_s": 65.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "Ref: Pěnu s vůní jablečn",
-      "line": 10
+      "line": 6
     },
     {
-      "id": "clip-12",
+      "id": "clip-8",
       "start_s": 66.0,
       "end_s": 70.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "vyvanulý sprej,",
-      "line": 11
+      "line": 7
     },
     {
-      "id": "clip-13",
+      "id": "clip-9",
       "start_s": 70.0,
       "end_s": 78.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "telefon, cos ustřihla mu",
-      "line": 12
+      "line": 8
     },
     {
-      "id": "clip-14",
+      "id": "clip-10",
       "start_s": 78.0,
       "end_s": 82.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "Knížku krásně zbytečnou,",
-      "line": 13
+      "line": 9
     },
     {
-      "id": "clip-15",
+      "id": "clip-11",
       "start_s": 82.0,
       "end_s": 86.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "co má lživý děj,",
-      "line": 14
+      "line": 10
     },
     {
-      "id": "clip-16",
+      "id": "clip-12",
       "start_s": 86.0,
       "end_s": 92.5,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "píše se v ní, jak se lít",
-      "line": 15
+      "line": 11
     },
     {
-      "id": "clip-17",
+      "id": "clip-13",
       "start_s": 92.0,
       "end_s": 96.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "lítá vzhůru,",
-      "line": 16
+      "line": 12
     },
     {
-      "id": "clip-18",
+      "id": "clip-14",
       "start_s": 96.0,
       "end_s": 99.25,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "ve dvou vzhůru.",
-      "line": 17
+      "line": 13
     },
     {
-      "id": "clip-19",
+      "id": "clip-15",
       "start_s": 99.0,
       "end_s": 105.25,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "3. Odešla's mi před úsvi",
-      "line": 18
+      "line": 14
     },
     {
-      "id": "clip-20",
+      "id": "clip-16",
       "start_s": 106.0,
       "end_s": 114.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "mám snad bloudit vlastní",
-      "line": 19
+      "line": 15
     },
     {
-      "id": "clip-21",
+      "id": "clip-17",
       "start_s": 114.0,
       "end_s": 122.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "kam se kouknu, kousek Te",
-      "line": 20
+      "line": 16
     },
     {
-      "id": "clip-22",
+      "id": "clip-18",
       "start_s": 126.0,
       "end_s": 134.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "Ref: Pěnu s vůní jablečn",
-      "line": 22
+      "line": 17
     },
     {
-      "id": "clip-23",
+      "id": "clip-19",
       "start_s": 140.0,
       "end_s": 148.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "telefon, cos ustřihla mu",
-      "line": 23
+      "line": 18
     },
     {
-      "id": "clip-24",
+      "id": "clip-20",
       "start_s": 148.0,
       "end_s": 156.0,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "Knížku krásně zbytečnou,",
-      "line": 24
+      "line": 19
+    },
+    {
+      "id": "clip-21",
+      "start_s": 156.0,
+      "end_s": 162.5,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "píše se v ní, jak se lít",
+      "line": 20
     },
     {
       "id": "clip-25",
@@ -8313,6 +8280,15 @@
       "line": 26
     },
     {
+      "id": "clip-22",
+      "start_s": 169.0,
+      "end_s": 175.25,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "4. Skončili jsme jasná z",
+      "line": 22
+    },
+    {
       "id": "clip-27",
       "start_s": 169.0,
       "end_s": 175.25,
@@ -8320,6 +8296,15 @@
       "mode": "lyrics_chords",
       "label": "4. Skončili jsme jasná z",
       "line": 27
+    },
+    {
+      "id": "clip-23",
+      "start_s": 176.0,
+      "end_s": 178.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "není komu z okna mávat v",
+      "line": 23
     },
     {
       "id": "clip-28",
@@ -8333,11 +8318,20 @@
     {
       "id": "clip-29",
       "start_s": 180.0,
-      "end_s": 183.5,
+      "end_s": 185.5,
       "source_track": 1,
       "mode": "chords",
-      "label": "G Gmaj7 Emi C D Ami",
+      "label": "Gmaj7 Emi C D Ami G",
       "line": 21
+    },
+    {
+      "id": "clip-24",
+      "start_s": 184.0,
+      "end_s": 186.0,
+      "source_track": 1,
+      "mode": "lyrics_chords",
+      "label": "jasná zpráva, rub, co ne",
+      "line": 24
     },
     {
       "id": "clip-30",
@@ -8350,11 +8344,11 @@
     },
     {
       "id": "clip-31",
-      "start_s": 252.0,
-      "end_s": 260.0,
+      "start_s": 253.0,
+      "end_s": 259.5,
       "source_track": 1,
       "mode": "chords",
-      "label": "G Gmaj7 Emi C D Ami",
+      "label": "Gmaj7 Emi C D Ami G",
       "line": 30
     }
   ]
