@@ -5,6 +5,9 @@ a jejich export do **JSON** pro karaoke systémy — text, akordy a bicí (např
 přehrávač na ESP32 ze SD karty). Součástí je i **import akordů a textu z webu**
 a **dávkové stažení celého interpreta**.
 
+Aplikace je **dvojjazyčná (česky / anglicky)** — přepínač je v menu
+**Zobrazit ▸ Jazyk**, volba se pamatuje mezi spuštěními (`settings.json`).
+
 ---
 
 ## Funkce
@@ -73,8 +76,38 @@ a **dávkové stažení celého interpreta**.
     dané stopy v čase najednou (oprava fáze, když bicí z GP vyjedou).
   - **🎸 Stopa basy** (objeví se po GP sloučení) — noty jako úsečky ve 4
     řadách podle struny. Jen náhled/reference, do exportu nejde.
+  - **🔗 Displej sleduje obsah automaticky** — klip se sám průběžně
+    přepočítává tak, aby přesně odpovídal textu/akordům pod ním (tažení slova,
+    přesné časy v panelu vlastností, hromadný posun). Jakmile klip **ručně**
+    posuneš/roztáhneš, odpojí se a nechá se být; obnovit jde pravým klikem
+    („🔄 Obnovit auto-sledování…“) nebo hromadně **🔄 Zarovnat displej (celá
+    píseň)**. Když jsi mazal(a)/přeskládal(a) řádky a zarovnání nestačí, je tu
+    **🔄🗑 Znovu poskládat Displej stopu** — zahodí všechny klipy a poskládá je
+    znovu od nuly z aktuálního obsahu (řádky se počítají napříč všemi stopami,
+    takže akordy na jiné stopě než zpěv se správně spojí s textem).
   - Posun bloků, editace dvojklikem, zalomení řádků pravým klikem, zoom
     (Ctrl+kolečko). Náhledy (Chord Chart, Noty, JSON…) jsou ve sbalitelném docku.
+  - **Hromadný výběr (ripple)** — `]` / `[` (nebo pravý klik → „Vybrat od zde
+    DÁL/DŘÍV v čase“) vybere prvek a vše odpovídající po/před ním na stejné
+    stopě (**text i akordy dohromady**, včetně odpovídajících klipů Displeje);
+    pak buď táhni myší, nebo **↔ Posunout vybrané…** pro přesný číselný posun.
+  - **Mix časové osy** (levý dock, vždy viditelný i při vodorovném rolování) —
+    hlasitost/ztlumení nahrávky a GP mixu bicích, hlasitost cvakání bicích při
+    editaci, a skrytí/zobrazení jednotlivých zdrojových stop.
+- 🔊 **Přehrávání nahrávky + jog/shuttle** — načti k písni MP3/WAV
+  („🎵 Načíst MP3/WAV…“) a přehrávej ji synchronizovaně s kurzorem; kruhový
+  **jog/shuttle ovladač** (styl Sony) pro přetáčení. Nad zdrojovými stopami se
+  kreslí **vlnovka** nahrávky (výška řádku tažením, automatické zesílení
+  zobrazení u tichých nahrávek), kterou lze **posunout a ±10 % roztáhnout**
+  („🎚 Poloha/roztažení…“) nebo nechat **automaticky zarovnat dle rytmu**
+  („🥁 Auto-zarovnat dle rytmu“ — najde údery a spočítá nejlepší posun+roztažení).
+- 🎼 **GP bicí mix — poslechové porovnání** — „🎼 GP bicí mix“ vyrobí
+  syntetizovaný zvuk bicích **přímo z GP dat** (`drums_timeline`) a přehraje ho
+  **druhým přehrávačem vedle skutečné nahrávky**, se sdíleným transportem a
+  nezávislou hlasitostí obou. Slouží k tomu, aby si člověk **poslechem ověřil**,
+  jestli to, co říká GP soubor, sedí na realitu. „🔎 Ověřit délku“ jen
+  informativně porovná vypočtenou délku písně s délkou nahrávky —
+  **nic sám neupravuje**, rozhodnutí je vždy na uživateli.
 - 🎸 **Podpora více stop** — každý event nese `track_index` (odkaz na stopu).
 - 🌐 **Import z webu** (jádro Ctrl+N) — rozpozná chord chart (akordy nad
   textem) z [pisnicky-akordy.cz](https://pisnicky-akordy.cz) i obecných webů.
@@ -125,10 +158,12 @@ python guitar_pro_viewer.py
 4. V **časové ose** (hlavní plocha) doladíš akordy/konce řádků tažením, **⏱ Na
    mřížku** přichytí bloky na takt/beat. Detailní náhledy (stopy, text, akordy,
    JSON) jsou v docku **Zobrazit → Panel náhledů**.
-5. **💾 Export JSON** (v liště osy) nebo **Uložit Karaoke JSON** — vyexportuje
-   strukturu vč. `display_timeline` podle [JSON_FORMAT.md](JSON_FORMAT.md).
-   Tento výstup čte přehrávač na ESP32 (viz
+5. **Soubor ▸ Exportovat Karaoke JSON…** (`Ctrl+E`) — vyexportuje strukturu vč.
+   `display_timeline` podle [JSON_FORMAT.md](JSON_FORMAT.md). Tento výstup čte
+   přehrávač na ESP32 (viz
    [ESP32_KARAOKE_IMPLEMENTATION.md](ESP32_KARAOKE_IMPLEMENTATION.md)).
+   Export **vždy uloží aktuální, živě upravená data z editoru** — bez ohledu
+   na to, jestli píseň přišla z GP souboru, JSONu nebo z webu.
 
 ### Prohlížení GP souborů (doplňkově)
 **Otevřít** GP soubor (`.gp3/.gp4/.gp5`, `Ctrl+O`) zobrazí stopy/takty/tabulatury
@@ -149,14 +184,40 @@ píseň**/web. **Otevřít Karaoke JSON** (`Ctrl+J`) načte už hotový karaoke 
 
 | Soubor | Popis |
 |--------|-------|
-| `guitar_pro_viewer.py` | Hlavní GUI aplikace (vstupní bod), rozvržení oken |
-| `timeline_editor.py` | Editor časové osy — master „Displej" stopa, klipy, playhead, auto-časování |
+| `guitar_pro_viewer.py` | Hlavní GUI aplikace (vstupní bod), menu bar + toolbary, rozvržení oken |
+| `timeline_editor.py` | Editor časové osy — master „Displej" stopa, klipy, playhead, auto-časování, přehrávání audia + GP mix bicích |
 | `web_import.py` | Import z webu, detekce akordů, JSON export, stažení interpreta |
+| `jog_shuttle.py` | Kruhový jog/shuttle transportní ovladač (styl Sony) |
+| `waveform.py` | Dekódování audia, vlnovka, detekce úderů, odhad zarovnání dle rytmu |
+| `i18n.py` | Dvojjazyčnost (CS/EN) — `tr()` slovník + živé přepínání za běhu |
+| `icons.py` | Pomůcky pro ikony (systémové Qt + vlastní SVG) |
+| `assets/icons/` | Vlastní ploché SVG ikony pro menu/toolbary |
+| `assets/drum_icons/` | Ikonky bubnů kreslené na časovou osu |
+| `web/jog_shuttle.html` | Webová (HTML/CSS/JS) varianta jog/shuttle ovladače — pro pozdější webserver na ESP32 |
 | `JSON_FORMAT.md` | Specifikace výstupního JSON formátu (`format_version: 2`) |
 | `ESP32_KARAOKE_IMPLEMENTATION.md` | Návod pro přehrávač JSONu na ESP32 (řízení displeje, bicí samply) |
 | `drum_samples.json` | Mapa jméno bubnu → `.wav` na SD kartě (zkopíruj do `/drums/` na kartě) |
 | `requirements.txt` | Python závislosti |
+| `settings.json` | Uživatelské nastavení (jazyk) — generuje se za běhu |
 | `stažené/` | Stažené písně (generovaný výstup — **není** ve verzování) |
+
+---
+
+## Menu a klávesové zkratky
+
+Všechny akce jsou v hlavním menu (a zároveň jako ikony v toolbarech
+**Hlavní panel** / **Časová osa**):
+
+| Menu | Obsah |
+|------|-------|
+| **Soubor** | Nová píseň z webu/textu (`Ctrl+N`), Sloučit s webem (`Ctrl+M`) · Otevřít GP (`Ctrl+O`), Otevřít JSON (`Ctrl+J`), Exportovat JSON (`Ctrl+E`) · Konec (`Ctrl+Q`) |
+| **Úpravy** | Zpět (`Ctrl+Z`), Znovu (`Ctrl+Shift+Z`/`Ctrl+Y`) · Rozdělit v kurzoru (`S`), Smazat vybrané (`Del`), Posunout vybrané… |
+| **Časová osa** | ＋ Klip displeje, 🔄 Zarovnat displej, 🔄🗑 Znovu poskládat Displej stopu · ＋ Text, ＋ Akord · ⏱ Na mřížku…, ✏️ Tempo…, 🥁⏱ Odpočet…, Přichytit k mřížce ▸ |
+| **Zobrazit** | Panel stop, Panel náhledů · Přiblížit (`Ctrl+=`), Oddálit (`Ctrl+-`) · **Jazyk ▸ Čeština / English** |
+| **Nápověda** | Nápověda k časové ose, O aplikaci |
+
+Přímo v ose navíc: `]` / `[` = hromadný výběr od prvku dál/dříve v čase,
+`Ctrl+kolečko` = zoom.
 
 ---
 

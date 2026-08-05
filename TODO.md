@@ -364,3 +364,78 @@ přímého ověření.**
 - **STÁLE NEOVĚŘENO uživatelem proti reálné nahrávce** — sám řekl, že si
   tempo/délku ověří. Neprezentovat čísla v tomhle bodě jako finálně
   potvrzená, dokud se neozve.
+
+---
+
+## 13. Audio, GP mix, auto-sledování Displeje (2026-08-01, commit `4c954b3`)
+
+- **Přehrávání MP3/WAV + jog/shuttle** (`jog_shuttle.py`, `web/jog_shuttle.html`)
+  — obě varianty (PySide6 widget + samostatná HTML/CSS/JS pro budoucí ESP32
+  webserver). Vyřešeno cestou několik reálných bugů: zpětná vazba
+  playhead→seek způsobovala **cukání zvuku** (opraveno `_syncing` guardem),
+  `QPen(..., cap=...)` kwarg neexistuje v PySide6 (rozbíjelo vykreslení),
+  odpojení Bluetooth sluchátek vyžaduje **znovuvytvoření** `QAudioOutput`
+  (ne jen `setDevice()`).
+- **Vlnovka** (`waveform.py`) — `QAudioDecoder.setAudioFormat()` na Windows
+  **věší dekódování MP3** (WAV projde) → formát se nepřenastavuje, konverze
+  se dělá ručně. Audacity-styl (vyplněná obálka), automatické zesílení
+  ZOBRAZENÍ u tichých nahrávek (nikdy ne skutečné hlasitosti), posun +
+  ±10 % roztažení, automatické zarovnání dle rytmu (onset detekce +
+  comb-filter odhad).
+- **GP bicí mix** (`render_drums_mixdown()`) — druhý `QMediaPlayer` se
+  syntetizovanými bicími přímo z `drums_timeline`, sdílený transport,
+  nezávislá hlasitost. **Zásadní pravidlo od uživatele: audio je pro
+  VERIFIKACI ČLOVĚKEM, nikdy nesmí nic automaticky řídit/opravovat.**
+  `_check_duration_vs_audio()` je proto čistě informativní hláška na
+  vyžádání — žádné auto-spuštění, žádné "aplikovat návrh".
+- **Auto-sledování Displej klipů** (`auto_track`) — klip živě kopíruje
+  rozsah i popisek z obsahu, dokud ho uživatel ručně neposune. Plus
+  `rebuild_display_track()` na kompletní přestavbu od nuly (řeší smazané
+  řádky). **Bug nalezený uživatelem:** přestavba počítala řádky po JEDNÉ
+  stopě → akordy na jiné stopě než zpěv vyráběly falešné samostatné klipy;
+  opraveno na globální výpočet napříč stopami (stejně jako `to_json()`).
+- **Mix panel** v levém docku (`TrackMixPanel`) — hlavičky uvnitř
+  `QGraphicsScene` při vodorovném rolování odjedou pryč, proto je ovládání
+  hlasitosti/mute/skrytí stopy jako **samostatné Qt widgety v docku**.
+- Ripple výběr rozšířen: text+akordy **dohromady** a strhává i odpovídající
+  klipy Displeje (i při rubber-band výběru, ne jen `]`/`[`).
+
+## 14. Přestavba GUI: menu, ikony, dvojjazyčnost (2026-08-02, probíhá)
+
+Zadání: *„normalizace menu, tak jak je zvykem… horní panel předělat na
+ikony… vše musí být dvoujazyčně… začni psát návod v angličtině."*
+
+**Hotovo:**
+- **`i18n.py`** — lehký vlastní `tr()` slovník (ne Qt Linguist/.ts/.qm),
+  **registr naplňovaný při konstrukci widgetu** (`register_tr`/`tr_action`/
+  `tr_label`/`tr_dock_title`/`tr_tab`) → přepnutí jazyka překreslí UI **za
+  běhu**, bez restartu. Perzistence v `settings.json`. Čeština výchozí.
+  Past k zapamatování: `QDockWidget` titulek je JINÝ řetězec než jeho
+  `toggleViewAction().setText()` — obojí potřebuje vlastní registraci.
+- **Sjednocené menu** — nové **Úpravy** a **Časová osa**; všech ~20 tlačítek
+  z bývalého horního panelu `timeline_editor.py` je teď `QAction` **sdílená
+  mezi menu i toolbarem** (jeden objekt = jedno místo pro překlad).
+  `snap_combo`/`time_lbl` zůstaly widgety (combobox/živý readout do menu
+  nepatří), hlavní okno je jen převezme do toolbaru. **Nutná byla
+  deduplikace zkratek** — `TimelineView.keyPressEvent` měl Ctrl+Z/Y/Del/S
+  natvrdo; po vzniku `QAction` se stejnou zkratkou by to střílelo dvakrát.
+- **Ikony** — `assets/icons/*.svg` (19 vlastních plochých, v paletě
+  aplikace) + systémové `QStyle.standardIcon()` pro běžné akce; pomocník
+  `icons.py`.
+- **Oprava exportního bugu (nalezeno při auditu, nehlásil uživatel):**
+  `export_json()` při **přímo otevřeném .gp souboru** přestavoval JSON od
+  nuly z `guitarpro.Song` → **tiše zahazoval VŠECHNY úpravy z editoru**.
+  Teď vede jediná cesta ven přes `timeline.to_json()`.
+  `_build_karaoke_json()` zůstává jen pro PRVOTNÍ naplnění.
+- **i18n sweep `guitar_pro_viewer.py` kompletní** — dialogy, hlášky,
+  taby, docky, tabulka detailu stopy. Ověřeno živým CS→EN→CS testem.
+
+**Zbývá:**
+- i18n sweep `timeline_editor.py` (velký soubor, stovky UI řetězců:
+  dialogy tempo/count-in/vlnovka, kontextová menu, Panel vlastností,
+  `TrackMixPanel`) a `web_import.py`.
+- Anglický uživatelský návod `docs/USER_GUIDE.md` + generování screenshotů
+  (`docs/make_screenshots.py`, offscreen render, **jen syntetická data** —
+  nikdy uživatelovy živé soubory).
+- Ověřovací checklist z plánu (kompletní pokrytí překladu, perzistence
+  jazyka přes restart).

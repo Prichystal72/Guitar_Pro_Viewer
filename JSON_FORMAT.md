@@ -229,9 +229,34 @@ přes `source_track` a čas.
   "end_s": 12.5,
   "source_track": 1,          // odkaz na tracks[].index — CO se zobrazí
   "mode": "lyrics_chords",    // JAK se to zobrazí (viz tabulka)
-  "label": "Sloka 1"          // volitelný popisek klipu (jen pro editor/UI)
+  "label": "Sloka 1",         // volitelný popisek klipu (jen pro editor/UI)
+  "line": 0,                  // volitelné: index odpovídajícího karaoke_lines[] řádku
+  "auto_track": true          // volitelné, JEN pro editor — viz níže
 }
 ```
+
+**`auto_track`** (nepovinné, výchozí `true`; **ESP32 firmware ho ignoruje**) —
+říká editoru časové osy, jestli si klip má svůj rozsah (`start_s`/`end_s`)
+a `label` **sám průběžně dopočítávat z obsahu** (slova + akordy patřící ke
+stejnému řádku), nebo jestli ho uživatel ručně doladil a má se nechat být:
+
+- `true` (výchozí) — klip **živě sleduje obsah**: přetáhneš slovo/akord,
+  přepíšeš čas v panelu vlastností nebo posuneš celý výběr, a klip se hned
+  přepočítá tak, aby přesně odpovídal tomu, co je na ose. Platí pro režimy
+  `lyrics_chords`/`lyrics` (párování přes `line`) a `chords` (párování přes
+  nejbližší souvislý shluk akordů).
+- `false` — uživatel klip **ručně posunul/roztáhl**, editor do něj už sám
+  nesahá. Obnovit auto-sledování jde pravým klikem na klip (položka
+  „🔄 Obnovit auto-sledování…“) nebo hromadně tlačítkem
+  „🔄 Zarovnat displej (celá píseň)“.
+
+Pozn.: „Zarovnat displej“ jen dolaďuje **existující** klipy — když se všechna
+slova řádku smažou, není z čeho počítat a klip zůstane viset. Na to je
+„🔄🗑 Znovu poskládat Displej stopu“, která celou sekci **zahodí a postaví
+znovu od nuly** z aktuálního obsahu (řádky se přitom počítají **globálně
+napříč všemi stopami** podle časového překryvu — stejně jako `karaoke_lines`
+v `to_json()`, takže akordy na jiné stopě než zpěv se správně spojí s textovým
+řádkem, místo aby vyrobily falešný samostatný akordový klip).
 
 | `mode` | Význam pro displej |
 |--------|--------------------|

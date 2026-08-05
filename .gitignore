@@ -15,3 +15,6 @@ env/
 # Stažené písně (generovaný výstup, neverzuje se)
 stazeno/
 stažené/
+
+# Uživatelské nastavení (jazyk apod.) — generuje se za běhu, je lokální
+settings.json

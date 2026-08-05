@@ -36,11 +36,13 @@ from PySide6.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem,
     QGraphicsSimpleTextItem, QGraphicsPixmapItem, QInputDialog, QCheckBox,
     QSplitter, QFormLayout, QLineEdit, QDoubleSpinBox, QSpinBox,
-    QDialog, QDialogButtonBox, QMenu, QFileDialog, QSlider,
+    QDialog, QDialogButtonBox, QMenu, QFileDialog, QSlider, QStyle,
 )
 
 from jog_shuttle import JogShuttleWidget
 from waveform import WaveformData, WaveformLoader, estimate_alignment
+from i18n import tr, tr_action, register_tr, tr_label
+from icons import icon, std_icon
 
 # --- ikonky bicích (assets/drum_icons/*), klíč = _drum_icon_key() ---
 DRUM_ICON_DIR = os.path.join(os.path.dirname(__file__), "assets", "drum_icons")
@@ -1342,25 +1344,11 @@ class TimelineView(QGraphicsView):
         super().mousePressEvent(ev)
 
     def keyPressEvent(self, ev):
-        if ev.modifiers() & Qt.ControlModifier and ev.key() == Qt.Key_Z:
-            if ev.modifiers() & Qt.ShiftModifier:
-                self.editor.redo()          # Ctrl+Shift+Z
-            else:
-                self.editor.undo()          # Ctrl+Z
-            ev.accept()
-            return
-        if ev.modifiers() & Qt.ControlModifier and ev.key() == Qt.Key_Y:
-            self.editor.redo()              # Ctrl+Y
-            ev.accept()
-            return
-        if ev.key() in (Qt.Key_Delete, Qt.Key_Backspace):
-            self.editor.delete_selected()
-            ev.accept()
-            return
-        if ev.key() == Qt.Key_S:              # žiletka — rozdělit klip v kurzoru
-            self.editor.split_at_playhead()
-            ev.accept()
-            return
+        # Ctrl+Z/Ctrl+Shift+Z/Ctrl+Y/Delete/Backspace/S dřív byly řešené
+        # natvrdo tady — teď existují jako QAction se stejnou zkratkou na
+        # úrovni hlavního okna (menu Úpravy/Časová osa), takže tady zůstaly
+        # by způsobily DVOJITÉ vyvolání (např. dvojité undo na jeden
+        # stisk). `]`/`[` (ripple-select) do menu nejdou, zůstávají tady.
         if ev.key() == Qt.Key_BracketRight:   # ] — vyber od vybraného prvku DÁL v čase
             self.editor.select_ripple_from_selection("forward")
             ev.accept()
@@ -1571,130 +1559,47 @@ class TimelineEditor(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(2)
 
-        bar_widget = QWidget()
-        bar_widget.setMaximumHeight(30)
-        bar = QHBoxLayout(bar_widget)
-        bar.setContentsMargins(6, 1, 6, 1)
-        bar.setSpacing(5)
-        bar.addWidget(QLabel("Zoom:"))
-        btn_out = QPushButton("−"); btn_out.setMaximumWidth(28); btn_out.setMaximumHeight(24)
-        btn_in = QPushButton("+"); btn_in.setMaximumWidth(28); btn_in.setMaximumHeight(24)
-        btn_out.clicked.connect(lambda: self.zoom(1 / 1.25))
-        btn_in.clicked.connect(lambda: self.zoom(1.25))
-        bar.addWidget(btn_out); bar.addWidget(btn_in)
-
-        bar.addWidget(QLabel("Přichytit:"))
+        # Horní panel tlačítek byl přesunut do hlavního menu/toolbaru okna
+        # (guitar_pro_viewer.py — menu Úpravy/Časová osa + toolbar "Časová
+        # osa"), viz plán "Přestavba GUI". `snap_combo`/`time_lbl` sem ale
+        # patří obsahově (řídí/zobrazují stav TÉTO scény) — zůstávají tu
+        # jako widgety, hlavní okno je jen PŘEVEZME do svého toolbaru
+        # (`toolbar.addWidget(self.timeline.snap_combo)` reparentuje, to je
+        # v Qt běžné a bezpečné).
         self.snap_combo = QComboBox()
         self.snap_combo.setMaximumHeight(24)
-        self.snap_combo.setToolTip(
-            "Přichycení tažení k hudební mřížce (dle tempa písně) — "
-            "ne k pevným sekundám.")
-        for label, key in [("vypnuto", None), ("1/4 beatu", "q_beat"),
-                           ("1/2 beatu", "h_beat"), ("1 beat", "beat"),
-                           ("1 takt", "bar")]:
-            self.snap_combo.addItem(label, key)
+        register_tr(self.snap_combo.setToolTip, "timeline.snap.tooltip")
+        _snap_items = [("timeline.snap_off", None), ("timeline.snap_q_beat", "q_beat"),
+                       ("timeline.snap_h_beat", "h_beat"), ("timeline.snap_beat", "beat"),
+                       ("timeline.snap_bar", "bar")]
+
+        def _resync_snap_combo_labels(_unused=None):
+            # QComboBox položky nejdou "setText"-ovat jednotlivě přes
+            # register_tr — přestaví se celé, se zachováním výběru.
+            idx = self.snap_combo.currentIndex()
+            self.snap_combo.blockSignals(True)
+            self.snap_combo.clear()
+            for label_key, key in _snap_items:
+                self.snap_combo.addItem(tr(label_key), key)
+            self.snap_combo.setCurrentIndex(max(0, idx))
+            self.snap_combo.blockSignals(False)
+
+        register_tr(_resync_snap_combo_labels, "timeline.snap_beat")
         self.snap_combo.setCurrentIndex(3)   # výchozí: 1 beat — hudebně smysluplné
         self.snap_combo.currentIndexChanged.connect(self._update_snap_s)
-        bar.addWidget(self.snap_combo)
 
         self.time_lbl = QLabel("⏱ 0,00 s")
         self.time_lbl.setMaximumHeight(24)
         self.time_lbl.setStyleSheet(
             "color:#e01b24; font-weight:bold; font-family:Consolas; "
             "padding:1px 6px; border:1px solid #e0a0a0; border-radius:3px;")
-        self.time_lbl.setToolTip("Pozice kurzoru — klikni do pravítka nebo táhni červený kurzor")
-        bar.addWidget(self.time_lbl)
+        register_tr(self.time_lbl.setToolTip, "timeline.time_label.tooltip")
 
+        # styly použité dál dole u tlačítek spodní audio lišty
         btn_style = ("QPushButton{padding:2px 8px;}")
         colored_style = ("QPushButton{{background:{bg};color:white;padding:2px 8px;"
                          "border-radius:3px;font-weight:bold;}}"
                          "QPushButton:hover{{background:{hov};}}")
-
-        undo_btn = QPushButton("↶ Zpět")
-        undo_btn.setStyleSheet(btn_style)
-        undo_btn.setToolTip("Zpět (Ctrl+Z)")
-        undo_btn.clicked.connect(self.undo)
-        redo_btn = QPushButton("↷ Znovu")
-        redo_btn.setStyleSheet(btn_style)
-        redo_btn.setToolTip("Znovu (Ctrl+Y / Ctrl+Shift+Z)")
-        redo_btn.clicked.connect(self.redo)
-        bar.addWidget(undo_btn)
-        bar.addWidget(redo_btn)
-        bar.addSpacing(8)
-
-        add_clip = QPushButton("＋ Klip displeje")
-        add_clip.setStyleSheet(colored_style.format(bg="#9141ac", hov="#a55bbf"))
-        add_clip.clicked.connect(self.add_clip)
-        align_song_btn = QPushButton("🔄 Zarovnat displej (celá píseň)")
-        align_song_btn.setStyleSheet(btn_style)
-        align_song_btn.setToolTip(
-            "U VŠECH klipů na Displej stopě zruší ruční posun a obnoví "
-            "auto-sledování textu/akordů (klip = přesně to, co je na ose) — "
-            "trvalé tlačítko v liště, nemusíš klikat na každý klip zvlášť "
-            "přes pravé tlačítko myši.")
-        align_song_btn.clicked.connect(self.align_all_clips_to_content)
-        split_btn = QPushButton("✂ Rozdělit (S)")
-        split_btn.setStyleSheet(btn_style)
-        split_btn.setToolTip("Rozdělí vybraný klip v pozici kurzoru (klávesa S)")
-        split_btn.clicked.connect(lambda: self.split_at_playhead())
-        autotime_btn = QPushButton("⏱ Na mřížku")
-        autotime_btn.setStyleSheet(btn_style)
-        autotime_btn.setToolTip("Přichytí začátky bloků na hudební mřížku "
-                                "(takt/beat podle tempa) — žádné odhady.")
-        autotime_btn.clicked.connect(self.auto_time_dialog)
-        tempo_btn = QPushButton("✏️ Tempo")
-        tempo_btn.setStyleSheet(btn_style)
-        tempo_btn.setToolTip("Změní BPM písně. Volitelně přepočítá existující "
-                             "časy proporcionálně (staré tempo / nové tempo).")
-        tempo_btn.clicked.connect(self.bpm_dialog)
-        count_in_btn = QPushButton("🥁⏱ Odpočet…")
-        count_in_btn.setStyleSheet(btn_style)
-        count_in_btn.setToolTip(
-            "Vloží/upraví odpočet (count-in) před písní — automaticky posune "
-            "vše ostatní, žádné ruční přesouvání stop.")
-        count_in_btn.clicked.connect(self.count_in_dialog)
-        bar.addWidget(add_clip)
-        bar.addWidget(align_song_btn)
-        bar.addWidget(split_btn)
-        bar.addWidget(autotime_btn)
-        bar.addWidget(tempo_btn)
-        bar.addWidget(count_in_btn)
-        add_lyric = QPushButton("＋ Text")
-        add_lyric.setStyleSheet(btn_style)
-        add_lyric.clicked.connect(lambda: self.add_block("lyric"))
-        add_chord = QPushButton("＋ Akord")
-        add_chord.setStyleSheet(btn_style)
-        add_chord.clicked.connect(lambda: self.add_block("chord"))
-        del_btn = QPushButton("🗑 Smazat")
-        del_btn.setStyleSheet(btn_style)
-        del_btn.clicked.connect(self.delete_selected)
-        shift_sel_btn = QPushButton("↔ Posunout vybrané…")
-        shift_sel_btn.setStyleSheet(btn_style)
-        shift_sel_btn.setToolTip(
-            "Posune VŠECHNY vybrané prvky o přesný čas (parametricky, ne tažením).\n"
-            "Nejdřív vyber víc prvků: Shift/Ctrl+klik, tažení obdélníku, nebo pravým "
-            "klikem na prvek → „Vybrat od zde DÁL/DŘÍV v čase“ (zkratky ]/[).")
-        shift_sel_btn.clicked.connect(self.shift_selected_dialog)
-        bar.addWidget(add_lyric); bar.addWidget(add_chord); bar.addWidget(del_btn)
-        bar.addWidget(shift_sel_btn)
-
-        exp_btn = QPushButton("💾 Export JSON")
-        exp_btn.setStyleSheet(colored_style.format(bg="#2d7d2d", hov="#3a9e3a"))
-        exp_btn.clicked.connect(self._do_export)
-        bar.addWidget(exp_btn)
-
-        bar.addStretch()
-        self.info_lbl = QLabel("ⓘ")
-        self.info_lbl.setStyleSheet("color:#777; font-weight:bold;")
-        self.info_lbl.setToolTip(
-            "Displej = master stopa (co uvidí karaoke) · dvojklik klip = zdroj+režim · "
-            "táhni okraje = délka · pravý klik = režim/smazat · Ctrl+kolečko = zoom\n"
-            "] / [ nebo pravý klik → „Vybrat od zde DÁL/DŘÍV v čase“ = vyber prvek a "
-            "vše odpovídající po/před ním na stejné stopě (text+akordy dohromady) "
-            "→ táhni myší nebo „↔ Posunout vybrané…“ pro přesný posun "
-            "(hromadné přeřazení zbytku)")
-        bar.addWidget(self.info_lbl)
-        root.addWidget(bar_widget)
 
         self.scene = QGraphicsScene(self)
         self.view = TimelineView(self.scene, self)
@@ -1715,24 +1620,26 @@ class TimelineEditor(QWidget):
         audio_bar = QHBoxLayout(audio_widget)
         audio_bar.setContentsMargins(8, 4, 8, 4)
 
-        load_audio_btn = QPushButton("🎵 Načíst MP3/WAV…")
+        load_audio_btn = QPushButton()
+        tr_label(load_audio_btn, "audio.load")
         load_audio_btn.setStyleSheet(btn_style)
+        load_audio_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_DirOpenIcon))
         load_audio_btn.clicked.connect(self._load_audio_dialog)
         audio_bar.addWidget(load_audio_btn)
 
-        self.audio_label = QLabel("(žádné audio)")
+        self.audio_label = QLabel()
+        tr_label(self.audio_label, "audio.no_audio")
         self.audio_label.setStyleSheet("color:#777;")
         audio_bar.addWidget(self.audio_label)
 
         audio_bar.addSpacing(12)
-        audio_bar.addWidget(QLabel("Výstup:"))
+        output_lbl = QLabel()
+        tr_label(output_lbl, "audio.output_label")
+        audio_bar.addWidget(output_lbl)
         self.device_combo = QComboBox()
         self.device_combo.setMaximumHeight(24)
         self.device_combo.setMinimumWidth(160)
-        self.device_combo.setToolTip(
-            "Zvukové zařízení, na které přehrávač i testovací tón hrají — "
-            "Windows „výchozí“ nemusí být to, co zrovna posloucháš "
-            "(např. při více připojených sluchátkách/Voicemeeru).")
+        register_tr(self.device_combo.setToolTip, "audio.device_combo.tooltip")
         self._populate_device_combo()
         self.device_combo.currentIndexChanged.connect(self._on_device_changed)
         audio_bar.addWidget(self.device_combo)
@@ -1740,56 +1647,49 @@ class TimelineEditor(QWidget):
         refresh_btn = QPushButton("↻")
         refresh_btn.setMaximumWidth(28)
         refresh_btn.setStyleSheet(btn_style)
-        refresh_btn.setToolTip("Znovu načíst seznam zvukových zařízení")
+        refresh_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_BrowserReload))
+        register_tr(refresh_btn.setToolTip, "audio.refresh.tooltip")
         refresh_btn.clicked.connect(self._populate_device_combo)
         audio_bar.addWidget(refresh_btn)
 
-        test_btn = QPushButton("🔊 Test tón")
+        test_btn = QPushButton()
+        tr_label(test_btn, "audio.test_tone")
         test_btn.setStyleSheet(btn_style)
-        test_btn.setToolTip(
-            "Přehraje krátký pípák na vybraném zařízení — ověř TÍMHLE, že "
-            "je vůbec slyšet něco, než budeš hledat problém v písničce.")
+        test_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_MediaVolume))
+        register_tr(test_btn.setToolTip, "audio.test_tone.tooltip")
         test_btn.clicked.connect(self._play_test_tone)
         audio_bar.addWidget(test_btn)
 
-        waveform_btn = QPushButton("🎚 Poloha/roztažení…")
+        waveform_btn = QPushButton()
+        tr_label(waveform_btn, "audio.waveform_pos")
         waveform_btn.setStyleSheet(btn_style)
-        waveform_btn.setToolTip(
-            "Přesný posun nahrávky v čase a ±10% roztažení délky (pro "
-            "sladění s kulatým BPM) — totéž, co jde tažením myší po "
-            "vlnovce nad zdrojovými stopami.")
+        waveform_btn.setIcon(icon("waveform_align"))
+        register_tr(waveform_btn.setToolTip, "audio.waveform_pos.tooltip")
         waveform_btn.clicked.connect(self.waveform_dialog)
         audio_bar.addWidget(waveform_btn)
 
-        auto_align_btn = QPushButton("🥁 Auto-zarovnat dle rytmu")
+        auto_align_btn = QPushButton()
+        tr_label(auto_align_btn, "audio.auto_align")
         auto_align_btn.setStyleSheet(btn_style)
-        auto_align_btn.setToolTip(
-            "PLNĚ AUTOMATICKY: najde všechny výrazné údery v nahrávce a "
-            "spočítá takový posun+roztažení (v rámci ±10 %), aby jich co "
-            "nejvíc sedělo na mřížku aktuálního tempa — žádné ruční "
-            "klikání na body.")
+        auto_align_btn.setIcon(icon("auto_align_rhythm"))
+        register_tr(auto_align_btn.setToolTip, "audio.auto_align.tooltip")
         auto_align_btn.clicked.connect(self.auto_align_audio)
         audio_bar.addWidget(auto_align_btn)
 
-        check_dur_btn = QPushButton("🔎 Ověřit délku")
+        check_dur_btn = QPushButton()
+        tr_label(check_dur_btn, "audio.check_duration")
         check_dur_btn.setStyleSheet(btn_style)
-        check_dur_btn.setToolTip(
-            "Jen informativně porovná vypočtenou délku písně (dle tempa/"
-            "taktů) se skutečnou délkou nahrávky — nic sám neupravuje, "
-            "ověření/rozhodnutí je na tobě.")
+        check_dur_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_DialogApplyButton))
+        register_tr(check_dur_btn.setToolTip, "audio.check_duration.tooltip")
         check_dur_btn.clicked.connect(self._check_duration_vs_audio)
         audio_bar.addWidget(check_dur_btn)
 
         audio_bar.addSpacing(12)
-        gp_mix_btn = QPushButton("🎼 GP bicí mix")
+        gp_mix_btn = QPushButton()
+        tr_label(gp_mix_btn, "audio.gp_mix")
         gp_mix_btn.setStyleSheet(btn_style)
-        gp_mix_btn.setToolTip(
-            "Vygeneruje/přegeneruje syntetizovaný zvuk bicích PŘÍMO z GP "
-            "dat (drums_timeline) a přehraje ho druhým přehrávačem vedle "
-            "skutečné nahrávky — poslechem porovnáš, co říká GP soubor, "
-            "se skutečností. Sdílí play/pauza/stop/shuttle s nahrávkou, "
-            "hlasitost obou zvlášť níž. Čistě pro poslechové ověření "
-            "ČLOVĚKEM — nic tím sám neopravuji.")
+        gp_mix_btn.setIcon(icon("gp_drum_mix"))
+        register_tr(gp_mix_btn.setToolTip, "audio.gp_mix.tooltip")
         gp_mix_btn.clicked.connect(self._load_gp_mix)
         audio_bar.addWidget(gp_mix_btn)
 
@@ -2190,7 +2090,13 @@ class TimelineEditor(QWidget):
         """Tlačítko „🔄 Zarovnat displej (celá píseň)" — u VŠECH textových
         klipů zapne auto_track a přepočte start_s/end_s z aktuálního
         obsahu, najednou pro celou píseň (ne po jednom přes kontextové
-        menu). Klipy bez textového režimu (tab/count_in…) nechá být."""
+        menu). Klipy bez textového režimu (tab/count_in…) nechá být.
+
+        DŮLEŽITÉ omezení: dolaďuje jen EXISTUJÍCÍ klipy — když se všechna
+        slova/akordy nějakého řádku SMAŽOU, nemá se z čeho dopočítat nový
+        rozsah, takže klip zůstane viset se STARÝM obsahem (nic ho
+        nesmaže). Na tenhle případ je `rebuild_display_track()` — kompletní
+        znovu-poskládání od nuly."""
         from PySide6.QtWidgets import QMessageBox
         n = 0
         self._push_undo()
@@ -2203,10 +2109,110 @@ class TimelineEditor(QWidget):
                 n += 1
         if n == 0:
             self._undo_stack.pop()   # nic se nezměnilo, nekaz historii prázdným krokem
-        QMessageBox.information(self, "Zarovnat displej",
-            f"Hotovo — {n} klipů na Displej stopě obnoveno na auto-sledování "
-            "textu/akordů." if n else
-            "Všechny textové klipy už byly zarovnané, nic se neměnilo.")
+        QMessageBox.information(self, tr("timeline.align_song.result_title"),
+            tr("timeline.align_song.result_body_n", n=n) if n else
+            tr("timeline.align_song.result_body_none"))
+
+    @staticmethod
+    def _cluster_events_by_gap(events: list[dict], gap: float) -> list[tuple[float, float, list[dict]]]:
+        """Rozdělí (časově seřazené) eventy do shluků — mezera mezi koncem
+        jednoho a začátkem dalšího větší než `gap` shluk ukončí. Obecná
+        pomůcka, žádná znalost "co to je" (akord/slovo)."""
+        clusters: list[list[dict]] = []
+        cur: list[dict] = []
+        prev_end = None
+        for e in events:
+            t0 = float(e.get("time_s", 0.0))
+            end = t0 + float(e.get("duration_s", 0.5))
+            if cur and prev_end is not None and (t0 - prev_end) > gap:
+                clusters.append(cur)
+                cur = []
+            cur.append(e)
+            prev_end = end
+        if cur:
+            clusters.append(cur)
+        return [(c[0]["time_s"], max(e["time_s"] + e.get("duration_s", 0.5) for e in c), c)
+                for c in clusters]
+
+    def rebuild_display_track(self) -> None:
+        """RADIKÁLNÍ oprava (na uživatelovo přání): DEFINITIVNĚ zahodí
+        VŠECHNY klipy na Displej stopě (i ručně upravené) a poskládá je
+        znovu od nuly z AKTUÁLNÍHO obsahu — na rozdíl od
+        `align_all_clips_to_content()`, který jen dolaďuje EXISTUJÍCÍ klipy
+        a neporadí si se smazanými řádky.
+
+        Řádky (a která stopa/akordy k nim patří) se počítají STEJNĚ jako
+        `to_json()` — GLOBÁLNĚ napříč VŠEMI stopami podle skutečného
+        přesahu v čase, ne jen v rámci jedné stopy. Dřív se to počítalo
+        odděleně po jedné stopě, což u písní s akordy na JINÉ stopě než
+        text (typický případ: zpěv track 1, kytara s akordy track 2)
+        vyrábělo navíc falešné samostatné "akordové" klipy místo toho, aby
+        se akordy spojily se skutečným textovým řádkem — přesně nahlášený
+        bug ("neodpovídá přesně spodním stopám")."""
+        from PySide6.QtWidgets import QMessageBox
+        reply = QMessageBox.question(
+            self, tr("timeline.rebuild_display.confirm_title"),
+            tr("timeline.rebuild_display.confirm_body"),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+        self._push_undo()
+
+        # 1) VŠECHNY textové řádky napříč VŠEMI stopami, seřazené globálně
+        #    podle času (stejně jako to_json()'s `grouped`).
+        grouped: list[tuple[int, list[dict]]] = []
+        for ti in self._track_order():
+            for line in self._group_lines(ti):
+                if line:
+                    grouped.append((ti, line))
+        grouped.sort(key=lambda g: g[1][0]["time_s"])
+        line_ranges = [(min(e["time_s"] for e in line),
+                        max(e["time_s"] + e.get("duration_s", 0.5) for e in line))
+                       for _ti, line in grouped]
+
+        def line_idx_at(t: float):
+            return next((li for li, (s, e) in enumerate(line_ranges) if s <= t < e), None)
+
+        chords_all = sorted(self.data.get("chords_timeline", []) or [], key=lambda e: e["time_s"])
+
+        clips: list[dict] = []
+        n = 0
+        for line_idx, (ti, line) in enumerate(grouped):
+            n += 1
+            start, end = line_ranges[line_idx]
+            label = " ".join(e.get("text", "") for e in line).strip()
+            clips.append({
+                "id": f"clip-{n}", "start_s": round(start, 3), "end_s": round(end, 3),
+                "source_track": ti, "mode": "lyrics_chords", "label": label[:24],
+                "auto_track": True,
+            })
+
+        # 2) Akordy, které NEPADAJÍ do žádného řádku (na kterékoliv stopě) —
+        #    čistě instrumentální úseky. Shlukují se PO STOPÁCH (jen kvůli
+        #    zobrazení — instrumentální part na jedné stopě, ne mixem všech).
+        unassigned = [c for c in chords_all if line_idx_at(float(c.get("time_s", 0.0))) is None]
+        for ti in self._track_order():
+            track_unassigned = sorted(
+                (c for c in unassigned if c.get("track_index", 1) == ti),
+                key=lambda e: e["time_s"])
+            for t0, t1, cluster in self._cluster_events_by_gap(track_unassigned, gap=1.5):
+                n += 1
+                seen: list[str] = []
+                for c in cluster:
+                    nm = c.get("chord", "")
+                    if nm and nm not in seen:
+                        seen.append(nm)
+                clips.append({
+                    "id": f"clip-{n}", "start_s": round(t0, 3), "end_s": round(t1, 3),
+                    "source_track": ti, "mode": "chords", "label": " ".join(seen)[:24],
+                    "auto_track": True,
+                })
+
+        clips.sort(key=lambda c: c["start_s"])
+        self.data["display_timeline"] = clips
+        self._relayout()
+        QMessageBox.information(self, tr("timeline.rebuild_display.done_title"),
+                               tr("timeline.rebuild_display.done_body", n=len(clips)))
 
     def _live_sync_display_clip_for_line(self, line_idx) -> None:
         """Lehký "nudge" volaný přímo z BlockItem (tažení/resize/Panel
