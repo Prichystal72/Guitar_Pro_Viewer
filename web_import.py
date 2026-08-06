@@ -24,14 +24,21 @@ from PySide6.QtWidgets import (
     QComboBox, QHeaderView, QAbstractItemView, QTabWidget, QCheckBox, QSpinBox,
 )
 
-# Typy řádků chord chartu + jejich popisky v editoru
-LINE_TYPES = [
-    ("lyric", "Text"),
-    ("chord", "Akord"),
-    ("section", "Sekce"),
-    ("ignore", "Ignorovat"),
-]
-_TYPE_TO_LABEL = dict(LINE_TYPES)
+from i18n import tr, register_tr, tr_label, tr_window_title
+
+
+def _line_types() -> list[tuple[str, str]]:
+    """Typy řádků chord chartu + jejich popisky pro combo box v tabulce
+    (`_fill_table`) — FUNKCE, ne statický seznam, aby se popisky přeložily
+    znovu při každém přerenderování tabulky (po přepnutí jazyka za běhu);
+    `_fill_table` se volá při každém přeparsování textu, takže je to
+    zadarmo, žádný `register_tr` navíc netřeba."""
+    return [
+        ("lyric", tr("web_import.type_lyric")),
+        ("chord", tr("web_import.type_chord")),
+        ("section", tr("web_import.type_section")),
+        ("ignore", tr("web_import.type_ignore")),
+    ]
 
 # ---------------------------------------------------------------------------
 # Chord detekce
@@ -979,11 +986,11 @@ class ArtistDownloadWorker(QThread):
             r.encoding = detect_encoding(r)
             slug, songs = extract_artist_songs(r.text, self.artist_url)
         except Exception as ex:
-            self.error.emit(f"Nelze načíst stránku interpreta: {ex}")
+            self.error.emit(tr("web_import.artist_fetch_error", ex=ex))
             return
 
         if not songs:
-            self.error.emit("Na stránce nebyly nalezeny žádné odkazy na písně.")
+            self.error.emit(tr("web_import.artist_no_links"))
             return
 
         dest = Path(self.out_dir) / re.sub(r'[^\w\-]', '_', slug)[:60]
@@ -1043,8 +1050,8 @@ class WebImportDialog(QDialog):
         Odpočet…, aby zůstaly bicí/basa v synchronu), jen text/akordy."""
         super().__init__(parent)
         self._edit_mode = edit_mode
-        self.setWindowTitle("Upravit text a akordy" if edit_mode
-                             else "Nová píseň — text z webu nebo vlastní")
+        self.setWindowTitle(tr("web_import.title_edit") if edit_mode
+                             else tr("web_import.title_new"))
         self.setMinimumSize(1360, 760)
         self._worker: FetchWorker | None = None
         self._artist_worker: ArtistDownloadWorker | None = None
@@ -1068,21 +1075,15 @@ class WebImportDialog(QDialog):
         if tempo:
             self.tempo_input.setText(str(int(tempo)))
         self.tempo_input.setEnabled(False)
-        self.tempo_input.setToolTip(
-            "Tempo se tu neupravuje — použij „✏️ Tempo…“ v hlavním okně, "
-            "aby se správně přepočítaly i bicí a basa.")
+        self.tempo_input.setToolTip(tr("web_import.tempo_locked.tooltip"))
         bpl = meta.get("bars_per_line")
         if bpl:
             self.bars_per_line_spin.setValue(int(bpl))
         self.count_in_spin.setValue(0)
         self.count_in_spin.setEnabled(False)
-        self.count_in_spin.setToolTip(
-            "Úvodní odpočet se tu nepřidává — použij „🥁⏱ Odpočet…“ v hlavním "
-            "okně (tahle akce mění jen text a akordy).")
-        self.ok_btn.setText("✅  Uložit opravu textu/akordů")
-        self.ok_btn.setToolTip(
-            "Zavře dialog a nahradí text/akordy v aktuální písni tímhle opraveným "
-            "zněním. Bicí, basa, napojení na audio a Displej stopa zůstanou beze změny.")
+        self.count_in_spin.setToolTip(tr("web_import.count_in_locked.tooltip"))
+        self.ok_btn.setText(tr("web_import.ok_btn_edit"))
+        self.ok_btn.setToolTip(tr("web_import.ok_btn_edit.tooltip"))
         self._syncing = True
         try:
             self.raw_text.setPlainText(initial_text)
@@ -1093,18 +1094,8 @@ class WebImportDialog(QDialog):
     def _setup_ui(self) -> None:
         root = QVBoxLayout(self)
 
-        steps_lbl = QLabel(
-            "<b>Oprava textu/akordů:</b> uprav řádky/akordy vlevo (nebo v tabulce "
-            "uprostřed) &nbsp;→&nbsp; zkontroluj náhled JSONu vpravo &nbsp;→&nbsp; "
-            "<b>✅ Uložit opravu textu/akordů</b> — nahradí se JEN text a akordy "
-            "aktuální písně, bicí/basa/audio/Displej zůstanou beze změny."
-            if self._edit_mode else
-            "<b>Kompletní postup:</b> 1) načti text z webu (URL) <b>nebo</b> ho rovnou vlož/napiš "
-            "vlevo dole &nbsp;→&nbsp; 2) uprav řádky/akordy (typ i obsah jde editovat) "
-            "&nbsp;→&nbsp; 3) zkontroluj náhled JSONu vpravo &nbsp;→&nbsp; "
-            "<b>✅ Použít v editoru</b> — píseň se rovnou zobrazí na časové ose "
-            "v aktuálním tempu, řádek = jeden časový úsek (takt)."
-        )
+        steps_lbl = QLabel(tr("web_import.steps_edit") if self._edit_mode
+                            else tr("web_import.steps_new"))
         steps_lbl.setWordWrap(True)
         steps_lbl.setStyleSheet(
             "background:#213040; border:1px solid #3a5570; border-radius:4px; "
@@ -1114,11 +1105,11 @@ class WebImportDialog(QDialog):
 
         # URL (nepovinné — krok 1a: web)
         url_row = QHBoxLayout()
-        url_row.addWidget(QLabel("1a) URL (volitelně):"))
+        url_row.addWidget(QLabel(tr("web_import.url_label")))
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("https://  (stránka s akordy — ultimate-guitar, supermusic, …)")
+        self.url_input.setPlaceholderText(tr("web_import.url_placeholder"))
         self.url_input.returnPressed.connect(self._fetch)
-        self.fetch_btn = QPushButton("🔄  Načíst z webu")
+        self.fetch_btn = QPushButton(tr("web_import.fetch_btn"))
         self.fetch_btn.clicked.connect(self._fetch)
         url_row.addWidget(self.url_input, 1)
         url_row.addWidget(self.fetch_btn)
@@ -1126,63 +1117,52 @@ class WebImportDialog(QDialog):
 
         # Meta
         meta_row = QHBoxLayout()
-        meta_row.addWidget(QLabel("Název:"))
+        meta_row.addWidget(QLabel(tr("web_import.title_label")))
         self.title_input = QLineEdit()
         meta_row.addWidget(self.title_input, 2)
-        meta_row.addWidget(QLabel("Interpret:"))
+        meta_row.addWidget(QLabel(tr("web_import.artist_label")))
         self.artist_input = QLineEdit()
         meta_row.addWidget(self.artist_input, 2)
-        meta_row.addWidget(QLabel("Tempo (BPM):"))
+        meta_row.addWidget(QLabel(tr("web_import.tempo_label")))
         self.tempo_input = QLineEdit("120")
         self.tempo_input.setMaximumWidth(60)
-        self.tempo_input.setToolTip("Úderů za minutu — timeline je z toho pravidelná "
-                                    "mřížka: 1 beat = 60/tempo s, 1 takt (4/4) = 4 beaty.")
+        self.tempo_input.setToolTip(tr("web_import.tempo.tooltip"))
         meta_row.addWidget(self.tempo_input)
 
         meta_row.addSpacing(12)
-        meta_row.addWidget(QLabel("Taktů/řádek:"))
+        meta_row.addWidget(QLabel(tr("web_import.bars_per_line_label")))
         self.bars_per_line_spin = QSpinBox()
         self.bars_per_line_spin.setRange(1, 8)
         self.bars_per_line_spin.setValue(2)
-        self.bars_per_line_spin.setToolTip(
-            "Kolik taktů (4/4) zabere KAŽDÝ textový řádek — pevně, stejně pro "
-            "celou píseň, žádný odhad ze slabik. U pravidelných písní (Let It "
-            "Be…) nastav podle reálné délky řádku.")
+        self.bars_per_line_spin.setToolTip(tr("web_import.bars_per_line.tooltip"))
         meta_row.addWidget(self.bars_per_line_spin)
 
         meta_row.addSpacing(12)
-        meta_row.addWidget(QLabel("Úvodní takty (metronom):"))
+        meta_row.addWidget(QLabel(tr("web_import.count_in_label")))
         self.count_in_spin = QSpinBox()
         self.count_in_spin.setRange(0, 8)
         self.count_in_spin.setValue(1)
-        self.count_in_spin.setToolTip(
-            "Kolik taktů ticha se vloží na ÚPLNÝ začátek — mezera na odklikání "
-            "metronomu před prvním řádkem.")
+        self.count_in_spin.setToolTip(tr("web_import.count_in.tooltip"))
         meta_row.addWidget(self.count_in_spin)
         root.addLayout(meta_row)
 
         # Splitter — tři živě propojené panely
         splitter = QSplitter(Qt.Horizontal)
 
-        left_box = QGroupBox("1b) Text  (nebo přímo sem piš/vkládej vlastní — mění se živě)")
+        left_box = QGroupBox(tr("web_import.left_box_title"))
         ll = QVBoxLayout(left_box)
         self.raw_text = QTextEdit()
         self.raw_text.setFont(QFont("Courier New", 11))
-        self.raw_text.setPlaceholderText(
-            "Sem vložte nebo načtěte text chord chartu:\n\n"
-            "D          D\n"
-            "Skákal pes přes oves,\n"
-            "D            A7\n"
-            "přes zelenou louku,\n"
-        )
+        self.raw_text.setPlaceholderText(tr("web_import.raw_text_placeholder"))
         self.raw_text.textChanged.connect(self._on_raw_text_changed)
         ll.addWidget(self.raw_text)
         splitter.addWidget(left_box)
 
-        mid_box = QGroupBox("2) Rozpoznané řádky  (typ i obsah lze editovat)")
+        mid_box = QGroupBox(tr("web_import.mid_box_title"))
         ml = QVBoxLayout(mid_box)
         self.line_table = QTableWidget(0, 2)
-        self.line_table.setHorizontalHeaderLabels(["Typ", "Obsah řádku"])
+        self.line_table.setHorizontalHeaderLabels(
+            [tr("web_import.col_type"), tr("web_import.col_content")])
         self.line_table.verticalHeader().setVisible(False)
         # obsah je editovatelný (dvojklik / Enter / psaní) — změna jde hned do JSONu
         self.line_table.setEditTriggers(
@@ -1197,14 +1177,14 @@ class WebImportDialog(QDialog):
         ml.addWidget(self.line_table)
         splitter.addWidget(mid_box)
 
-        right_box = QGroupBox("3) Co půjde do JSONu  (živý náhled)")
+        right_box = QGroupBox(tr("web_import.right_box_title"))
         rl = QVBoxLayout(right_box)
         self.preview_tabs = QTabWidget()
         self.preview_lines = QTextEdit()
         self.preview_lines.setReadOnly(True)
         self.preview_lines.setFont(QFont("Consolas", 10))
         self.preview_lines.setLineWrapMode(QTextEdit.NoWrap)
-        self.preview_tabs.addTab(self.preview_lines, "🎤 Karaoke řádky")
+        self.preview_tabs.addTab(self.preview_lines, tr("web_import.tab_karaoke_lines"))
         self.preview_raw = QTextEdit()
         self.preview_raw.setReadOnly(True)
         self.preview_raw.setFont(QFont("Consolas", 9))
@@ -1233,29 +1213,23 @@ class WebImportDialog(QDialog):
 
         # Buttons
         btn_row = QHBoxLayout()
-        parse_btn = QPushButton("🔍  Rozpoznat")
-        parse_btn.setToolTip("Okamžité přeparsování textu (jinak se to děje automaticky za chodu).")
+        parse_btn = QPushButton(tr("web_import.parse_btn"))
+        parse_btn.setToolTip(tr("web_import.parse_btn.tooltip"))
         parse_btn.clicked.connect(self._parse)
 
-        self.artist_btn = QPushButton("📚  Stáhnout celého interpreta")
-        self.artist_btn.setToolTip(
-            "Zadej do URL stránku interpreta (např. pisnicky-akordy.cz/olympic) "
-            "a vyber složku — stáhnou se všechny písně jako GP4 + JSON."
-        )
+        self.artist_btn = QPushButton(tr("web_import.artist_btn"))
+        self.artist_btn.setToolTip(tr("web_import.artist_btn.tooltip"))
         self.artist_btn.clicked.connect(self._download_artist)
 
-        save_btn = QPushButton("💾  Uložit GP4 + JSON…")
-        save_btn.setToolTip("Volitelně navíc ulož GP4 + JSON na disk (dialog zůstane otevřený).")
+        save_btn = QPushButton(tr("web_import.save_btn"))
+        save_btn.setToolTip(tr("web_import.save_btn.tooltip"))
         save_btn.clicked.connect(self._save)
 
-        cancel_btn = QPushButton("Zavřít")
+        cancel_btn = QPushButton(tr("web_import.cancel_btn"))
         cancel_btn.clicked.connect(self.reject)
 
-        self.ok_btn = QPushButton("✅  Použít v editoru")
-        self.ok_btn.setToolTip(
-            "Zavře dialog a rovnou nahraje píseň do časové osy (aktuální tempo, "
-            "řádek = jeden časový úsek)."
-        )
+        self.ok_btn = QPushButton(tr("web_import.ok_btn_new"))
+        self.ok_btn.setToolTip(tr("web_import.ok_btn_new.tooltip"))
         self.ok_btn.setStyleSheet(
             "QPushButton{background:#2d7d2d;color:white;padding:6px 16px;"
             "border-radius:4px;font-weight:bold;font-size:13px;}"
@@ -1272,7 +1246,7 @@ class WebImportDialog(QDialog):
         btn_row.addWidget(self.ok_btn)
         root.addLayout(btn_row)
 
-        self.status_lbl = QLabel("Zadejte URL a načtěte z webu, nebo vložte/napište text vlevo dole ručně.")
+        self.status_lbl = QLabel(tr("web_import.status_initial"))
         root.addWidget(self.status_lbl)
 
     def _fetch(self) -> None:
@@ -1280,7 +1254,7 @@ class WebImportDialog(QDialog):
         if not url.startswith('http'):
             url = 'https://' + url
             self.url_input.setText(url)
-        self.status_lbl.setText(f"Načítám: {url} …")
+        self.status_lbl.setText(tr("web_import.status_fetching", url=url))
         self.fetch_btn.setEnabled(False)
         self._worker = FetchWorker(url)
         self._worker.done.connect(self._on_fetched)
@@ -1288,7 +1262,7 @@ class WebImportDialog(QDialog):
         self._worker.start()
 
     def _on_error(self, msg: str) -> None:
-        self.status_lbl.setText(f"Chyba: {msg}")
+        self.status_lbl.setText(tr("web_import.status_error", msg=msg))
         self.fetch_btn.setEnabled(True)
 
     def _on_fetched(self, url: str, html: str) -> None:
@@ -1316,7 +1290,7 @@ class WebImportDialog(QDialog):
             self._syncing = False
 
         self._fill_table(self._detected)
-        self._update_counts("Načteno")
+        self._update_counts(tr("web_import.verb_fetched"))
         self._update_json_preview()
 
     def _parse(self) -> None:
@@ -1342,7 +1316,7 @@ class WebImportDialog(QDialog):
         self._detected = (apply_chord_templates(detect_chord_chart(text.splitlines()))
                           if text.strip() else [])
         self._fill_table(self._detected)
-        self._update_counts("Živě rozpoznáno")
+        self._update_counts(tr("web_import.verb_live_detected"))
         self._update_json_preview()
 
     def _schedule_preview(self) -> None:
@@ -1358,7 +1332,7 @@ class WebImportDialog(QDialog):
         self._recolor_row(item.row())
         self._detected = self._table_to_detected()
         self._sync_raw_text_from_detected()
-        self._update_counts("Upraveno")
+        self._update_counts(tr("web_import.verb_edited"))
         self._update_json_preview()
 
     def _sync_raw_text_from_detected(self) -> None:
@@ -1382,7 +1356,7 @@ class WebImportDialog(QDialog):
             tempo = 120
 
         if not detected or not any(d['type'] in ('chord', 'lyric') for d in detected):
-            self.preview_lines.setPlainText("(zatím nic k zobrazení — vlož/uprav text vlevo)")
+            self.preview_lines.setPlainText(tr("web_import.preview_empty"))
             self.preview_raw.setPlainText("{}")
             self.preview_info.setText("—")
             self._preview_json = {}
@@ -1394,7 +1368,7 @@ class WebImportDialog(QDialog):
                                       bars_per_line=self.bars_per_line_spin.value(),
                                       count_in_bars=self.count_in_spin.value())
         except Exception as ex:
-            self.preview_lines.setPlainText(f"(chyba náhledu: {ex})")
+            self.preview_lines.setPlainText(tr("web_import.preview_error", ex=ex))
             self.preview_raw.setPlainText("{}")
             self.preview_info.setText("—")
             return
@@ -1406,16 +1380,16 @@ class WebImportDialog(QDialog):
             chords = ' '.join(kl.get('chords', []))
             sec = f"[{kl['section']}] " if kl.get('section') else ""
             t0, t1 = kl.get('start_s', 0.0), kl.get('end_s', 0.0)
-            txt = kl.get('text', '') or '(jen akordy)'
+            txt = kl.get('text', '') or tr("web_import.chords_only_marker")
             rows.append(f"{t0:6.2f}–{t1:6.2f}s  {sec}{chords:<14} {txt}")
-        self.preview_lines.setPlainText('\n'.join(rows) or "(žádné řádky)")
+        self.preview_lines.setPlainText('\n'.join(rows) or tr("web_import.no_lines"))
         self.preview_raw.setPlainText(json.dumps(data, indent=2, ensure_ascii=False))
 
         n_lines = len(data.get('karaoke_lines', []))
         n_chords = len(data.get('chords_timeline', []))
         dur = data.get('meta', {}).get('duration_seconds', 0.0)
         self.preview_info.setText(
-            f"{n_lines} karaoke řádků · {n_chords} akordů · délka ~{dur:.1f}s @ {tempo} BPM"
+            tr("web_import.preview_info", n_lines=n_lines, n_chords=n_chords, dur=f"{dur:.1f}", tempo=tempo)
         )
 
     def _use_in_editor(self) -> None:
@@ -1428,8 +1402,8 @@ class WebImportDialog(QDialog):
         self._update_json_preview()
         if not self._preview_json or not self._preview_json.get('karaoke_lines'):
             QMessageBox.warning(
-                self, "Nic k použití",
-                "Nejdřív načti text z webu, nebo ho vlož/napiš vlevo dole.")
+                self, tr("web_import.nothing_to_use_title"),
+                tr("web_import.nothing_to_use_body"))
             return
         self.result_json = self._preview_json
         self.accept()
@@ -1438,11 +1412,8 @@ class WebImportDialog(QDialog):
         n_c = sum(1 for d in self._detected if d['type'] == 'chord')
         n_l = sum(1 for d in self._detected if d['type'] == 'lyric')
         n_i = sum(1 for d in self._detected if d['type'] == 'ignore')
-        extra = f", {n_i} ignorováno" if n_i else ""
-        self.status_lbl.setText(
-            f"{verb}: {n_c} akord. řádků, {n_l} textových řádků{extra}. "
-            f"Uprav typ/obsah řádku → ✅ Použít v editoru."
-        )
+        extra = tr("web_import.counts_ignored_suffix", n_i=n_i) if n_i else ""
+        self.status_lbl.setText(tr("web_import.counts_status", verb=verb, n_c=n_c, n_l=n_l, extra=extra))
 
     # ------------------------------------------------------------------
     # Editovatelná tabulka řádků (přeřazení typu)
@@ -1456,9 +1427,10 @@ class WebImportDialog(QDialog):
         self.line_table.setRowCount(len(rows))
         for r, item in enumerate(rows):
             combo = QComboBox()
-            for code, label in LINE_TYPES:
+            line_types = _line_types()
+            for code, label in line_types:
                 combo.addItem(label, code)
-            idx = next((i for i, (c, _) in enumerate(LINE_TYPES) if c == item['type']), 0)
+            idx = next((i for i, (c, _) in enumerate(line_types) if c == item['type']), 0)
             combo.setCurrentIndex(idx)
             combo.currentIndexChanged.connect(lambda _i, row=r: self._on_type_changed(row))
             self.line_table.setCellWidget(r, 0, combo)
@@ -1474,7 +1446,7 @@ class WebImportDialog(QDialog):
         self._recolor_row(row)
         # Průběžně promítni změny typů do self._detected a přepočti počty i náhled
         self._detected = self._table_to_detected()
-        self._update_counts("Upraveno")
+        self._update_counts(tr("web_import.verb_edited"))
         self._update_json_preview()
 
     def _recolor_row(self, row: int) -> None:
@@ -1518,7 +1490,7 @@ class WebImportDialog(QDialog):
         if self.line_table.rowCount():
             self._detected = self._table_to_detected()
         if not self._detected or not any(d['type'] in ('chord', 'lyric') for d in self._detected):
-            QMessageBox.warning(self, "Upozornění", "Nejprve načtěte/rozpoznejte obsah.")
+            QMessageBox.warning(self, tr("common.warning_title"), tr("web_import.no_content_body"))
             return
 
         title = self.title_input.text().strip() or "Unknown"
@@ -1530,9 +1502,9 @@ class WebImportDialog(QDialog):
 
         safe = re.sub(r'[^\w\-]', '_', title)[:40]
         out_path, _ = QFileDialog.getSaveFileName(
-            self, "Uložit GP4 + JSON (zadejte základ jména)",
+            self, tr("web_import.save_dialog_title"),
             safe,
-            "Všechny soubory (*)"
+            tr("web_import.save_dialog_filter")
         )
         if not out_path:
             return
@@ -1548,15 +1520,15 @@ class WebImportDialog(QDialog):
             )
             n_kl = len(self._preview_json.get('karaoke_lines', []))
             self.status_lbl.setText(
-                f"Uloženo:  {Path(gp_path).name}  +  {Path(json_path).name}  "
-                f"({n_kl} karaoke řádků)"
+                tr("web_import.saved_status", gp_name=Path(gp_path).name,
+                   json_name=Path(json_path).name, n_kl=n_kl)
             )
             QMessageBox.information(
-                self, "Hotovo",
-                f"GP4:  {gp_path}\nJSON: {json_path}"
+                self, tr("web_import.saved_title"),
+                tr("web_import.saved_body", gp_path=gp_path, json_path=json_path)
             )
         except Exception as ex:
-            QMessageBox.critical(self, "Chyba", str(ex))
+            QMessageBox.critical(self, tr("common.error_title"), str(ex))
             raise
 
     # ------------------------------------------------------------------
@@ -1567,21 +1539,20 @@ class WebImportDialog(QDialog):
         # Běžící stahování → tlačítko funguje jako Zrušit
         if self._artist_worker is not None and self._artist_worker.isRunning():
             self._artist_worker.cancel()
-            self.status_lbl.setText("Ruším stahování…")
+            self.status_lbl.setText(tr("web_import.status_cancelling"))
             return
 
         url = self.url_input.text().strip()
         if not url:
             QMessageBox.information(
-                self, "Zadej URL interpreta",
-                "Do pole URL vlož stránku interpreta, např.:\n"
-                "https://pisnicky-akordy.cz/olympic"
+                self, tr("web_import.need_artist_url_title"),
+                tr("web_import.need_artist_url_body")
             )
             return
         if not url.startswith('http'):
             url = 'https://' + url
 
-        out_dir = QFileDialog.getExistingDirectory(self, "Vyber cílovou složku")
+        out_dir = QFileDialog.getExistingDirectory(self, tr("web_import.choose_folder_title"))
         if not out_dir:
             return
 
@@ -1594,26 +1565,26 @@ class WebImportDialog(QDialog):
         self._artist_worker.progress.connect(self._on_artist_progress)
         self._artist_worker.finished_all.connect(self._on_artist_done)
         self._artist_worker.error.connect(self._on_artist_error)
-        self.artist_btn.setText("⏹  Zrušit stahování")
-        self.status_lbl.setText("Načítám seznam písní interpreta…")
+        self.artist_btn.setText(tr("web_import.artist_btn_cancel"))
+        self.status_lbl.setText(tr("web_import.status_artist_listing"))
         self._artist_worker.start()
 
     def _on_artist_progress(self, done: int, total: int, name: str) -> None:
-        self.status_lbl.setText(f"Stahuji {done}/{total}:  {name}")
+        self.status_lbl.setText(tr("web_import.status_artist_progress", done=done, total=total, name=name))
 
     def _on_artist_done(self, ok: int, fail: int, dest: str) -> None:
-        self.artist_btn.setText("📚  Stáhnout celého interpreta")
-        self.status_lbl.setText(f"Hotovo: {ok} uloženo, {fail} přeskočeno → {dest}")
+        self.artist_btn.setText(tr("web_import.artist_btn"))
+        self.status_lbl.setText(tr("web_import.status_artist_done", ok=ok, fail=fail, dest=dest))
         QMessageBox.information(
-            self, "Stažení dokončeno",
-            f"Uloženo: {ok}\nPřeskočeno/chyby: {fail}\n\nSložka:\n{dest}"
+            self, tr("web_import.artist_done_title"),
+            tr("web_import.artist_done_body", ok=ok, fail=fail, dest=dest)
         )
         self._artist_worker = None
 
     def _on_artist_error(self, msg: str) -> None:
-        self.artist_btn.setText("📚  Stáhnout celého interpreta")
-        self.status_lbl.setText(f"Chyba: {msg}")
-        QMessageBox.critical(self, "Chyba", msg)
+        self.artist_btn.setText(tr("web_import.artist_btn"))
+        self.status_lbl.setText(tr("web_import.status_error", msg=msg))
+        QMessageBox.critical(self, tr("common.error_title"), msg)
         self._artist_worker = None
 
 

@@ -439,3 +439,12 @@ ikony… vše musí být dvoujazyčně… začni psát návod v angličtině."*
   nikdy uživatelovy živé soubory).
 - Ověřovací checklist z plánu (kompletní pokrytí překladu, perzistence
   jazyka přes restart).
+- **Build-ready pro exe (PyInstaller)** — zatím žádný `.spec`/build skript
+  v repu. Než se bude appka balit: (1) `datas` pro `lang/`, `assets/`,
+  `web/`, `drum_samples.json` (PyInstaller je sám od sebe nezabalí,
+  `lang/*.json` chybějící v buildu = appka bez překladů, `⚠MISSING:` všude);
+  (2) `i18n.SETTINGS_PATH` přesměrovat z `os.path.dirname(__file__)` do
+  `%APPDATA%` — v `--onefile` módu se `__file__` rozbaluje do dočasného
+  adresáře smazaného po zavření appky, takže volba jazyka by se nikdy
+  nezapamatovala mezi spuštěními. Odloženo na žádost uživatele, řešit až
+  před reálným balením do exe.

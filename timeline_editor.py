@@ -133,6 +133,28 @@ MODE_LABELS = {
     "tab_chords": "Tab + akordy",
     "count_in": "Odpočet (metronom)",
 }
+# Klíč → i18n klíč popisku — MODE_LABELS výše zůstává (jen pro kontrolu
+# platných klíčů přes `in`/`.data() in`, viz použití), skutečný ZOBRAZENÝ
+# text jde přes tuhle funkci, aby se přeložil znovu při každém překreslení
+# (canvas text/menu se staví nanovo, žádný register_tr netřeba).
+_MODE_LABEL_KEYS = {
+    "lyrics_chords": "mode.lyrics_chords",
+    "lyrics": "mode.lyrics",
+    "chords": "mode.chords",
+    "tab": "mode.tab",
+    "tab_chords": "mode.tab_chords",
+    "count_in": "mode.count_in",
+}
+
+
+def _mode_label(key: str) -> str:
+    return tr(_MODE_LABEL_KEYS.get(key, key))
+
+
+def _track_fallback_name(ti) -> str:
+    return tr("track.fallback_name", n=ti)
+
+
 MODE_ORDER = ["lyrics_chords", "lyrics", "chords", "tab", "tab_chords", "count_in"]
 # Textové (karaoke-řádkové) režimy — jediné, které `to_json()` páruje s
 # `karaoke_lines` přes `line` (viz `to_json`, komentář u TEXT_MODES tam).
@@ -317,7 +339,7 @@ class PlayheadItem(QGraphicsItem):
         )
         self.setZValue(60)
         self.setCursor(Qt.SizeHorCursor)
-        self.setToolTip("Kurzor — táhni, nebo klikni do pravítka nahoře")
+        self.setToolTip(tr("playhead.tooltip"))
         self._syncing = False   # True = posun "shora" (z dat), ne tažení myší
         self._sync()
 
@@ -379,11 +401,7 @@ class DisplayClipItem(QGraphicsRectItem):
                                       # to přesné/parametrické hodnoty ze zarovnání/panelu)
         self.setAcceptHoverEvents(True)
         self.setZValue(12)
-        self.setToolTip(
-            "Táhni okraj = posuň ZAČÁTEK/KONEC řádku na displeji "
-            "(nezávisle na hudební mřížce taktů/beatů). "
-            "Táhni střed = posuň celý klip po ose."
-        )
+        self.setToolTip(tr("display_clip.tooltip"))
         self._sync_from_clip()        # setPos PŘED ItemSendsGeometryChanges —
         self.setFlags(                # jinak by vlastní inicializace vypadala
             QGraphicsItem.ItemIsMovable          # jako tažení a zbytečně
@@ -430,10 +448,10 @@ class DisplayClipItem(QGraphicsRectItem):
         label = self.clip.get("label", "") or ""
         if self._mode() == "count_in":
             line1 = "🎵 " + (self.clip.get("artist", "") or "?")
-            line2 = (self.clip.get("title", "") or "") + "  ·  odpočet 4-3-2-1…"
+            line2 = (self.clip.get("title", "") or "") + "  ·  " + tr("display_clip.count_in_label")
         else:
-            line1 = label if label else names.get(ti, f"Stopa {ti}")
-            line2 = f"{MODE_LABELS[self._mode()]} · {names.get(ti, f'Stopa {ti}')}"
+            line1 = label if label else names.get(ti, _track_fallback_name(ti))
+            line2 = f"{_mode_label(self._mode())} · {names.get(ti, _track_fallback_name(ti))}"
         p.setPen(QPen(QColor("#1a1a1a")))
         f = QFont("Segoe UI", 9, QFont.Bold)
         p.setFont(f)
@@ -520,30 +538,29 @@ class DisplayClipItem(QGraphicsRectItem):
         from PySide6.QtWidgets import QMenu
         self.editor._ensure_selected_for_context_menu(self)
         menu = QMenu()
-        sub = menu.addMenu("Režim zobrazení")
+        sub = menu.addMenu(tr("menu.display_mode_submenu"))
         for key in MODE_ORDER:
-            act = sub.addAction(("● " if key == self._mode() else "   ") + MODE_LABELS[key])
+            act = sub.addAction(("● " if key == self._mode() else "   ") + _mode_label(key))
             act.setData(key)
         menu.addSeparator()
-        edit_act = menu.addAction("✎ Upravit klip…")
-        split_act = menu.addAction("✂ Rozdělit v kurzoru")
+        edit_act = menu.addAction(tr("menu.edit_clip"))
+        split_act = menu.addAction(tr("menu.split_at_playhead"))
         menu.addSeparator()
         # VŽDY přítomná položka (jen šedivá/needitovatelná, když nedává
         # smysl) — uživatel explicitně nechce mizející/objevující se
         # položky v menu, ať vidí, co existuje, i když se to zrovna nedá
         # použít.
-        auto_restore_act = menu.addAction(
-            "🔄 Obnovit auto-sledování textu/akordů (zrušit ruční posun)")
+        auto_restore_act = menu.addAction(tr("menu.restore_auto_track"))
         auto_restore_act.setEnabled(
             self._mode() in AUTO_TRACK_MODES and not self.clip.get("auto_track", True))
         menu.addSeparator()
-        fwd_act = menu.addAction("➤ Vybrat od zde DÁL v čase  (])")
-        back_act = menu.addAction("➤ Vybrat od zde DŘÍV v čase  ([)")
-        track_act = menu.addAction("☰ Vybrat celou stopu")
+        fwd_act = menu.addAction(tr("menu.select_forward"))
+        back_act = menu.addAction(tr("menu.select_backward"))
+        track_act = menu.addAction(tr("menu.select_track"))
         menu.addSeparator()
-        copy_act = menu.addAction("📋 Kopírovat")
-        cut_act = menu.addAction("✂ Vyjmout")
-        del_act = menu.addAction("🗑 Smazat klip")
+        copy_act = menu.addAction(tr("menu.copy"))
+        cut_act = menu.addAction(tr("menu.cut"))
+        del_act = menu.addAction(tr("menu.delete_clip"))
         chosen = menu.exec(ev.screenPos())
         if chosen is None:
             ev.accept()
@@ -713,17 +730,17 @@ class BlockItem(QGraphicsRectItem):
             first = self.editor.first_word(self.event.get("track_index", 1))
             is_break = bool(self.event.get("line_start")) and self.event is not first
             if is_break:
-                break_act = menu.addAction("⤺ Zrušit zalomení (spojit s předchozím řádkem)")
+                break_act = menu.addAction(tr("menu.unbreak_line"))
             else:
-                break_act = menu.addAction("➤ Začít zde nový řádek")
+                break_act = menu.addAction(tr("menu.start_new_line"))
             menu.addSeparator()
-        fwd_act = menu.addAction("➤ Vybrat od zde DÁL v čase  (])")
-        back_act = menu.addAction("➤ Vybrat od zde DŘÍV v čase  ([)")
-        track_act = menu.addAction("☰ Vybrat celou stopu")
+        fwd_act = menu.addAction(tr("menu.select_forward"))
+        back_act = menu.addAction(tr("menu.select_backward"))
+        track_act = menu.addAction(tr("menu.select_track"))
         menu.addSeparator()
-        copy_act = menu.addAction("📋 Kopírovat")
-        cut_act = menu.addAction("✂ Vyjmout")
-        del_act = menu.addAction("🗑 Smazat")
+        copy_act = menu.addAction(tr("menu.copy"))
+        cut_act = menu.addAction(tr("menu.cut"))
+        del_act = menu.addAction(tr("menu.delete_generic"))
         chosen = menu.exec(ev.screenPos())
         if chosen is None:
             ev.accept()
@@ -782,8 +799,7 @@ class DrumHitItem(QGraphicsPixmapItem):
         self.setOffset(-icon_size / 2, -icon_size / 2)
         self.setZValue(15)
         self.setCursor(Qt.OpenHandCursor)
-        self.setToolTip(f"{event.get('drum', '?')} — táhni = posun v čase, "
-                        "pravý klik = změnit buben / smazat")
+        self.setToolTip(tr("drum_hit.tooltip", drum=event.get('drum', '?')))
         self._sync_from_event()     # setPos PŘED ItemSendsGeometryChanges (viz DisplayClipItem)
         self.setFlags(
             QGraphicsItem.ItemIsMovable
@@ -830,19 +846,19 @@ class DrumHitItem(QGraphicsPixmapItem):
     def contextMenuEvent(self, ev):
         self.editor._ensure_selected_for_context_menu(self)
         menu = QMenu()
-        sub = menu.addMenu("Změnit buben")
+        sub = menu.addMenu(tr("menu.change_drum"))
         cur = self.event.get("drum", "?")
         for dn in DRUM_HIT_NAMES:
             act = sub.addAction(("● " if dn == cur else "   ") + dn)
             act.setData(dn)
         menu.addSeparator()
-        fwd_act = menu.addAction("➤ Vybrat od zde DÁL v čase  (])")
-        back_act = menu.addAction("➤ Vybrat od zde DŘÍV v čase  ([)")
-        track_act = menu.addAction("☰ Vybrat celou stopu")
+        fwd_act = menu.addAction(tr("menu.select_forward"))
+        back_act = menu.addAction(tr("menu.select_backward"))
+        track_act = menu.addAction(tr("menu.select_track"))
         menu.addSeparator()
-        copy_act = menu.addAction("📋 Kopírovat")
-        cut_act = menu.addAction("✂ Vyjmout")
-        del_act = menu.addAction("🗑 Smazat úder")
+        copy_act = menu.addAction(tr("menu.copy"))
+        cut_act = menu.addAction(tr("menu.cut"))
+        del_act = menu.addAction(tr("menu.delete_drum_hit"))
         chosen = menu.exec(ev.screenPos())
         if chosen is None:
             ev.accept()
@@ -888,9 +904,8 @@ class BassNoteItem(QGraphicsLineItem):
         self.setPen(p)
         self.setZValue(15)
         self.setCursor(Qt.OpenHandCursor)
-        self.setToolTip(f"{event.get('note_name', '?')} (struna {event.get('string', '?')}, "
-                        f"pražec {event.get('fret', '?')}) — táhni = posun v čase, "
-                        "pravý klik = struna/pražec/smazat")
+        self.setToolTip(tr("bass_note.tooltip", note=event.get('note_name', '?'),
+                           string=event.get('string', '?'), fret=event.get('fret', '?')))
         self._sync_from_event()
         self.setFlags(
             QGraphicsItem.ItemIsMovable
@@ -932,22 +947,22 @@ class BassNoteItem(QGraphicsLineItem):
     def contextMenuEvent(self, ev):
         self.editor._ensure_selected_for_context_menu(self)
         menu = QMenu()
-        sub = menu.addMenu("Změnit strunu")
+        sub = menu.addMenu(tr("menu.change_string"))
         cur_s = int(self.event.get("string", 4))
         string_acts = []
         for s in (1, 2, 3, 4):
             act = sub.addAction(("● " if s == cur_s else "   ") + tr("lane.string", n=s))
             act.setData(s)
             string_acts.append(act)
-        fret_act = menu.addAction(f"✎ Pražec… ({self.event.get('fret', 0)})")
+        fret_act = menu.addAction(tr("menu.fret_ellipsis", fret=self.event.get('fret', 0)))
         menu.addSeparator()
-        fwd_act = menu.addAction("➤ Vybrat od zde DÁL v čase  (])")
-        back_act = menu.addAction("➤ Vybrat od zde DŘÍV v čase  ([)")
-        track_act = menu.addAction("☰ Vybrat celou stopu")
+        fwd_act = menu.addAction(tr("menu.select_forward"))
+        back_act = menu.addAction(tr("menu.select_backward"))
+        track_act = menu.addAction(tr("menu.select_track"))
         menu.addSeparator()
-        copy_act = menu.addAction("📋 Kopírovat")
-        cut_act = menu.addAction("✂ Vyjmout")
-        del_act = menu.addAction("🗑 Smazat notu")
+        copy_act = menu.addAction(tr("menu.copy"))
+        cut_act = menu.addAction(tr("menu.cut"))
+        del_act = menu.addAction(tr("menu.delete_bass_note"))
         chosen = menu.exec(ev.screenPos())
         if chosen is None:
             ev.accept()
@@ -966,7 +981,7 @@ class BassNoteItem(QGraphicsLineItem):
         elif chosen is cut_act:
             self.editor.cut_selected()
         elif chosen is fret_act:
-            fret, ok = QInputDialog.getInt(None, "Pražec", "Číslo pražce (0 = prázdná struna):",
+            fret, ok = QInputDialog.getInt(None, tr("dialog.fret_title"), tr("dialog.fret_label"),
                                            int(self.event.get("fret", 0)), 0, 24)
             if ok:
                 self.editor._push_undo()
@@ -993,16 +1008,16 @@ class BassLaneBackground(QGraphicsRectItem):
         self.setPos(x, y)
         self.setBrush(QBrush(QColor("#eaf3ff")))
         self.setPen(QPen(Qt.NoPen))
-        self.setToolTip(f"Pravý klik = přidat notu na struně {string} zde")
+        self.setToolTip(tr("bass_lane_bg.tooltip", string=string))
 
     def contextMenuEvent(self, ev):
         t = self.editor.snap_time(ev.pos().x() / self.editor.pps)
         menu = QMenu()
-        act = menu.addAction(f"➕ Přidat notu na struně {self.string} zde…")
+        act = menu.addAction(tr("menu.add_bass_note_here", string=self.string))
         paste_act = _add_paste_action(menu, self.editor)
         chosen = menu.exec(ev.screenPos())
         if chosen is act:
-            fret, ok = QInputDialog.getInt(None, "Pražec", "Číslo pražce (0 = prázdná struna):",
+            fret, ok = QInputDialog.getInt(None, tr("dialog.fret_title"), tr("dialog.fret_label"),
                                            0, 0, 24)
             if ok:
                 self.editor.add_bass_note(self.ti, self.string, fret, t)
@@ -1057,7 +1072,7 @@ def _add_paste_action(menu: QMenu, editor: "TimelineEditor"):
     if not editor._clipboard:
         return None
     menu.addSeparator()
-    return menu.addAction(f"📌 Vložit sem ({len(editor._clipboard)})")
+    return menu.addAction(tr("menu.paste_here", n=len(editor._clipboard)))
 
 
 class DrumRowBackground(QGraphicsRectItem):
@@ -1074,12 +1089,12 @@ class DrumRowBackground(QGraphicsRectItem):
         self.setPos(x, y)
         self.setBrush(QBrush(QColor("#fff4e6")))
         self.setPen(QPen(Qt.NoPen))
-        self.setToolTip(f"Pravý klik = přidat úder „{drum_name}“ zde")
+        self.setToolTip(tr("drum_row_bg.tooltip", drum=drum_name))
 
     def contextMenuEvent(self, ev):
         t = self.editor.snap_time(ev.pos().x() / self.editor.pps)
         menu = QMenu()
-        act = menu.addAction(f"➕ Přidat „{self.drum_name}“ zde")
+        act = menu.addAction(tr("menu.add_drum_hit_here", drum=self.drum_name))
         paste_act = _add_paste_action(menu, self.editor)
         chosen = menu.exec(ev.screenPos())
         if chosen is act:
@@ -1102,7 +1117,7 @@ class DisplayLaneBackground(QGraphicsRectItem):
         self.setPos(x, y)
         self.setBrush(QBrush(QColor("#f3e9fb")))
         self.setPen(QPen(Qt.NoPen))
-        self.setToolTip("Pravý klik = přidat klip displeje přesně sem")
+        self.setToolTip(tr("display_lane_bg.tooltip"))
 
     def _time_at(self, ev) -> float:
         return self.editor.snap_time(ev.pos().x() / self.editor.pps)
@@ -1110,7 +1125,7 @@ class DisplayLaneBackground(QGraphicsRectItem):
     def contextMenuEvent(self, ev):
         t = self._time_at(ev)
         menu = QMenu()
-        act = menu.addAction("➕ Přidat klip displeje zde")
+        act = menu.addAction(tr("menu.add_display_clip_here"))
         paste_act = _add_paste_action(menu, self.editor)
         chosen = menu.exec(ev.screenPos())
         if chosen is act:
@@ -1142,10 +1157,7 @@ class WaveformItem(QGraphicsRectItem):
         self.setZValue(5)
         self.setAcceptHoverEvents(True)
         self.setCursor(Qt.OpenHandCursor)
-        self.setToolTip(
-            "Táhni = posuň celou nahrávku v čase. Táhni DOLNÍ okraj = výška "
-            "řádku. Pravý klik = přesný posun/roztažení (±10 %, pro sladění "
-            "s kulatým BPM).")
+        self.setToolTip(tr("waveform.tooltip"))
         self._dragging_offset = False
         self._resizing_height = False
         self._drag_start_x = 0.0
@@ -1164,8 +1176,8 @@ class WaveformItem(QGraphicsRectItem):
         if not wf or len(wf) == 0:
             p.setPen(QPen(QColor("#8a97a3")))
             p.setFont(QFont("Segoe UI", 8))
-            msg = ("načítám tvar vlny…" if editor._waveform_loading else
-                  "(bez náhledu vlny — „🎵 Načíst MP3/WAV…“)")
+            msg = (tr("waveform.loading") if editor._waveform_loading else
+                  tr("waveform.no_preview"))
             p.drawText(r, Qt.AlignCenter, msg)
         elif x1 > x0:
             pps = editor.pps
@@ -1278,21 +1290,21 @@ class WaveformItem(QGraphicsRectItem):
     def contextMenuEvent(self, ev):
         t_click = ev.pos().x() / self.editor.pps
         menu = QMenu()
-        auto_act = menu.addAction("🥁 Automaticky zarovnat dle rytmu")
+        auto_act = menu.addAction(tr("menu.auto_align_rhythm"))
         menu.addSeparator()
         a_act = menu.addAction(
-            ("↻ " if self.editor._align_a else "📍 ") + "Nastavit bod A zde (nejbližší úder)")
+            ("↻ " if self.editor._align_a else "📍 ") + tr("menu.set_align_point_a"))
         b_act = menu.addAction(
-            ("↻ " if self.editor._align_b else "📍 ") + "Nastavit bod B zde (nejbližší úder)")
+            ("↻ " if self.editor._align_b else "📍 ") + tr("menu.set_align_point_b"))
         apply_act = None
         clear_act = None
         if self.editor._align_a and self.editor._align_b:
             menu.addSeparator()
-            apply_act = menu.addAction("🎯 Zarovnat dle bodů A + B (ruční)")
+            apply_act = menu.addAction(tr("menu.apply_align_points"))
         if self.editor._align_a or self.editor._align_b:
-            clear_act = menu.addAction("✖ Zrušit body zarovnání")
+            clear_act = menu.addAction(tr("menu.clear_align_points"))
         menu.addSeparator()
-        edit_act = menu.addAction("✎ Poloha/roztažení zvuku…")
+        edit_act = menu.addAction(tr("menu.waveform_position"))
         chosen = menu.exec(ev.screenPos())
         if chosen is auto_act:
             self.editor.auto_align_audio()
@@ -1321,14 +1333,15 @@ class PropertiesPanel(QWidget):
         self.setMinimumWidth(230)
         self.setMaximumWidth(340)
         root = QVBoxLayout(self)
-        title = QLabel("Vlastnosti")
+        title = QLabel()
+        tr_label(title, "properties_panel.title")
         title.setStyleSheet("font-weight:bold; padding:4px;")
         root.addWidget(title)
         self.form_host = QWidget()
         self.form = QFormLayout(self.form_host)
         root.addWidget(self.form_host)
-        self.placeholder = QLabel("Vyber jeden prvek na časové ose (text, "
-                                  "akord, úder bicích nebo klip displeje).")
+        self.placeholder = QLabel()
+        tr_label(self.placeholder, "properties_panel.placeholder")
         self.placeholder.setStyleSheet("color:#999999; padding:8px;")
         self.placeholder.setWordWrap(True)
         root.addWidget(self.placeholder)
@@ -1401,9 +1414,9 @@ class PropertiesPanel(QWidget):
         t_sb = self._time_spin(float(ev.get("time_s", 0.0)), on_time)
         d_sb = self._time_spin(float(ev.get("duration_s", 0.5)), on_dur)
 
-        self.form.addRow("Akord:" if is_chord else "Text:", text)
-        self.form.addRow("Čas (s):", t_sb)
-        self.form.addRow("Délka (s):", d_sb)
+        self.form.addRow(tr("properties_panel.chord_label") if is_chord else tr("properties_panel.text_label"), text)
+        self.form.addRow(tr("properties_panel.time_label"), t_sb)
+        self.form.addRow(tr("properties_panel.duration_label"), d_sb)
 
     def _build_drum_form(self, item: "DrumHitItem") -> None:
         ev = item.event
@@ -1440,9 +1453,9 @@ class PropertiesPanel(QWidget):
         t_sb = self._time_spin(float(ev.get("time_s", 0.0)), on_time)
         d_sb = self._time_spin(float(ev.get("duration_s", 0.2)), on_dur)
 
-        self.form.addRow("Buben:", combo)
-        self.form.addRow("Čas (s):", t_sb)
-        self.form.addRow("Délka (s):", d_sb)
+        self.form.addRow(tr("properties_panel.drum_label"), combo)
+        self.form.addRow(tr("properties_panel.time_label"), t_sb)
+        self.form.addRow(tr("properties_panel.duration_label"), d_sb)
 
     def _build_clip_form(self, item: "DisplayClipItem") -> None:
         clip = item.clip
@@ -1458,7 +1471,7 @@ class PropertiesPanel(QWidget):
         order = self.editor._track_order()
         names = self.editor._track_names()
         for ti in order:
-            src.addItem(f"{ti}. {names.get(ti, f'Stopa {ti}')}", ti)
+            src.addItem(f"{ti}. {names.get(ti, _track_fallback_name(ti))}", ti)
         cur_ti = clip.get("source_track", order[0] if order else 1)
         src.blockSignals(True)
         if cur_ti in order:
@@ -1473,7 +1486,7 @@ class PropertiesPanel(QWidget):
 
         mode = QComboBox()
         for key in MODE_ORDER:
-            mode.addItem(MODE_LABELS[key], key)
+            mode.addItem(_mode_label(key), key)
         cur_mode = clip.get("mode", "lyrics_chords")
         mode.blockSignals(True)
         if cur_mode in MODE_ORDER:
@@ -1499,11 +1512,11 @@ class PropertiesPanel(QWidget):
         start_sb = self._time_spin(float(clip.get("start_s", 0.0)), on_start)
         end_sb = self._time_spin(float(clip.get("end_s", 1.0)), on_end)
 
-        self.form.addRow("Popisek:", label)
-        self.form.addRow("Zdrojová stopa:", src)
-        self.form.addRow("Režim:", mode)
-        self.form.addRow("Začátek (s):", start_sb)
-        self.form.addRow("Konec (s):", end_sb)
+        self.form.addRow(tr("properties_panel.label_label"), label)
+        self.form.addRow(tr("properties_panel.source_track_label"), src)
+        self.form.addRow(tr("properties_panel.mode_label"), mode)
+        self.form.addRow(tr("properties_panel.start_label"), start_sb)
+        self.form.addRow(tr("properties_panel.end_label"), end_sb)
 
 
 class TimelineView(QGraphicsView):
@@ -1610,35 +1623,35 @@ class TrackMixPanel(QWidget):
         self._clear()
         ed = self.editor
 
-        name = QLabel("🎵 Nahrávka")
-        mute = QCheckBox("mute")
+        name = QLabel(tr("mix_panel.recording"))
+        mute = QCheckBox(tr("mix_panel.mute"))
         mute.setChecked(ed._rec_muted)
         mute.toggled.connect(ed._on_rec_mute)
         vol = self._vol_slider(ed._rec_volume, ed._on_rec_volume)
         self._add_row([name, mute, vol])
 
-        name = QLabel("🎼 GP bicí mix")
-        mute = QCheckBox("mute")
+        name = QLabel(tr("mix_panel.gp_drum_mix"))
+        mute = QCheckBox(tr("mix_panel.mute"))
         mute.setChecked(ed._gp_muted)
         mute.toggled.connect(ed._on_gp_mute)
         vol = self._vol_slider(ed._gp_volume, ed._on_gp_volume)
         self._add_row([name, mute, vol])
 
-        name = QLabel("🥁 Bicí (editace)")
+        name = QLabel(tr("mix_panel.drums_editing"))
         vol = self._vol_slider(ed._drum_click_volume, ed._on_drum_click_volume)
         self._add_row([name, vol])
 
-        sep = QLabel("— stopy —")
+        sep = QLabel(tr("mix_panel.tracks_separator"))
         sep.setStyleSheet("color:#8a8a8a; font-size:10px;")
         self.vbox.addWidget(sep)
 
         names = ed._track_names()
         for ti in ed._track_order():
             is_drums = ed._track_is_drums(ti)
-            label = ("🥁 " if is_drums else "") + names.get(ti, f"Stopa {ti}")
+            label = ("🥁 " if is_drums else "") + names.get(ti, _track_fallback_name(ti))
             name = QLabel(label)
             name.setWordWrap(True)
-            hide = QCheckBox("skrýt")
+            hide = QCheckBox(tr("mix_panel.hide"))
             hide.setChecked(ti in ed._hidden_tracks)
             hide.toggled.connect(lambda checked, t=ti: ed._on_track_hide_toggle(t, checked))
             self._add_row([name, hide])
@@ -1932,7 +1945,8 @@ class TimelineEditor(QWidget):
         gp_mix_btn.clicked.connect(self._load_gp_mix)
         audio_bar.addWidget(gp_mix_btn)
 
-        self.gp_audio_label = QLabel("(GP mix nevygenerován)")
+        self.gp_audio_label = QLabel()
+        tr_label(self.gp_audio_label, "audio.gp_mix_not_generated")
         self.gp_audio_label.setStyleSheet("color:#999999;")
         audio_bar.addWidget(self.gp_audio_label)
 
@@ -1942,7 +1956,7 @@ class TimelineEditor(QWidget):
         rec_vol.setRange(0, 100)
         rec_vol.setValue(100)
         rec_vol.setMaximumWidth(70)
-        rec_vol.setToolTip("Hlasitost nahrávky")
+        rec_vol.setToolTip(tr("audio.rec_volume.tooltip"))
         rec_vol.valueChanged.connect(self._on_rec_volume)
         audio_bar.addWidget(rec_vol)
 
@@ -1951,7 +1965,7 @@ class TimelineEditor(QWidget):
         gp_vol.setRange(0, 100)
         gp_vol.setValue(100)
         gp_vol.setMaximumWidth(70)
-        gp_vol.setToolTip("Hlasitost GP bicí mixu")
+        gp_vol.setToolTip(tr("audio.gp_volume.tooltip"))
         gp_vol.valueChanged.connect(self._on_gp_volume)
         audio_bar.addWidget(gp_vol)
 
@@ -1985,7 +1999,7 @@ class TimelineEditor(QWidget):
         self._align_a = None
         self._align_b = None
         if hasattr(self, "audio_label"):
-            self.audio_label.setText("(žádné audio)")
+            self.audio_label.setText(tr("audio.no_audio"))
             self.audio_label.setStyleSheet("color:#999999;")
         # GP mix je vyrenderovaný ze STARÝCH dat — po načtení jiné/nové
         # písně už neplatí, nesmí zůstat hrát/nabídnutý ke starým bicím.
@@ -1993,7 +2007,7 @@ class TimelineEditor(QWidget):
         self.gp_player.setSource(QUrl())
         self.gp_audio_path = None
         if hasattr(self, "gp_audio_label"):
-            self.gp_audio_label.setText("(GP mix nevygenerován)")
+            self.gp_audio_label.setText(tr("audio.gp_mix_not_generated"))
             self.gp_audio_label.setStyleSheet("color:#999999;")
         self.data = data or {}
         self.tracks = self.data.get("tracks", []) or []
@@ -2042,10 +2056,10 @@ class TimelineEditor(QWidget):
     # --- master "Displej" stopa (Vegas program) ---
 
     def _track_names(self) -> dict[int, str]:
-        names = {t.get("index", i + 1): (t.get("name") or f"Stopa {i + 1}")
+        names = {t.get("index", i + 1): (t.get("name") or _track_fallback_name(i + 1))
                  for i, t in enumerate(self.tracks)}
         for ti in self._track_order():
-            names.setdefault(ti, f"Stopa {ti}")
+            names.setdefault(ti, _track_fallback_name(ti))
         return names
 
     def _song_end(self) -> float:
@@ -2681,15 +2695,15 @@ class TimelineEditor(QWidget):
             if ti in self._hidden_tracks:
                 continue
             if self._track_is_drums(ti):
-                self._draw_drums_lane(ti, top, names.get(ti, f"Stopa {ti}"), total_w, h_slot)
+                self._draw_drums_lane(ti, top, names.get(ti, _track_fallback_name(ti)), total_w, h_slot)
             elif self._track_is_bass(ti):
-                self._draw_bass_lane(ti, top, names.get(ti, f"Stopa {ti}"), total_w, h_slot)
+                self._draw_bass_lane(ti, top, names.get(ti, _track_fallback_name(ti)), total_w, h_slot)
             else:
                 line_y = top + 2
                 chord_y = line_y + LINE_H
                 lyric_y = chord_y + CHORD_H
                 self._track_lane[ti] = {"line_y": line_y, "chord_y": chord_y, "lyric_y": lyric_y}
-                self._draw_lane_bg(ti, top, names.get(ti, f"Stopa {ti}"), total_w)
+                self._draw_lane_bg(ti, top, names.get(ti, _track_fallback_name(ti)), total_w)
             top += h_slot
 
         # bloky (akordy, slova)
@@ -2885,7 +2899,7 @@ class TimelineEditor(QWidget):
         for i, dev in enumerate(outputs):
             label = dev.description()
             if dev.id() == default_id:
-                label += "  (výchozí)"
+                label += "  " + tr("audio.device_default_suffix")
             self.device_combo.addItem(label, dev)
             if dev.id() == current_id:
                 sel = i
@@ -2977,7 +2991,7 @@ class TimelineEditor(QWidget):
 
     def _load_audio_dialog(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Načíst zvuk k písni", "", "Audio (*.mp3 *.wav)")
+            self, tr("dialog.load_audio_title"), "", tr("dialog.load_audio_filter"))
         if path:
             self.load_audio(path)
 
@@ -3010,9 +3024,8 @@ class TimelineEditor(QWidget):
         pro ČLOVĚKA, nemá nic sama od sebe ovlivňovat."""
         if not self.data.get("drums_timeline"):
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.information(self, "GP bicí mix",
-                                   "V datech není žádná stopa bicích (drums_timeline) — "
-                                   "není co vygenerovat.")
+            QMessageBox.information(self, tr("dialog.gp_drum_mix_title"),
+                                   tr("dialog.gp_drum_mix_no_data"))
             return
         from PySide6.QtWidgets import QApplication
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -3023,7 +3036,7 @@ class TimelineEditor(QWidget):
             QApplication.restoreOverrideCursor()
         self.gp_audio_path = path
         self.gp_player.setSource(QUrl.fromLocalFile(path))
-        self.gp_audio_label.setText(f"GP mix: {duration:.1f}s bicí ({self.bpm:g} BPM)")
+        self.gp_audio_label.setText(tr("audio.gp_mix_generated", dur=f"{duration:.1f}", bpm=f"{self.bpm:g}"))
         self.gp_audio_label.setStyleSheet("color:#2d7d2d;")
         self._seek_audio(self.playhead_s)
 
@@ -3058,7 +3071,7 @@ class TimelineEditor(QWidget):
     def _on_gp_audio_error(self, error, error_string: str) -> None:
         if error == QMediaPlayer.Error.NoError:
             return
-        self.gp_audio_label.setText(f"⚠ GP mix: {error_string}")
+        self.gp_audio_label.setText(tr("audio.gp_mix_error", error=error_string))
         self.gp_audio_label.setStyleSheet("color:#c01c28;")
 
     def _on_waveform_ready(self, data: WaveformData) -> None:
@@ -3080,8 +3093,8 @@ class TimelineEditor(QWidget):
         rozhodnutí (přetypovat tempo, ověřit repetice v GP…) udělat sám."""
         from PySide6.QtWidgets import QMessageBox
         if self.waveform is None or len(self.waveform) == 0:
-            QMessageBox.information(self, "Ověření délky",
-                                   "Nejdřív načti MP3/WAV — bez nahrávky není s čím srovnávat.")
+            QMessageBox.information(self, tr("dialog.check_duration_title"),
+                                   tr("dialog.check_duration_no_audio"))
             return
         computed_end = self._song_end()
         computed_audio_end = self._timeline_to_audio_t(computed_end)
@@ -3091,12 +3104,9 @@ class TimelineEditor(QWidget):
         ratio = computed_audio_end / real_dur
         pct_off = (ratio - 1.0) * 100.0
 
-        QMessageBox.information(self, "Ověření délky proti nahrávce",
-            f"Vypočtená délka podle tempa/taktů: {computed_end:.1f} s (při {self.bpm:g} BPM)\n"
-            f"Délka načtené nahrávky: {real_dur:.1f} s\n"
-            f"Rozdíl: {pct_off:+.1f} %\n\n"
-            "Jen informativní — nic se tím automaticky nemění. Případnou "
-            "opravu (tempo, repetice v GP…) udělej ručně podle vlastního úsudku.")
+        QMessageBox.information(self, tr("dialog.check_duration_result_title"),
+            tr("dialog.check_duration_result_body", computed_end=f"{computed_end:.1f}",
+               bpm=f"{self.bpm:g}", real_dur=f"{real_dur:.1f}", pct_off=f"{pct_off:+.1f}"))
 
     def _on_waveform_failed(self, msg: str) -> None:
         self.waveform = None
@@ -3107,7 +3117,7 @@ class TimelineEditor(QWidget):
     def _on_audio_error(self, error, error_string: str) -> None:
         if error == QMediaPlayer.Error.NoError:
             return
-        self.audio_label.setText(f"⚠ audio: {error_string}")
+        self.audio_label.setText(tr("audio.error", error=error_string))
         self.audio_label.setStyleSheet("color:#c01c28;")
 
     def _on_playback_state_changed(self, _state=None) -> None:
@@ -3165,13 +3175,10 @@ class TimelineEditor(QWidget):
         (přes `undo()` — první živá změna push-ne jeden undo krok, další
         živé změny už ne, takže Cancel = jeden Ctrl+Z, ne hromada kroků)."""
         dlg = QDialog(self)
-        dlg.setWindowTitle("Poloha a roztažení nahrávky")
+        dlg.setWindowTitle(tr("dialog.waveform_title"))
         form = QFormLayout(dlg)
 
-        info = QLabel(
-            "Posune/roztáhne CELOU nahrávku na časové ose (žádný střih). "
-            "Roztažení mění i rychlost přehrávání, aby zvuk a vlnovka "
-            "zůstaly synchronní. Náhled vlevo nahoře se mění živě.")
+        info = QLabel(tr("dialog.waveform_info"))
         info.setWordWrap(True)
         info.setStyleSheet("color:#aaaaaa;")
         form.addRow(info)
@@ -3181,7 +3188,7 @@ class TimelineEditor(QWidget):
         offset_sb.setDecimals(3)
         offset_sb.setSuffix(" s")
         offset_sb.setValue(self.audio_offset_s)
-        form.addRow("Posun (kdy v písni začíná t=0 nahrávky):", offset_sb)
+        form.addRow(tr("dialog.waveform_offset_label"), offset_sb)
 
         stretch_sb = QDoubleSpinBox()
         stretch_sb.setRange(AUDIO_STRETCH_MIN * 100.0, AUDIO_STRETCH_MAX * 100.0)
@@ -3189,7 +3196,7 @@ class TimelineEditor(QWidget):
         stretch_sb.setSingleStep(0.1)
         stretch_sb.setSuffix(" %")
         stretch_sb.setValue(self.audio_stretch * 100.0)
-        form.addRow("Roztažení délky (100 % = beze změny, ±10 %):", stretch_sb)
+        form.addRow(tr("dialog.waveform_stretch_label"), stretch_sb)
 
         dur = self.waveform.duration_s if self.waveform else None
         preview = QLabel()
@@ -3198,10 +3205,10 @@ class TimelineEditor(QWidget):
         def refresh_preview():
             if dur:
                 new_dur = dur * (stretch_sb.value() / 100.0)
-                preview.setText(f"Délka nahrávky: {dur:.1f} s → po roztažení {new_dur:.1f} s "
-                                f"(rychlost přehrávání ×{100.0 / stretch_sb.value():.3f})")
+                preview.setText(tr("dialog.waveform_preview", dur=f"{dur:.1f}", new_dur=f"{new_dur:.1f}",
+                                   speed=f"{100.0 / stretch_sb.value():.3f}"))
             else:
-                preview.setText("(délka nahrávky se ještě zjišťuje…)")
+                preview.setText(tr("dialog.waveform_preview_pending"))
 
         undo_pushed = False
 
@@ -3270,10 +3277,8 @@ class TimelineEditor(QWidget):
         g2, a2 = self._align_b
         if abs(a2 - a1) < 0.05:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Zarovnání nahrávky",
-                               "Body A a B jsou v nahrávce moc blízko sebe — "
-                               "vyber je co nejdál od sebe (např. začátek a "
-                               "konec písně), ať je výpočet přesný.")
+            QMessageBox.warning(self, tr("dialog.align_audio_title"),
+                               tr("dialog.align_points_too_close_body"))
             return
         stretch = (g2 - g1) / (a2 - a1)
         stretch_clamped = max(AUDIO_STRETCH_MIN, min(AUDIO_STRETCH_MAX, stretch))
@@ -3290,11 +3295,10 @@ class TimelineEditor(QWidget):
         self._relayout()
         if abs(stretch - stretch_clamped) > 0.001:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.information(self, "Zarovnání nahrávky",
-                                   f"Vypočtené natažení ({stretch * 100:.1f} %) je mimo "
-                                   f"povolený rozsah ±10 % — použito {stretch_clamped * 100:.1f} % "
-                                   "(krajní povolená hodnota). Body A/B asi nesedí na "
-                                   "stejné takty jako na mřížce, zkus je nastavit znovu.")
+            QMessageBox.information(self, tr("dialog.align_audio_title"),
+                                   tr("dialog.align_stretch_clamped_body",
+                                      stretch=f"{stretch * 100:.1f}",
+                                      stretch_clamped=f"{stretch_clamped * 100:.1f}"))
 
     def auto_align_audio(self) -> None:
         """PLNĚ AUTOMATICKÉ zarovnání — žádné ruční klikání na body. Najde
@@ -3304,39 +3308,33 @@ class TimelineEditor(QWidget):
         (`waveform.estimate_alignment` — "comb filter" odhad)."""
         if self.waveform is None or len(self.waveform) == 0:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.information(self, "Automatické zarovnání",
-                                   "Nejdřív načti MP3/WAV („🎵 Načíst MP3/WAV…“) — "
-                                   "bez nahrávky není co analyzovat.")
+            QMessageBox.information(self, tr("dialog.auto_align_title"),
+                                   tr("dialog.auto_align_no_audio_body"))
             return
 
         onsets = self.waveform.detect_onsets()
         result = estimate_alignment(onsets, self.beat_s, AUDIO_STRETCH_MIN, AUDIO_STRETCH_MAX)
         if result is None:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.information(self, "Automatické zarovnání",
-                                   f"Nalezeno jen {len(onsets)} výrazných úderů — na "
-                                   "spolehlivý odhad je potřeba aspoň 4. Zkus ruční "
-                                   "zarovnání (pravý klik na vlnovku → bod A/B).")
+            QMessageBox.information(self, tr("dialog.auto_align_title"),
+                                   tr("dialog.auto_align_too_few_onsets_body", n=len(onsets)))
             return
 
         dlg = QDialog(self)
-        dlg.setWindowTitle("Automatické zarovnání dle rytmu")
+        dlg.setWindowTitle(tr("dialog.auto_align_rhythm_title"))
         form = QFormLayout(dlg)
         pct = result["confidence"] * 100.0
         form.addRow(QLabel(
-            f"Nalezeno {len(onsets)} úderů, {result['matched']} z nich "
-            f"({pct:.0f} %) sedí na mřížku takového zarovnání:"))
-        form.addRow("Roztažení:", QLabel(f"{result['stretch'] * 100:.2f} %"))
-        form.addRow("Posun:", QLabel(f"{result['offset']:.3f} s"))
+            tr("dialog.auto_align_summary", n=len(onsets), matched=result['matched'], pct=f"{pct:.0f}")))
+        form.addRow(tr("dialog.auto_align_stretch_label"), QLabel(f"{result['stretch'] * 100:.2f} %"))
+        form.addRow(tr("dialog.auto_align_offset_label"), QLabel(f"{result['offset']:.3f} s"))
         if pct < 50:
-            warn = QLabel("⚠ Nízká shoda — nahrávka možná nemá pravidelný rytmus "
-                          "nebo tempo v projektu neodpovídá skutečnosti. Zkontroluj "
-                          "výsledek poslechem, případně zkus ruční zarovnání.")
+            warn = QLabel(tr("dialog.auto_align_low_confidence_warning"))
             warn.setWordWrap(True)
             warn.setStyleSheet("color:#c64600;")
             form.addRow(warn)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Ok).setText("Použít")
+        bb.button(QDialogButtonBox.Ok).setText(tr("dialog.auto_align_apply_btn"))
         bb.accepted.connect(dlg.accept)
         bb.rejected.connect(dlg.reject)
         form.addRow(bb)
@@ -3551,11 +3549,10 @@ class TimelineEditor(QWidget):
                 st.setBrush(QBrush(QColor("#c64600")))
                 self._register_header_item(st, 6)
             if self.waveform is not None and self.waveform.display_gain > 1.05:
-                g = self.scene.addSimpleText(f"zobrazení ×{self.waveform.display_gain:.1f}")
+                g = self.scene.addSimpleText(tr("waveform.display_gain_label", gain=f"{self.waveform.display_gain:.1f}"))
                 g.setFont(QFont("Segoe UI", 7))
                 g.setPos(6, top + 31)
-                g.setToolTip("Automatické zesílení jen v grafice (tichá "
-                            "nahrávka) — hlasitost přehrávání se nemění.")
+                g.setToolTip(tr("waveform.display_gain.tooltip"))
                 g.setBrush(QBrush(QColor("#888888")))
                 self._register_header_item(g, 6)
 
@@ -3826,8 +3823,8 @@ class TimelineEditor(QWidget):
 
     def _shift_drum_track_dialog(self, ti: int) -> None:
         delta, ok = QInputDialog.getDouble(
-            self, "Posunout stopu bicích",
-            "Posun v sekundách (kladné = později, záporné = dřív):",
+            self, tr("dialog.shift_drum_track_title"),
+            tr("dialog.shift_drum_track_label"),
             0.0, -60.0, 60.0, 3)
         if ok and delta:
             self.shift_drum_track(ti, delta)
@@ -3975,13 +3972,13 @@ class TimelineEditor(QWidget):
 
     def edit_block(self, block: BlockItem) -> None:
         if block.kind == "chord":
-            text, ok = QInputDialog.getText(self, "Editace akordu", "Akord:",
+            text, ok = QInputDialog.getText(self, tr("dialog.edit_chord_title"), tr("dialog.edit_chord_label"),
                                             text=block.event.get("chord", ""))
             if ok:
                 self._push_undo()
                 block.event["chord"] = text.strip()
         else:
-            text, ok = QInputDialog.getText(self, "Editace textu", "Text řádku:",
+            text, ok = QInputDialog.getText(self, tr("dialog.edit_text_title"), tr("dialog.edit_text_label"),
                                             text=block.event.get("text", ""))
             if ok:
                 self._push_undo()
@@ -4080,26 +4077,26 @@ class TimelineEditor(QWidget):
         names = self._track_names()
 
         dlg = QDialog(self)
-        dlg.setWindowTitle("Klip displeje — co a odkud se zobrazí")
+        dlg.setWindowTitle(tr("dialog.edit_clip_title"))
         form = QFormLayout(dlg)
 
         src = QComboBox()
         for ti in order:
-            src.addItem(f"{ti}. {names.get(ti, f'Stopa {ti}')}", ti)
+            src.addItem(f"{ti}. {names.get(ti, _track_fallback_name(ti))}", ti)
         cur_ti = clip.get("source_track", order[0] if order else 1)
         src.setCurrentIndex(order.index(cur_ti) if cur_ti in order else 0)
 
         mode = QComboBox()
         for key in MODE_ORDER:
-            mode.addItem(MODE_LABELS[key], key)
+            mode.addItem(_mode_label(key), key)
         cur_mode = clip.get("mode", "lyrics_chords")
         mode.setCurrentIndex(MODE_ORDER.index(cur_mode) if cur_mode in MODE_ORDER else 0)
 
         label = QLineEdit(clip.get("label", ""))
 
-        form.addRow("Zdrojová stopa:", src)
-        form.addRow("Režim zobrazení:", mode)
-        form.addRow("Popisek:", label)
+        form.addRow(tr("dialog.edit_clip_source_track"), src)
+        form.addRow(tr("dialog.edit_clip_mode"), mode)
+        form.addRow(tr("dialog.edit_clip_label"), label)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(dlg.accept)
         bb.rejected.connect(dlg.reject)
@@ -4157,23 +4154,21 @@ class TimelineEditor(QWidget):
             QDialog, QFormLayout, QComboBox, QDialogButtonBox, QLabel,
         )
         dlg = QDialog(self)
-        dlg.setWindowTitle("Přichytit na mřížku")
+        dlg.setWindowTitle(tr("dialog.auto_time_title"))
         form = QFormLayout(dlg)
-        info = QLabel(
-            "Přichytí začátky textových bloků na mřížku podle tempa (beat/takt).\n"
-            "Řádky/akordy pak leží přesně na hudební mřížce — žádné odhady."
-        )
+        info = QLabel(tr("dialog.auto_time_info"))
         info.setStyleSheet("color:#aaaaaa;")
         form.addRow(info)
 
         sub = QComboBox()
-        for lbl, v in [("1 takt", 0.25), ("1 beat", 1), ("1/2 beatu", 2), ("1/4 beatu", 4)]:
+        for lbl, v in [(tr("dialog.auto_time_grid_bar"), 0.25), (tr("dialog.auto_time_grid_beat"), 1),
+                       (tr("dialog.auto_time_grid_half_beat"), 2), (tr("dialog.auto_time_grid_quarter_beat"), 4)]:
             sub.addItem(lbl, v)
         sub.setCurrentIndex(1)
-        form.addRow("Mřížka:", sub)
+        form.addRow(tr("dialog.auto_time_grid_label"), sub)
 
         bpm = (self.data.get("meta", {}) or {}).get("tempo_bpm", 120) or 120
-        form.addRow(QLabel(f"Tempo: {bpm} BPM  →  1 beat = {60.0 / bpm:.3f} s"))
+        form.addRow(QLabel(tr("dialog.auto_time_tempo_info", bpm=bpm, beat_s=f"{60.0 / bpm:.3f}")))
 
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(dlg.accept)
@@ -4206,21 +4201,17 @@ class TimelineEditor(QWidget):
 
     def bpm_dialog(self) -> None:
         dlg = QDialog(self)
-        dlg.setWindowTitle("Změnit tempo (BPM)")
+        dlg.setWindowTitle(tr("dialog.bpm_title"))
         form = QFormLayout(dlg)
 
         spin = QSpinBox()
         spin.setRange(20, 300)
         spin.setValue(int(round(self.bpm)))
-        form.addRow("Nové BPM:", spin)
+        form.addRow(tr("dialog.bpm_new_label"), spin)
 
-        rescale = QCheckBox("Přepočítat existující časy proporcionálně")
+        rescale = QCheckBox(tr("dialog.bpm_rescale_checkbox"))
         rescale.setChecked(True)
-        rescale.setToolTip(
-            "Zaškrtnuto: všechny časy (text, akordy, bicí, basa, klipy) se "
-            "přepočítají poměrem staré/nové tempo — dosavadní hudební poloha "
-            "zůstane zachována.\nOdškrtnuto: jen se změní BPM/mřížka, časy "
-            "zůstanou beze změny.")
+        rescale.setToolTip(tr("dialog.bpm_rescale.tooltip"))
         form.addRow(rescale)
 
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -4275,32 +4266,27 @@ class TimelineEditor(QWidget):
     def count_in_dialog(self) -> None:
         meta = self.data.get("meta", {}) or {}
         dlg = QDialog(self)
-        dlg.setWindowTitle("Odpočet (count-in) před písní")
+        dlg.setWindowTitle(tr("dialog.count_in_title"))
         form = QFormLayout(dlg)
 
-        info = QLabel(
-            "Vloží pár taktů „ťukání“ (zavřená hajtka) před první notu a "
-            "automaticky posune VŠECHNY existující stopy/prvky o stejný čas "
-            "— nic není třeba ručně přesouvat. Na displeji se v tomto úseku "
-            "místo textu/akordů zobrazí interpret + název a odpočet čísel "
-            "podle tempa (4, 3, 2, 1…).")
+        info = QLabel(tr("dialog.count_in_info"))
         info.setWordWrap(True)
         info.setStyleSheet("color:#aaaaaa;")
         form.addRow(info)
 
         bars_sb = QSpinBox()
         bars_sb.setRange(0, 8)
-        bars_sb.setToolTip("0 = odstranit odpočet")
+        bars_sb.setToolTip(tr("dialog.count_in_bars.tooltip"))
         bars_sb.setValue(int(meta.get("count_in_bars", 0) or 0) or 1)
-        form.addRow("Počet taktů:", bars_sb)
+        form.addRow(tr("dialog.count_in_bars_label"), bars_sb)
 
         artist_edit = QLineEdit(meta.get("artist", "") or "")
         title_edit = QLineEdit(meta.get("title", "") or "")
-        form.addRow("Interpret:", artist_edit)
-        form.addRow("Píseň:", title_edit)
+        form.addRow(tr("dialog.count_in_artist_label"), artist_edit)
+        form.addRow(tr("dialog.count_in_title_label"), title_edit)
 
-        form.addRow(QLabel(f"Tempo: {self.bpm:g} BPM · {self.beats_per_measure}/4  →  "
-                           f"1 takt = {self.bar_s:.3f} s"))
+        form.addRow(QLabel(tr("dialog.count_in_tempo_info", bpm=f"{self.bpm:g}",
+                              beats_per_measure=self.beats_per_measure, bar_s=f"{self.bar_s:.3f}")))
 
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(dlg.accept)
@@ -4639,14 +4625,14 @@ class TimelineEditor(QWidget):
         if not sel:
             return
         dlg = QDialog(self)
-        dlg.setWindowTitle(f"Posunout vybrané prvky ({len(sel)})")
+        dlg.setWindowTitle(tr("dialog.shift_selected_title", n=len(sel)))
         form = QFormLayout(dlg)
         spin = QDoubleSpinBox()
         spin.setRange(-9999.0, 9999.0)
         spin.setDecimals(3)
         spin.setSuffix(" s")
         spin.setValue(0.0)
-        form.addRow(f"Posun ({len(sel)}× vybráno, + = později, − = dřív):", spin)
+        form.addRow(tr("dialog.shift_selected_label", n=len(sel)), spin)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(dlg.accept)
         bb.rejected.connect(dlg.reject)

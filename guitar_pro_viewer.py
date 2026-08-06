@@ -14,7 +14,7 @@ import guitarpro.models as gpm
 from web_import import WebImportDialog
 from timeline_editor import TimelineEditor
 from i18n import (tr, tr_action, register_tr, tr_label, tr_dock_title, tr_tab,
-                   tr_window_title, get_language, set_language)
+                   tr_window_title, get_language, set_language, available_languages)
 from icons import icon, std_icon
 
 from PySide6.QtWidgets import (
@@ -589,6 +589,16 @@ class GuitarProViewer(QMainWindow):
         if idx >= 0:
             self.doc_tabs.setTabText(idx, self._tab_label_for(ed))
 
+    def _refresh_all_tab_labels(self) -> None:
+        """Přeznačí VŠECHNY karty — volá se i po přepnutí jazyka (viz
+        `register_tr` v `_setup_ui`), aby se přeložil i popisek karty bez
+        názvu ("Bez názvu"/"Untitled"/…); ten se jinak nastaví jen jednou
+        při vytvoření karty a v registru překladů by sám o sobě nebyl."""
+        for i in range(self.doc_tabs.count()):
+            ed = self.doc_tabs.widget(i)
+            if ed is not None:
+                self.doc_tabs.setTabText(i, self._tab_label_for(ed))
+
     def _confirm_discard(self, ed: TimelineEditor) -> bool:
         """Karta `ed` má neuložené změny — zeptá se Uložit/Zahodit/Zrušit.
         Vrací True, když je bezpečné pokračovat v zavření (uloženo, NEBO
@@ -839,6 +849,13 @@ class GuitarProViewer(QMainWindow):
         # `_on_active_tab_changed` sahá.
         self.doc_tabs.currentChanged.connect(self._on_active_tab_changed)
 
+        # Popisky karet nejsou obyčejný `register_tr(widget.setText, …)` —
+        # skládají se z názvu písně + značky neuložených změn a jen kartu
+        # BEZ názvu je potřeba přeložit. Registrujeme proto přeznačení
+        # všech karet na klíč "tab.untitled": při přepnutí jazyka registr
+        # zavolá tuhle lambdu a popisky se přepočítají.
+        register_tr(lambda _text: self._refresh_all_tab_labels(), "tab.untitled")
+
     def _build_menus(self) -> None:
         """Kompletní menu bar + toolbary — sjednocuje dřívější File menu
         (guitar_pro_viewer.py) s tím, co dřív bylo natvrdo napsané tlačítka
@@ -1015,18 +1032,23 @@ class GuitarProViewer(QMainWindow):
         view_menu.addAction(act_zoom_out)
         view_menu.addSeparator()
 
+        # Nabídka jazyků se staví z TOHO, CO SE NAŠLO v adresáři `lang/`
+        # (viz i18n.available_languages) — přidání jazyka je tedy jen
+        # přidání souboru `lang/<kód>.json`, BEZ zásahu do kódu. Názvy
+        # jazyků se schválně NEpřekládají (každý je psaný sám v sobě —
+        # "Deutsch", "Español"…), aby je našel i ten, kdo appku omylem
+        # přepnul do jazyka, kterému nerozumí.
         lang_menu = view_menu.addMenu("")
         register_tr(lang_menu.setTitle, "view.language_submenu")
         lang_group = QActionGroup(self)
         lang_group.setExclusive(True)
-        act_lang_cs = tr_action(self, "view.language_cs", checkable=True)
-        act_lang_en = tr_action(self, "view.language_en", checkable=True)
-        for act in (act_lang_cs, act_lang_en):
+        for code, name in available_languages():
+            act = QAction(name, self)
+            act.setCheckable(True)
+            act.setChecked(code == get_language())
             act.setActionGroup(lang_group)
+            act.triggered.connect(lambda _checked=False, c=code: set_language(c))
             lang_menu.addAction(act)
-        (act_lang_cs if get_language() == "cs" else act_lang_en).setChecked(True)
-        act_lang_cs.triggered.connect(lambda: set_language("cs"))
-        act_lang_en.triggered.connect(lambda: set_language("en"))
 
         # --- Nápověda / Help ---
         help_menu = menubar.addMenu("")

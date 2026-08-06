@@ -5,8 +5,11 @@ a jejich export do **JSON** pro karaoke systémy — text, akordy a bicí (např
 přehrávač na ESP32 ze SD karty). Součástí je i **import akordů a textu z webu**
 a **dávkové stažení celého interpreta**.
 
-Aplikace je **dvojjazyčná (česky / anglicky)** — přepínač je v menu
-**Zobrazit ▸ Jazyk**, volba se pamatuje mezi spuštěními (`settings.json`).
+Aplikace je **vícejazyčná** — česky, anglicky, německy, španělsky a polsky.
+Přepínač je v menu **Zobrazit ▸ Jazyk**, volba se pamatuje mezi spuštěními
+(`settings.json`). Překlady jsou v `lang/*.json`, mimo kód —
+**přidání dalšího jazyka nevyžaduje žádný zásah do Pythonu** (viz
+[Překlady a přidání jazyka](#překlady-a-přidání-jazyka)).
 
 ---
 
@@ -193,7 +196,9 @@ editoru — to je jediný formát, který appka doopravdy "otevírá"/"ukládá"
 | `web_import.py` | Import z webu, detekce akordů, JSON export, stažení interpreta |
 | `jog_shuttle.py` | Kruhový jog/shuttle transportní ovladač (styl Sony) |
 | `waveform.py` | Dekódování audia, vlnovka, detekce úderů, odhad zarovnání dle rytmu |
-| `i18n.py` | Dvojjazyčnost (CS/EN) — `tr()` slovník + živé přepínání za běhu |
+| `i18n.py` | Vícejazyčnost — načítání `lang/*.json`, `tr()` + živé přepínání za běhu |
+| `lang/*.json` | Překlady, jeden soubor = jeden jazyk (`cs`, `en`, `de`, `es`, `pl`) |
+| `tools/check_translations.py` | Kontrola překladů (chybějící klíče, zástupné symboly) |
 | `icons.py` | Pomůcky pro ikony (systémové Qt + vlastní SVG) |
 | `assets/icons/` | Vlastní ploché SVG ikony pro menu/toolbary |
 | `assets/drum_icons/` | Ikonky bubnů kreslené na časovou osu |
@@ -217,7 +222,7 @@ Všechny akce jsou v hlavním menu (a zároveň jako ikony v toolbarech
 | **Soubor** | Nová píseň z webu/textu (`Ctrl+N`), Sloučit s webem (`Ctrl+M`) · Otevřít… (`Ctrl+O`, JSON), Importovat z Guitar Pro… (`Ctrl+I`) · Uložit (`Ctrl+S`), Uložit jako… (`Ctrl+Shift+S`) · Konec (`Ctrl+Q`) |
 | **Úpravy** | Zpět (`Ctrl+Z`), Znovu (`Ctrl+Shift+Z`/`Ctrl+Y`) · Vybrat vše (`Ctrl+A`), Kopírovat (`Ctrl+C`), Vyjmout (`Ctrl+X`), Vložit (`Ctrl+V`) · Rozdělit v kurzoru (`S`), Smazat vybrané (`Del`), Posunout vybrané… · ✎ Upravit text a akordy… (`Ctrl+Shift+T`) |
 | **Časová osa** | ＋ Klip displeje (`Ctrl+D`, nebo pravý klik přímo na Displej stopu = klip přesně tam), 🔄 Zarovnat displej, 🔄🗑 Znovu poskládat Displej stopu · ＋ Text, ＋ Akord · ⏱ Na mřížku…, ✏️ Tempo…, 🥁⏱ Odpočet…, Přichytit k mřížce ▸ |
-| **Zobrazit** | Panel stop, Panel náhledů · Přiblížit (`Ctrl+=`), Oddálit (`Ctrl+-`) · **Jazyk ▸ Čeština / English** |
+| **Zobrazit** | Panel stop, Panel náhledů · Přiblížit (`Ctrl+=`), Oddálit (`Ctrl+-`) · **Jazyk ▸** (Čeština / English / Deutsch / Español / Polski) |
 | **Nápověda** | Nápověda k časové ose (strukturovaná, s tabulkou zkratek), O aplikaci |
 
 Přímo v ose navíc: `]` / `[` = hromadný výběr od prvku dál/dříve v čase,
@@ -244,6 +249,41 @@ Každá otevřená píseň je vlastní **karta** nahoře nad časovou osou:
 - **•** před názvem karty = neuložené změny. Zavření takové karty (×) se
   zeptá Uložit / Zahodit / Zrušit; stejně tak zavření celé appky, když je
   rozdělaných karet víc.
+
+---
+
+## Překlady a přidání jazyka
+
+Všechny texty rozhraní jsou **mimo kód**, v `lang/*.json` — jeden soubor =
+jeden jazyk, název souboru = kód jazyka. Dodávané jazyky: `cs`, `en`, `de`,
+`es`, `pl`.
+
+**Přidání nového jazyka nevyžaduje žádný zásah do Pythonu:**
+
+1. zkopíruj `lang/en.json` na `lang/<kód>.json` (např. `lang/it.json`),
+2. přelož hodnoty (klíče vlevo nech beze změny) a uprav `"_name"` na název
+   jazyka **v něm samotném** (`"Italiano"`) — přesně tenhle text se zobrazí
+   v menu **Zobrazit ▸ Jazyk**,
+3. spusť appku — jazyk se sám objeví v nabídce.
+
+Pravidla, která je nutné dodržet:
+
+- **Zástupné symboly** (`{path}`, `{n}`, `{tempo}` …) musí v překladu zůstat
+  doslova — appka do nich dosazuje hodnoty.
+- `&` v položkách menu značí klávesovou zkratku písmene (`&Soubor` → Alt+S);
+  `&&` znamená doslovné „&".
+- HTML v klíči `help.full.html` (obsah okna nápovědy) si musí zachovat
+  strukturu značek, překládá se jen text mezi nimi.
+
+Nepřeložené nebo chybějící klíče **nikdy nerozbijí UI** — tiše propadnou na
+angličtinu a pak češtinu, takže rozpracovaný překlad jde klidně používat.
+
+Kontrola překladů (chybějící/přebývající klíče, nesouhlasící zástupné
+symboly, klíče použité v kódu bez překladu):
+
+```bash
+python tools/check_translations.py
+```
 
 ---
 
