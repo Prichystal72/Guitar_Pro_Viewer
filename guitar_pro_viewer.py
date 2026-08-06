@@ -7,7 +7,7 @@ import sys
 import json
 from html import escape as html_escape
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional
 
 import guitarpro
 import guitarpro.models as gpm
@@ -496,16 +496,176 @@ class HelpDialog(QDialog):
 class GuitarProViewer(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.song: Optional[Any] = None
-        # Dřív jedno `current_file` pro GP i JSON dohromady — matlo to "Uložit"
-        # (přepsat cestu k GP souboru JSONem nedává smysl, GP se jen importuje,
-        # viz plán "Oprava New/Open/Save/Save As"). Rozděleno na dvě:
-        self.current_gp_file: Optional[str] = None     # jen import (bicí/basa/tabulatura)
-        self.current_json_file: Optional[str] = None   # SKUTEČNÝ cíl pro "Uložit"
-        self.tempo_map: list = []
-        self._worker: Optional[LoadWorker] = None
-        self._loaded_json: Optional[dict] = None
+        # "Identita dokumentu" (song/current_gp_file/current_json_file/
+        # tempo_map/_loaded_json) NENÍ tady — žije na `TimelineEditor`
+        # (jedna instance = jedna karta, viz plán "Multi-dokument"). Tahle
+        # třída k ní přistupuje přes `self.timeline`/`self.song`/… property
+        # níže, které se vždy vztahují k PRÁVĚ AKTIVNÍ kartě.
+        self._workers: list["LoadWorker"] = []   # běžící načítání GP na pozadí, víc najednou (1 na kartu)
         self._setup_ui()
+
+    # ------------------------------------------------------------------
+    # "Aktivní karta" — self.timeline a odvozené property se VŽDY vztahují
+    # k právě zobrazené kartě (self.doc_tabs.currentWidget()). Díky tomu
+    # funguje veškerý STÁVAJÍCÍ kód, který čte/píše self.timeline/self.song/
+    # self.current_gp_file/self.current_json_file/self.tempo_map beze
+    # změny — automaticky cílí na aktivní kartu. VÝJIMKA: asynchronní
+    # dokončení `LoadWorker` (viz `_on_loaded`) NESMÍ jít přes tyhle
+    # property (karta, na kterou se načítalo, už nemusí být aktivní), tam
+    # se píše přímo do zachyceného `target` — viz komentář u `_load_file`.
+    # ------------------------------------------------------------------
+
+    @property
+    def timeline(self) -> TimelineEditor:
+        return self.doc_tabs.currentWidget()
+
+    @property
+    def song(self):
+        return self.timeline.song
+
+    @song.setter
+    def song(self, value) -> None:
+        self.timeline.song = value
+
+    @property
+    def current_gp_file(self) -> Optional[str]:
+        return self.timeline.current_gp_file
+
+    @current_gp_file.setter
+    def current_gp_file(self, value: Optional[str]) -> None:
+        self.timeline.current_gp_file = value
+
+    @property
+    def current_json_file(self) -> Optional[str]:
+        return self.timeline.current_json_file
+
+    @current_json_file.setter
+    def current_json_file(self, value: Optional[str]) -> None:
+        self.timeline.current_json_file = value
+
+    @property
+    def tempo_map(self) -> list:
+        return self.timeline.tempo_map
+
+    @tempo_map.setter
+    def tempo_map(self, value: list) -> None:
+        self.timeline.tempo_map = value
+
+    @property
+    def _loaded_json(self) -> Optional[dict]:
+        return self.timeline._loaded_json
+
+    @_loaded_json.setter
+    def _loaded_json(self, value: Optional[dict]) -> None:
+        self.timeline._loaded_json = value
+
+    # ------------------------------------------------------------------
+    # Karty (multi-dokument)
+    # ------------------------------------------------------------------
+
+    def _new_tab(self) -> TimelineEditor:
+        """Vytvoří novou kartu (nový, prázdný dokument) a udělá ji aktivní.
+        Volá se před KAŽDÝM otevřením/importem/novou písní (Nová píseň,
+        Otevřít, Importovat z GP) — nikdy nepřepisuje obsah existující
+        karty. Sloučení (`merge_with_web`) je výjimka — to záměrně
+        pracuje NAD aktivní kartou, ne v nové."""
+        ed = TimelineEditor()
+        ed.export_callback = self._export_timeline_json
+        ed.dirty_changed.connect(lambda _dirty, ed=ed: self._refresh_tab_label(ed))
+        idx = self.doc_tabs.addTab(ed, tr("tab.untitled"))
+        self.doc_tabs.setCurrentIndex(idx)
+        return ed
+
+    def _tab_label_for(self, ed: TimelineEditor) -> str:
+        meta = (ed.data.get("meta", {}) or {}) if ed.data else {}
+        base = meta.get("title") or ""
+        if not base:
+            path = ed.current_json_file or ed.current_gp_file
+            base = Path(path).stem if path else tr("tab.untitled")
+        return ("• " if ed._dirty else "") + base
+
+    def _refresh_tab_label(self, ed: TimelineEditor) -> None:
+        idx = self.doc_tabs.indexOf(ed)
+        if idx >= 0:
+            self.doc_tabs.setTabText(idx, self._tab_label_for(ed))
+
+    def _confirm_discard(self, ed: TimelineEditor) -> bool:
+        """Karta `ed` má neuložené změny — zeptá se Uložit/Zahodit/Zrušit.
+        Vrací True, když je bezpečné pokračovat v zavření (uloženo, NEBO
+        uživatel schválně zahodil), False když se má zavření karty zrušit."""
+        name = self._tab_label_for(ed).lstrip("• ")
+        reply = QMessageBox.question(
+            self, tr("tab.close_confirm_title"), tr("tab.close_confirm_body", name=name),
+            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel, QMessageBox.Save)
+        if reply == QMessageBox.Cancel:
+            return False
+        if reply == QMessageBox.Save:
+            if ed is not self.timeline:
+                self.doc_tabs.setCurrentWidget(ed)
+            self.save_json()
+            if ed._dirty:   # dialog "Uložit jako" zrušen / uložení selhalo
+                return False
+        return True
+
+    def _close_tab(self, index: int) -> None:
+        ed = self.doc_tabs.widget(index)
+        if ed is None:
+            return
+        if ed._dirty and not self._confirm_discard(ed):
+            return
+        ed.player.stop()
+        ed.gp_player.stop()
+        self.doc_tabs.removeTab(index)
+        ed.deleteLater()
+        if self.doc_tabs.count() == 0:
+            self._new_tab()
+
+    def _on_active_tab_changed(self, index: int) -> None:
+        """Přepnutí karty — pauzne přehrávání ostatních karet, přepne mix
+        panel + snap-combo/time-label ve sdíleném toolbaru na NOVOU
+        aktivní kartu a znovu vykreslí sdílené doky (Stopy/Náhledy) podle
+        jejího obsahu (beze změny `active.data` — jen čtení/zobrazení)."""
+        for i in range(self.doc_tabs.count()):
+            ed = self.doc_tabs.widget(i)
+            if ed is not None and i != index:
+                ed.player.pause()
+                ed.gp_player.pause()
+
+        active = self.timeline
+        if active is None:
+            return
+
+        # POZOR: `QScrollArea.setWidget()` SMAŽE předchozí widget, pokud
+        # nějaký byl (dokumentované chování) — bez `takeWidget()` by tohle
+        # smazalo `mix_panel` ODCHÁZEJÍCÍ karty (ta pořád existuje, jen se
+        # skrývá), ne jen ho odpojilo.
+        self.mix_scroll.takeWidget()
+        self.mix_scroll.setWidget(active.mix_panel)
+        self._swap_toolbar_widgets(active)
+
+        if getattr(active, "_pending_gp_populate", False):
+            active._pending_gp_populate = False
+            self._finish_gp_import(active)
+        elif active.song is not None:
+            self._populate_ui()
+        elif active.data:
+            self._render_docks_from_json()
+        else:
+            self._clear_docks_to_empty()
+
+    def closeEvent(self, event) -> None:
+        """Zavření CELÉHO okna s víc kartami — projde je a pro každou
+        neuloženou nabídne stejné Uložit/Zahodit/Zrušit jako zavření
+        jedné karty (`_confirm_discard`); zrušení kterékoli kartu zruší
+        celé zavření okna."""
+        for i in range(self.doc_tabs.count()):
+            ed = self.doc_tabs.widget(i)
+            if ed is not None and ed._dirty:
+                self.doc_tabs.setCurrentWidget(ed)
+                if not self._confirm_discard(ed):
+                    event.ignore()
+                    return
+        event.accept()
 
     # ------------------------------------------------------------------
     # UI stavba
@@ -545,10 +705,20 @@ class GuitarProViewer(QMainWindow):
         info_layout.addWidget(self.lbl_meta)
         root.addWidget(info_frame)
 
-        # Časová osa vyplní celé centrum
-        self.timeline = TimelineEditor()
-        self.timeline.export_callback = self._export_timeline_json
-        root.addWidget(self.timeline, 1)
+        # Časová osa vyplní celé centrum — karty (self.doc_tabs), jedna
+        # TimelineEditor instance = jeden otevřený dokument (viz plán
+        # "Multi-dokument"). `self.timeline` výše je property vracející
+        # PRÁVĚ AKTIVNÍ kartu (self.doc_tabs.currentWidget()).
+        self.doc_tabs = QTabWidget()
+        self.doc_tabs.setTabsClosable(True)
+        self.doc_tabs.setMovable(True)
+        self.doc_tabs.setDocumentMode(True)
+        self.doc_tabs.tabCloseRequested.connect(self._close_tab)
+        root.addWidget(self.doc_tabs, 1)
+        self._new_tab()   # vždy aspoň jedna karta — `currentChanged` se
+        # připojí AŽ na konci `_setup_ui()` (viz níže), ať tahle první
+        # karta nespustí `_on_active_tab_changed` dřív, než existují
+        # doky/toolbar, na které sahá.
 
         # ---- Levý DOCK: seznam stop ----
         left = QWidget()
@@ -582,10 +752,10 @@ class GuitarProViewer(QMainWindow):
         tr_label(mix_label, "left.mix_title")
         mix_label.setStyleSheet("font-weight: bold; margin-top: 8px;")
         left_layout.addWidget(mix_label)
-        mix_scroll = QScrollArea()
-        mix_scroll.setWidgetResizable(True)
-        mix_scroll.setWidget(self.timeline.mix_panel)
-        left_layout.addWidget(mix_scroll, 1)
+        self.mix_scroll = QScrollArea()
+        self.mix_scroll.setWidgetResizable(True)
+        self.mix_scroll.setWidget(self.timeline.mix_panel)
+        left_layout.addWidget(self.mix_scroll, 1)
 
         self.dock_tracks = QDockWidget(self)
         tr_dock_title(self.dock_tracks, "dock.tracks_title")
@@ -664,6 +834,11 @@ class GuitarProViewer(QMainWindow):
 
         self._build_menus()
 
+        # Připojit AŽ TEĎ (viz komentář u self._new_tab() výše) — v tuhle
+        # chvíli už existují doky/toolbar/snap-radio menu, na které
+        # `_on_active_tab_changed` sahá.
+        self.doc_tabs.currentChanged.connect(self._on_active_tab_changed)
+
     def _build_menus(self) -> None:
         """Kompletní menu bar + toolbary — sjednocuje dřívější File menu
         (guitar_pro_viewer.py) s tím, co dřív bylo natvrdo napsané tlačítka
@@ -712,22 +887,27 @@ class GuitarProViewer(QMainWindow):
         # --- Úpravy / Edit ---
         edit_menu = menubar.addMenu("")
         register_tr(edit_menu.setTitle, "menu.edit")
+        # POZOR: `slot=lambda: self.timeline.X()` — NE `slot=self.timeline.X`
+        # (svázaná metoda by se vyhodnotila JEDNOU, při stavbě menu, a
+        # navždy zůstala navázaná na PRVNÍ kartu; lambda odkládá vyhledání
+        # `self.timeline` — property vracející AKTIVNÍ kartu — až na
+        # okamžik kliknutí, viz plán "Multi-dokument").
         act_undo = tr_action(self, "edit.undo", tooltip_key="edit.undo.tooltip",
-                              shortcut="Ctrl+Z", slot=self.timeline.undo, icon=icon("undo"))
+                              shortcut="Ctrl+Z", slot=lambda: self.timeline.undo(), icon=icon("undo"))
         edit_menu.addAction(act_undo)
         act_redo = tr_action(self, "edit.redo", tooltip_key="edit.redo.tooltip",
-                              shortcuts=["Ctrl+Shift+Z", "Ctrl+Y"], slot=self.timeline.redo,
+                              shortcuts=["Ctrl+Shift+Z", "Ctrl+Y"], slot=lambda: self.timeline.redo(),
                               icon=icon("redo"))
         edit_menu.addAction(act_redo)
         edit_menu.addSeparator()
         act_select_all = tr_action(self, "edit.select_all", tooltip_key="edit.select_all.tooltip",
-                                    shortcut="Ctrl+A", slot=self.timeline.select_all,
+                                    shortcut="Ctrl+A", slot=lambda: self.timeline.select_all(),
                                     icon=icon("select_all"))
         edit_menu.addAction(act_select_all)
-        act_copy = tr_action(self, "edit.copy", shortcut="Ctrl+C", slot=self.timeline.copy_selected,
+        act_copy = tr_action(self, "edit.copy", shortcut="Ctrl+C", slot=lambda: self.timeline.copy_selected(),
                               icon=icon("copy"))
         edit_menu.addAction(act_copy)
-        act_cut = tr_action(self, "edit.cut", shortcut="Ctrl+X", slot=self.timeline.cut_selected,
+        act_cut = tr_action(self, "edit.cut", shortcut="Ctrl+X", slot=lambda: self.timeline.cut_selected(),
                              icon=icon("cut"))
         edit_menu.addAction(act_cut)
         act_paste = tr_action(self, "edit.paste", tooltip_key="edit.paste.tooltip",
@@ -741,11 +921,11 @@ class GuitarProViewer(QMainWindow):
                                icon=icon("split"))
         edit_menu.addAction(act_split)
         act_delete = tr_action(self, "edit.delete", shortcut="Del",
-                                slot=self.timeline.delete_selected,
+                                slot=lambda: self.timeline.delete_selected(),
                                 icon=std_icon(self, QStyle.StandardPixmap.SP_TrashIcon))
         edit_menu.addAction(act_delete)
         act_shift_sel = tr_action(self, "edit.shift_selected", tooltip_key="edit.shift_selected.tooltip",
-                                   slot=self.timeline.shift_selected_dialog, icon=icon("shift_selected"))
+                                   slot=lambda: self.timeline.shift_selected_dialog(), icon=icon("shift_selected"))
         edit_menu.addAction(act_shift_sel)
         edit_menu.addSeparator()
         act_rewrite_text = tr_action(self, "edit.rewrite_text", tooltip_key="edit.rewrite_text.tooltip",
@@ -757,16 +937,16 @@ class GuitarProViewer(QMainWindow):
         timeline_menu = menubar.addMenu("")
         register_tr(timeline_menu.setTitle, "menu.timeline")
         act_add_clip = tr_action(self, "timeline.add_clip", tooltip_key="timeline.add_clip.tooltip",
-                                  shortcut="Ctrl+D", slot=self.timeline.add_clip,
+                                  shortcut="Ctrl+D", slot=lambda: self.timeline.add_clip(),
                                   icon=icon("add_display_clip"))
         timeline_menu.addAction(act_add_clip)
         act_align_song = tr_action(self, "timeline.align_song", tooltip_key="timeline.align_song.tooltip",
-                                    slot=self.timeline.align_all_clips_to_content,
+                                    slot=lambda: self.timeline.align_all_clips_to_content(),
                                     icon=icon("align_display"))
         timeline_menu.addAction(act_align_song)
         act_rebuild_display = tr_action(self, "timeline.rebuild_display",
                                          tooltip_key="timeline.rebuild_display.tooltip",
-                                         slot=self.timeline.rebuild_display_track,
+                                         slot=lambda: self.timeline.rebuild_display_track(),
                                          icon=std_icon(self, QStyle.StandardPixmap.SP_BrowserReload))
         timeline_menu.addAction(act_rebuild_display)
         timeline_menu.addSeparator()
@@ -780,18 +960,19 @@ class GuitarProViewer(QMainWindow):
         timeline_menu.addAction(act_add_chord)
         timeline_menu.addSeparator()
         act_autotime = tr_action(self, "timeline.autotime", tooltip_key="timeline.autotime.tooltip",
-                                  slot=self.timeline.auto_time_dialog, icon=icon("ruler"))
+                                  slot=lambda: self.timeline.auto_time_dialog(), icon=icon("ruler"))
         timeline_menu.addAction(act_autotime)
         act_tempo = tr_action(self, "timeline.tempo", tooltip_key="timeline.tempo.tooltip",
-                               slot=self.timeline.bpm_dialog, icon=icon("tempo"))
+                               slot=lambda: self.timeline.bpm_dialog(), icon=icon("tempo"))
         timeline_menu.addAction(act_tempo)
         act_count_in = tr_action(self, "timeline.count_in", tooltip_key="timeline.count_in.tooltip",
-                                  slot=self.timeline.count_in_dialog, icon=icon("count_in"))
+                                  slot=lambda: self.timeline.count_in_dialog(), icon=icon("count_in"))
         timeline_menu.addAction(act_count_in)
 
         # Přichytit k mřížce ▸ — radio podmenu, obousměrně zrcadlí
-        # self.timeline.snap_combo (combobox zůstal v editoru, protože řídí
-        # jeho vlastní stav — viz timeline_editor.py _setup_ui).
+        # snap_combo AKTIVNÍ karty. Combobox samotný je PER KARTA (viz
+        # timeline_editor.py _setup_ui) — při přepnutí karty se signál
+        # přepojí na combobox NOVÉ karty, viz `_swap_toolbar_widgets`.
         snap_menu = timeline_menu.addMenu(icon("snap_grid"), "")
         register_tr(snap_menu.setTitle, "timeline.snap_submenu")
         snap_group = QActionGroup(self)
@@ -807,10 +988,14 @@ class GuitarProViewer(QMainWindow):
         for i, act in enumerate(snap_actions):
             act.triggered.connect(lambda checked, idx=i: self.timeline.snap_combo.setCurrentIndex(idx))
 
+        self._snap_actions = snap_actions
+
         def _sync_snap_radio(idx: int) -> None:
             if 0 <= idx < len(snap_actions):
                 snap_actions[idx].setChecked(True)
-        self.timeline.snap_combo.currentIndexChanged.connect(_sync_snap_radio)
+        self._sync_snap_radio = _sync_snap_radio
+        self.timeline.snap_combo.currentIndexChanged.connect(self._sync_snap_radio)
+        self._connected_snap_combo = self.timeline.snap_combo
 
         # --- Zobrazit / View ---
         view_menu = menubar.addMenu("")
@@ -878,12 +1063,18 @@ class GuitarProViewer(QMainWindow):
         register_tr(tb_timeline.setWindowTitle, "toolbar.timeline")
         tb_timeline.setMovable(False)
         self.addToolBar(tb_timeline)
+        self.tb_timeline = tb_timeline
         tb_timeline.addWidget(QLabel(" " + tr("timeline.zoom_label")))
         tb_timeline.addAction(act_zoom_out)
         tb_timeline.addAction(act_zoom_in)
-        tb_timeline.addWidget(self.timeline.snap_combo)
-        tb_timeline.addWidget(self.timeline.time_lbl)
-        tb_timeline.addSeparator()
+        # snap_combo/time_lbl jsou PER KARTA (viz timeline_editor.py) —
+        # vložené widgety hlavního okna jen "vypůjčí"; při přepnutí karty
+        # se vymění za widgety nové aktivní karty, viz
+        # `_swap_toolbar_widgets`/`_on_active_tab_changed`. `_tb_timeline_anchor`
+        # (tenhle oddělovač) drží jejich pozici v toolbaru napříč výměnami.
+        self._snap_combo_act = tb_timeline.addWidget(self.timeline.snap_combo)
+        self._time_lbl_act = tb_timeline.addWidget(self.timeline.time_lbl)
+        self._tb_timeline_anchor = tb_timeline.addSeparator()
         tb_timeline.addAction(act_undo)
         tb_timeline.addAction(act_redo)
         tb_timeline.addSeparator()
@@ -905,6 +1096,23 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addSeparator()
         tb_timeline.addAction(act_rewrite_text)
 
+    def _swap_toolbar_widgets(self, active: TimelineEditor) -> None:
+        """Vymění snap_combo/time_lbl v toolbaru „Časová osa“ za widgety
+        `active` karty (QWidget může mít jen jednoho rodiče, jde jen
+        vyndat/vložit, ne sdílet) a přepojí radio-menu „Přichytit k
+        mřížce“ na její combobox — volá `_on_active_tab_changed`."""
+        self.tb_timeline.removeAction(self._snap_combo_act)
+        self.tb_timeline.removeAction(self._time_lbl_act)
+        self._snap_combo_act = self.tb_timeline.insertWidget(self._tb_timeline_anchor, active.snap_combo)
+        self._time_lbl_act = self.tb_timeline.insertWidget(self._tb_timeline_anchor, active.time_lbl)
+        try:
+            self._connected_snap_combo.currentIndexChanged.disconnect(self._sync_snap_radio)
+        except (RuntimeError, TypeError):
+            pass   # předchozí combobox už mohl zaniknout (zavřená karta)
+        active.snap_combo.currentIndexChanged.connect(self._sync_snap_radio)
+        self._connected_snap_combo = active.snap_combo
+        self._sync_snap_radio(active.snap_combo.currentIndex())
+
     # ------------------------------------------------------------------
     # Načítání souboru
     # ------------------------------------------------------------------
@@ -916,8 +1124,7 @@ class GuitarProViewer(QMainWindow):
         dialogu, dialog se tím nezavírá."""
         dlg = WebImportDialog(self)
         if dlg.exec() == QDialog.Accepted and dlg.result_json:
-            self.current_gp_file = None
-            self.current_json_file = None   # nová píseň — zatím nikam neuložená
+            self._tab_for_new_document()   # nová píseň — vlastní (prázdná) karta
             self._present_karaoke_data(dlg.result_json, source_desc=tr("web.new_song_desc"))
 
     def _edit_text_and_chords(self) -> None:
@@ -945,20 +1152,55 @@ class GuitarProViewer(QMainWindow):
         if reply == QMessageBox.Yes:
             self.timeline.rebuild_display_track()
 
+    def _tab_for_new_document(self) -> TimelineEditor:
+        """Vrátí kartu pro novou/importovanou/otevřenou píseň — POUŽIJE
+        aktuální kartu, pokud je úplně prázdná a neuložená (typicky
+        jediná výchozí karta hned po startu, nebo hned po „Zavřít kartu“),
+        jinak otevře NOVOU (aby se nikdy nepřepsala rozdělaná práce)."""
+        cur = self.timeline
+        if cur is not None and cur.song is None and not cur.data and not cur._dirty:
+            return cur
+        return self._new_tab()
+
     def open_file(self):
+        """Importovat z Guitar Pro — VŽDY do AKTIVNÍ karty, nikdy do nové
+        (na rozdíl od Nová píseň/Otevřít — viz `_tab_for_new_document`).
+        Zachovává existující chování: GP importovaný AŽ PO existujících
+        karaoke datech (web/JSON) na tuhle kartu se do nich jen PŘIDÁ
+        (bicí/basa, `_merge_gp_tracks_into_current`), GP importovaný do
+        prázdné/jen-GP karty ji (pře)naplní od nuly — viz `_on_loaded`."""
         path, _ = QFileDialog.getOpenFileName(
             self, tr("file.import_gp.dialog_title"), "",
             tr("file.import_gp.dialog_filter")
         )
         if path:
-            self._load_file(path)
+            self._load_file(path, self.timeline)
 
-    def _load_file(self, path: str):
+    def _load_file(self, path: str, target: TimelineEditor) -> None:
+        """Načte GP soubor NA POZADÍ do `target` — karta zachycená UZÁVĚREM,
+        NE „aktuální karta v okamžiku doručení signálu“ (to by se s kartami
+        mohlo rozejít, kdyby uživatel mezitím přepnul — oprava dřívějšího
+        bugu, kdy `_on_loaded` četl cestu zpátky z `self._worker`, což by
+        s více souběžnými načítáními/kartami mohlo přiřadit výsledek
+        špatné kartě). `self._workers` drží VŠECHNY běžící načítání
+        najednou (dřív jen jedno, `self._worker`, přepisované)."""
         self.status.showMessage(tr("status.loading", path=path))
-        self._worker = LoadWorker(path)
-        self._worker.done.connect(self._on_loaded)
-        self._worker.error.connect(self._on_load_error)
-        self._worker.start()
+        worker = LoadWorker(path)
+        self._workers.append(worker)
+
+        def _done(song, w=worker) -> None:
+            if w in self._workers:
+                self._workers.remove(w)
+            self._on_loaded(song, path, target)
+
+        def _err(msg: str, w=worker) -> None:
+            if w in self._workers:
+                self._workers.remove(w)
+            self._on_load_error(msg)
+
+        worker.done.connect(_done)
+        worker.error.connect(_err)
+        worker.start()
 
     # ------------------------------------------------------------------
     # Načtení karaoke JSON přímo do editoru (např. z web importu)
@@ -970,6 +1212,7 @@ class GuitarProViewer(QMainWindow):
             tr("file.open.dialog_filter")
         )
         if path:
+            self._tab_for_new_document()
             self._load_karaoke_json(path)
 
     def _load_karaoke_json(self, path: str):
@@ -986,13 +1229,11 @@ class GuitarProViewer(QMainWindow):
         self.current_json_file = path
         self._present_karaoke_data(data, source_desc=tr("source.json", path=path))
 
-    def _present_karaoke_data(self, data: dict, source_desc: str = "") -> None:
-        """Naplní UI a editor karaoke daty (z JSON souboru nebo ze sloučení
-        s webem). GP song se dál nepoužívá — pracuje se s těmito daty."""
-        self.song = None
-        self.tempo_map = []
-        self._loaded_json = data
-
+    def _render_docks_from_json(self) -> None:
+        """Vykreslí sdílené doky (Stopy/Náhledy) z `self.timeline.data`
+        (AKTIVNÍ karty, JSON cesta — bez GP song). Bezpečné volat
+        OPAKOVANĚ (i jen při přepnutí karty) — nic nemění, jen čte."""
+        data = self.timeline.data
         meta = data.get("meta", {}) or {}
         display_path = self.current_json_file or self.current_gp_file
         self.lbl_title.setText(meta.get("title") or (display_path and Path(display_path).stem) or "")
@@ -1018,7 +1259,29 @@ class GuitarProViewer(QMainWindow):
         self.chord_chart_browser.setHtml(f"<p>{note}</p>")
         self.json_preview.setText(json.dumps(data, indent=2, ensure_ascii=False))
 
+    def _clear_docks_to_empty(self) -> None:
+        """Prázdná/čerstvá karta (žádný song, žádná data) — doky do
+        stejného stavu jako hned po startu appky."""
+        self.lbl_title.setText("—")
+        self.lbl_artist.setText("")
+        self.lbl_meta.setText("")
+        self.track_tree.clear()
+        note = tr("present.no_gp_note")
+        for w in (self.overview_text, self.lyrics_text, self.chords_text):
+            w.setPlainText(note)
+        self.chord_chart_browser.setHtml(f"<p>{note}</p>")
+        self.json_preview.setText("")
+
+    def _present_karaoke_data(self, data: dict, source_desc: str = "") -> None:
+        """Naplní AKTIVNÍ kartu karaoke daty (z JSON souboru nebo ze
+        sloučení s webem) — JEDNORÁZOVĚ (`self.timeline.load_data`, ne
+        volat opakovaně, přepsalo by živé úpravy) — a vykreslí doky. GP
+        song se dál nepoužívá."""
+        self.song = None
+        self.tempo_map = []
+        self._loaded_json = data
         self.timeline.load_data(data)
+        self._render_docks_from_json()
         n_lines = len(self.timeline.data.get("karaoke_lines", []))
         self.status.showMessage(tr("status.loaded_lines", source=source_desc, n_lines=n_lines))
 
@@ -1074,32 +1337,50 @@ class GuitarProViewer(QMainWindow):
                n_drums=len(web.get('drums_timeline', [])),
                n_bass=len(web.get('bass_timeline', []))))
 
-    def _on_loaded(self, song):
-        path = self._worker.path
-        if self._loaded_json is not None:
-            # Text/akordy už jsou načtené (web/JSON/merge) — tenhle GP soubor
-            # jen PŘIDÁ své stopy (bicí), text/akordy zůstávají beze změny.
-            self._merge_gp_tracks_into_current(song, path)
+    def _on_loaded(self, song, path: str, target: TimelineEditor) -> None:
+        """Dokončení `_load_file()` — `target` je karta zachycená UZÁVĚREM
+        při spuštění, NE `self.timeline` (aktivní karta TEĎ může být jiná,
+        pokud uživatel mezitím přepnul). Když `target` právě NENÍ aktivní,
+        vlastní data se do ní přesto zapíšou hned (přímo, ne přes property),
+        ale dokreslení sdílených doků se odloží na okamžik, kdy se na ni
+        skutečně přepne (`_pending_gp_populate`, viz `_on_active_tab_changed`)
+        — ať se neroztrhne obsah docku od právě zobrazené JINÉ karty."""
+        if target._loaded_json is not None:
+            # Text/akordy už jsou na týhle kartě načtené (web/JSON/merge) —
+            # tenhle GP soubor jen PŘIDÁ své stopy (bicí), text/akordy
+            # zůstávají beze změny.
+            self._merge_gp_tracks_into_current(song, path, target)
             return
-        self.song = song
-        self.current_gp_file = path
-        self.current_json_file = None   # GP je jen import — zatím žádný JSON k přepsání
-        self.tempo_map = build_tempo_map(song)
-        self._populate_ui()
-        self.status.showMessage(tr("status.loaded_file", path=self.current_gp_file))
+        target.song = song
+        target.current_gp_file = path
+        target.current_json_file = None   # GP je jen import — zatím žádný JSON k přepsání
+        target.tempo_map = build_tempo_map(song)
+        if target is self.timeline:
+            self._finish_gp_import(target)
+            self.status.showMessage(tr("status.loaded_file", path=target.current_gp_file))
+        else:
+            target._pending_gp_populate = True
 
-    def _merge_gp_tracks_into_current(self, song, path: str) -> None:
-        """GP otevřený AŽ PO existujících karaoke datech (web/JSON) — text a
-        akordy zůstávají beze změny, z GP se přidají bicí a basa (jediné dva
-        typy stopy, které tento merge z GP bere — viz `_gp_drums_for_merge`
-        / `_gp_bass_for_merge`)."""
-        self.song = song
-        self.tempo_map = build_tempo_map(song)
+    def _merge_gp_tracks_into_current(self, song, path: str, target: TimelineEditor) -> None:
+        """GP importovaný AŽ PO existujících karaoke datech (web/JSON) na
+        tuhle kartu — text a akordy zůstávají beze změny, z GP se přidají
+        bicí a basa (jediné dva typy stopy, které tento merge z GP bere —
+        viz `_gp_drums_for_merge`/`_gp_bass_for_merge`).
+
+        POZOR: `_gp_drums_for_merge`/`_gp_bass_for_merge` čtou `self.song`
+        (= AKTIVNÍ karta) — pokud `target` mezitím přestala být aktivní,
+        krátce na ni přepneme (vzácný okrajový případ: pozadí dokončí GP
+        parse zrovna ve chvíli, kdy uživatel přepnul jinam; výsledek musí
+        jít na SPRÁVNOU kartu, i za cenu toho viditelného přepnutí)."""
+        target.song = song
+        target.tempo_map = build_tempo_map(song)
+        if target is not self.timeline:
+            self.doc_tabs.setCurrentWidget(target)
         drums, drum_track = self._gp_drums_for_merge()
         bass, bass_track = self._gp_bass_for_merge()
 
         import web_import as W
-        data = self.timeline.data if self.timeline.data else self._loaded_json
+        data = target.data if target.data else target._loaded_json
         if drum_track:
             W.attach_drums(data, drums, drum_track)
         if bass_track:
@@ -1107,7 +1388,7 @@ class GuitarProViewer(QMainWindow):
         meta = data.setdefault("meta", {})
         meta["source_file"] = Path(path).name
         meta["merged_web_gp"] = True
-        self.current_gp_file = path   # jen import — self.current_json_file (cíl "Uložit") se NEMĚNÍ
+        target.current_gp_file = path   # jen import — current_json_file (cíl "Uložit") se NEMĚNÍ
 
         gp_name = Path(path).name
         self._present_karaoke_data(data, source_desc=tr("source.web_gp_drums_bass", gp_name=gp_name))
@@ -1134,6 +1415,12 @@ class GuitarProViewer(QMainWindow):
     # ------------------------------------------------------------------
 
     def _populate_ui(self):
+        """Vykreslí sdílené doky (Stopy/Náhledy) z GP song AKTIVNÍ karty.
+        Bezpečné volat OPAKOVANĚ (i jen při přepnutí karty) — NEMĚNÍ
+        `self.timeline.data` (na rozdíl od prvotního naplnění po čerstvém
+        GP importu, viz `_finish_gp_import`, které volá
+        `self.timeline.load_data(...)` — to by při opakování přepsalo
+        živé úpravy udělané v editoru)."""
         song = self.song
         title = song.title or (Path(self.current_gp_file).stem if self.current_gp_file else "")
         artist = song.artist or "—"
@@ -1182,14 +1469,17 @@ class GuitarProViewer(QMainWindow):
         # JSON náhled
         self._update_json_preview()
 
-        # Časová osa (editor) — naplň z karaoke dat
-        self.timeline.load_data(self._build_karaoke_json(preview_only=False))
-
-        # Zobraz chord chart jako výchozí záložku
+    def _finish_gp_import(self, target: TimelineEditor) -> None:
+        """Jednorázově po ČERSTVÉM GP importu — `target` JE aktivní karta v
+        okamžiku volání (zajišťuje volající, viz `_on_loaded`/
+        `_on_active_tab_changed`). Postaví karaoke JSON z GP song a nahraje
+        ho do timeline (`load_data` resetuje undo/dirty — proto jen
+        JEDNOU, nikdy opakovaně na již rozeditovanou kartu), pak dokreslí
+        doky a vybere první stopu."""
+        target.load_data(self._build_karaoke_json(preview_only=False))
+        self._populate_ui()
         self.tabs.setCurrentIndex(0)
-
-        # Zobraz první stopu
-        if song.tracks:
+        if target.song and target.song.tracks:
             self._show_track(0)
             self.track_tree.setCurrentItem(self.track_tree.topLevelItem(0))
 
@@ -1820,6 +2110,8 @@ class GuitarProViewer(QMainWindow):
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             self.current_json_file = path
+            self.timeline._dirty = False
+            self._refresh_tab_label(self.timeline)
             if silent:
                 self.status.showMessage(tr("export.status_done", path=path))
             else:

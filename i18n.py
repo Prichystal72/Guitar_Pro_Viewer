@@ -84,7 +84,14 @@ class _Registry:
 
     def retranslate(self) -> None:
         for setter, key, kwargs_fn in self._entries:
-            setter(tr(key, **(kwargs_fn() if kwargs_fn else {})))
+            try:
+                setter(tr(key, **(kwargs_fn() if kwargs_fn else {})))
+            except RuntimeError:
+                # Widget mezitím zanikl (např. zavřená karta v multi-dokumentu
+                # — každý TimelineEditor si registruje vlastní snap_combo/
+                # time_lbl) — jeho záznam tu zůstane (zanedbatelná pár-tuple
+                # paměť), jen se přeskočí, stejný vzor jako `_pin_headers()`.
+                pass
 
 
 _registry = _Registry()
@@ -384,6 +391,24 @@ něj nikdy nezapisuje zpátky), uprav časovou osu níže, ulož (<code>Ctrl+S</
      „📌 Vložit sem“ — vloží přesně tam, kam se kliklo.</li>
  <li>Vložené Displej klipy se odpojí od auto-sledování (jsou to teď nezávislé
      kopie, ne odkaz na konkrétní řádek).</li>
+ <li><b>Schránka je společná pro všechny karty</b> — zkopíruj v jedné písni,
+     přepni kartu, vlož do druhé (viz níže).</li>
+</ul>
+
+<h3>🗂 Karty — víc písní otevřených najednou</h3>
+<ul>
+ <li>Každá otevřená píseň = vlastní karta nahoře. <b>Nová píseň</b>
+     (<code>Ctrl+N</code>) a <b>Otevřít…</b> (<code>Ctrl+O</code>) vždy otevřou
+     NOVOU kartu — nikdy nepřepíšou rozdělanou práci (výjimka: úplně prázdná
+     karta se použije rovnou).</li>
+ <li><b>Importovat z Guitar Pro</b> (<code>Ctrl+I</code>) naopak cílí na
+     AKTIVNÍ kartu — když už na ní text/akordy jsou, GP se do nich jen přidá
+     (bicí + basa), přesně jako dřív.</li>
+ <li>Každá karta má vlastní tempo, undo historii, audio i cíl pro
+     <b>Uložit</b> — uložení jedné písně nikdy nesáhne na jinou.</li>
+ <li><b>•</b> před názvem karty = neuložené změny. Zavření takové karty
+     (křížek) se zeptá Uložit / Zahodit / Zrušit; stejně tak zavření celé
+     appky, když je rozdělaných karet víc.</li>
 </ul>
 
 <h3>↔ Posun a zarovnání</h3>
@@ -487,6 +512,24 @@ writes back to it), edit the timeline below, save (<code>Ctrl+S</code>).</p>
      "📌 Paste Here" — pastes exactly where you clicked.</li>
  <li>Pasted Display clips detach from auto-follow (they're independent copies now,
      not a reference to a specific line).</li>
+ <li><b>The clipboard is shared across all tabs</b> — copy in one song, switch
+     tabs, paste into another (see below).</li>
+</ul>
+
+<h3>🗂 Tabs — several songs open at once</h3>
+<ul>
+ <li>Each open song = its own tab at the top. <b>New Song</b>
+     (<code>Ctrl+N</code>) and <b>Open…</b> (<code>Ctrl+O</code>) always open a
+     NEW tab — they never overwrite work in progress (exception: a completely
+     empty tab is reused).</li>
+ <li><b>Import from Guitar Pro</b> (<code>Ctrl+I</code>) targets the ACTIVE tab
+     instead — if it already has lyrics/chords, the GP file is merely added to
+     them (drums + bass), exactly as before.</li>
+ <li>Every tab has its own tempo, undo history, audio and <b>Save</b> target —
+     saving one song never touches another.</li>
+ <li><b>•</b> before a tab name = unsaved changes. Closing such a tab (the ×)
+     asks Save / Discard / Cancel; so does closing the whole app when several
+     tabs have unsaved work.</li>
 </ul>
 
 <h3>↔ Shifting and aligning</h3>
@@ -579,6 +622,18 @@ load MP3/WAV, play, compare against the GP mix.</p>
     "tab.lyrics": {"cs": "Text / Slova", "en": "Lyrics"},
     "tab.chords": {"cs": "Akordy", "en": "Chords"},
     "tab.json_preview": {"cs": "JSON náhled", "en": "JSON Preview"},
+
+    # --- karty (multi-dokument) ---
+    "tab.untitled": {"cs": "Bez názvu", "en": "Untitled"},
+    "tab.close_confirm_title": {"cs": "Neuložené změny", "en": "Unsaved Changes"},
+    "tab.close_confirm_body": {
+        "cs": "Píseň „{name}“ má neuložené změny. Uložit je před zavřením karty?",
+        "en": "“{name}” has unsaved changes. Save before closing the tab?"},
+    "tab.close_all_confirm_body": {
+        "cs": "{n} otevřených písní má neuložené změny. Opravdu zavřít appku a "
+              "zahodit je?",
+        "en": "{n} open songs have unsaved changes. Really close the app and "
+              "discard them?"},
     "status.ready": {
         "cs": "Připraven — Nová píseň (Ctrl+N), Otevřít JSON (Ctrl+O) nebo Import z Guitar Pro (Ctrl+I)",
         "en": "Ready — New Song (Ctrl+N), Open JSON (Ctrl+O), or Import from Guitar Pro (Ctrl+I)"},

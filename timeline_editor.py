@@ -25,7 +25,7 @@ import tempfile
 import wave
 from typing import Any, Optional
 
-from PySide6.QtCore import Qt, QRectF, QPointF, QUrl, QTimer
+from PySide6.QtCore import Qt, QRectF, QPointF, QUrl, QTimer, Signal
 from PySide6.QtGui import QColor, QBrush, QPen, QFont, QPainter, QPixmap, QPolygonF
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtMultimedia import (
@@ -171,6 +171,12 @@ def _section_of(text: str):
 
 
 _beep_wav_path: Optional[str] = None
+
+# Schránka kopírovat/vyjmout/vložit — SDÍLENÁ napříč VŠEMI otevřenými
+# kartami (viz plán "Multi-dokument"), schválně modulová (ne instanční na
+# TimelineEditor), aby "kopírovat v písni A → přepnout kartu → vložit v
+# písni B" fungovalo bez jakékoliv zvláštní mezikartové komunikace.
+_SHARED_CLIPBOARD: list[dict] = []
 
 
 def _beep_wav() -> str:
@@ -1643,8 +1649,29 @@ class TrackMixPanel(QWidget):
 class TimelineEditor(QWidget):
     """Widget časové osy. Napojení: load_data(dict) → editace → to_json()."""
 
+    # Signalizuje změnu `_dirty` (neuložené změny) — hlavní okno na to
+    # napojuje živé přeznačení titulku karty (• prefix), viz
+    # guitar_pro_viewer.py._new_tab/_refresh_tab_label.
+    dirty_changed = Signal(bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        # "Identita dokumentu" — dřív žila jako singleton na GuitarProViewer,
+        # teď patří SEM, protože každá karta (viz plán "Multi-dokument") je
+        # vlastní TimelineEditor instance a musí si nést svoje vlastní GP
+        # song/cesty/tempo mapu, ne sdílet je s ostatními otevřenými písněmi.
+        self.song = None                              # guitarpro.Song | None
+        self.current_gp_file: Optional[str] = None    # jen import — NIKDY cíl pro Uložit
+        self.current_json_file: Optional[str] = None  # skutečný cíl pro "Uložit"
+        self.tempo_map: list = []
+        self._loaded_json: Optional[dict] = None
+        self._dirty: bool = False   # True od první změny po načtení/uložení — viz _push_undo/load_data
+        # Nastaví guitar_pro_viewer.py._on_loaded, když GP dokončí načítání
+        # na pozadí zatímco tahle karta NENÍ aktivní — dokreslení doků se
+        # pak odloží na okamžik, kdy se na kartu skutečně přepne (viz
+        # _on_active_tab_changed), místo přepisování docků jiné, právě
+        # zobrazené karty.
+        self._pending_gp_populate: bool = False
         self.data: dict[str, Any] = {}
         self.tracks: list[dict] = []
         self.pps: float = 60.0                # px za sekundu (zoom)
@@ -1656,7 +1683,10 @@ class TimelineEditor(QWidget):
         self.clips: list[DisplayClipItem] = []   # klipy master "Displej" stopy
         self.drum_hit_items: list[DrumHitItem] = []   # úhozy bicí stopy
         self.bass_note_items: list[BassNoteItem] = []   # noty basové stopy
-        self._clipboard: list[dict] = []   # viz copy_selected/cut_selected/paste_at
+        # POZOR: schránka je SDÍLENÁ napříč všemi kartami (modulová
+        # `_SHARED_CLIPBOARD`, viz konec souboru) — NENÍ to instanční
+        # atribut, schválně, aby "kopírovat v písni A, vložit v písni B"
+        # fungovalo beze změny copy_selected/cut_selected/paste_at.
         self._display_lane_y: float = RULER_H + 4
         self._track_lane: dict[int, dict] = {}   # track_index → {'chord_y','lyric_y'}
         self.export_callback = None              # nastaví hlavní okno: fn(dict, path, silent)
@@ -1750,6 +1780,14 @@ class TimelineEditor(QWidget):
         self.scene.selectionChanged.connect(self._on_selection_changed)
         self.mix_panel = TrackMixPanel(self)
         self.mix_panel.refresh()
+
+    @property
+    def _clipboard(self) -> list[dict]:
+        return _SHARED_CLIPBOARD
+
+    @_clipboard.setter
+    def _clipboard(self, value: list[dict]) -> None:
+        _SHARED_CLIPBOARD[:] = value
 
     def _setup_ui(self):
         root = QVBoxLayout(self)
@@ -1937,6 +1975,7 @@ class TimelineEditor(QWidget):
         return max(0.0, t)
 
     def load_data(self, data: dict) -> None:
+        self._dirty = False   # čerstvě načtená/prezentovaná data = zatím žádné neuložené změny
         self._stop_shuttle_timer()
         self.player.stop()
         self.audio_path = None
@@ -1985,6 +2024,9 @@ class TimelineEditor(QWidget):
         audio_file = meta.get("audio_file")
         if audio_file and os.path.isfile(audio_file):
             self.load_audio(audio_file)
+        # AŽ NAKONEC — posluchač (titulek karty) čte `self.data`/meta.title,
+        # takže emit musí přijít až po jejich naplnění, ne na začátku metody.
+        self.dirty_changed.emit(False)
 
     def _update_snap_s(self) -> None:
         """Přepočítá `snap_s` z aktuálního tempa podle volby v `snap_combo`
@@ -2735,6 +2777,10 @@ class TimelineEditor(QWidget):
         if len(self._undo_stack) > UNDO_LIMIT:
             self._undo_stack.pop(0)
         self._redo_stack.clear()
+        was_dirty = self._dirty
+        self._dirty = True   # jakákoliv editace = neuložené změny (viz karta title/zavírací dialog)
+        if not was_dirty:
+            self.dirty_changed.emit(True)
 
     def undo(self) -> None:
         if not self._undo_stack:

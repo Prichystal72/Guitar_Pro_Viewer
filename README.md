@@ -228,6 +228,23 @@ stopa se dá editovat stejně jako bicí (přidat notu zadáním pražce, přesu
 tažením, smazat) — je to čistě vizuální referenční stopa, nikam se
 nepřehrává.
 
+### 🗂 Karty — víc písní otevřených najednou
+
+Každá otevřená píseň je vlastní **karta** nahoře nad časovou osou:
+
+- **Nová píseň** (`Ctrl+N`) a **Otevřít…** (`Ctrl+O`) vždy otevřou **novou
+  kartu** — nikdy nepřepíšou rozdělanou práci (výjimka: úplně prázdná karta
+  se použije rovnou). **Importovat z Guitar Pro** (`Ctrl+I`) naopak cílí na
+  **aktivní kartu** — když už na ní text/akordy jsou, GP se do nich jen
+  přidá (bicí + basa), přesně jako dřív.
+- **Schránka je společná pro všechny karty** — `Ctrl+C` v jedné písni,
+  přepnout kartu, `Ctrl+V` do druhé. Kvůli tomuhle karty vznikly.
+- Každá karta má vlastní tempo, undo historii, audio i cíl pro **Uložit** —
+  uložení jedné písně nikdy nesáhne na jinou.
+- **•** před názvem karty = neuložené změny. Zavření takové karty (×) se
+  zeptá Uložit / Zahodit / Zrušit; stejně tak zavření celé appky, když je
+  rozdělaných karet víc.
+
 ---
 
 ## Výstupní formát
