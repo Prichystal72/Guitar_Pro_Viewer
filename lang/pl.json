@@ -425,5 +425,6 @@
   "dialog.count_in_title_label": "Utwór:",
   "dialog.count_in_tempo_info": "Tempo: {bpm} BPM · {beats_per_measure}/4  →  1 takt = {bar_s} s",
   "dialog.shift_selected_title": "Przesuń zaznaczone elementy ({n})",
-  "dialog.shift_selected_label": "Przesunięcie ({n}× zaznaczono, + = później, − = wcześniej):"
+  "dialog.shift_selected_label": "Przesunięcie ({n}× zaznaczono, + = później, − = wcześniej):",
+  "track.type_vocal": "Wokal"
 }

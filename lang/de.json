@@ -425,5 +425,6 @@
   "dialog.count_in_title_label": "Song:",
   "dialog.count_in_tempo_info": "Tempo: {bpm} BPM · {beats_per_measure}/4  →  1 Takt = {bar_s} s",
   "dialog.shift_selected_title": "Ausgewählte Elemente verschieben ({n})",
-  "dialog.shift_selected_label": "Verschiebung ({n}× ausgewählt, + = später, − = früher):"
+  "dialog.shift_selected_label": "Verschiebung ({n}× ausgewählt, + = später, − = früher):",
+  "track.type_vocal": "Gesang"
 }

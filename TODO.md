@@ -430,10 +430,8 @@ ikony… vše musí být dvoujazyčně… začni psát návod v angličtině."*
 - **i18n sweep `guitar_pro_viewer.py` kompletní** — dialogy, hlášky,
   taby, docky, tabulka detailu stopy. Ověřeno živým CS→EN→CS testem.
 
-**Zbývá:**
-- i18n sweep `timeline_editor.py` (velký soubor, stovky UI řetězců:
-  dialogy tempo/count-in/vlnovka, kontextová menu, Panel vlastností,
-  `TrackMixPanel`) a `web_import.py`.
+**Zbývá (stav k bodu 14):**
+- i18n sweep `timeline_editor.py` a `web_import.py` — ✅ **HOTOVO, viz bod 15.**
 - Anglický uživatelský návod `docs/USER_GUIDE.md` + generování screenshotů
   (`docs/make_screenshots.py`, offscreen render, **jen syntetická data** —
   nikdy uživatelovy živé soubory).
@@ -448,3 +446,76 @@ ikony… vše musí být dvoujazyčně… začni psát návod v angličtině."*
   adresáře smazaného po zavření appky, takže volba jazyka by se nikdy
   nezapamatovala mezi spuštěními. Odloženo na žádost uživatele, řešit až
   před reálným balením do exe.
+
+## 15. Multi-dokument (karty) + i18n přesunuto do JSON, plný sweep (2026-08-06)
+
+Zadání: *„pro potřeby kopírování mezi json vzájemně je třeba udělat
+multidokument… a zároveň je čas udělat vícejazyčnou verzi celého
+programu… rozhodni, co bude lepší udělat jako první."* Rozhodnuto:
+multi-dokument první (viz plán, `AskUserQuestion` → uživatel zvolil karty
+místo split view), pak dokončení i18n. Následně uživatel: *„nebylo by
+lepsí třeba více mutací, které by byly mimo py soubor?"* → i18n přesunuto
+z inline Python slovníku do `lang/*.json`, jazyky doplněny na
+**cs/en/de/es/pl** (uživatel: "česky, anglicky, německy, španělsky a
+polsky"), sekvence "nejdřív JSON, pak sweep zbytku appky" (uživatelem
+zvolená varianta).
+
+**Hotovo:**
+- **Multi-dokument (taby).** `guitar_pro_viewer.py`: `self.doc_tabs`
+  (`QTabWidget`) nahradilo jedinou `self.timeline`; `self.timeline` teď
+  `@property` → `self.doc_tabs.currentWidget()`, takže ~50 stávajících
+  volání funguje beze změny. Identita dokumentu (`song`,
+  `current_gp_file`/`current_json_file`, `tempo_map`, `_dirty`) se
+  přesunula z hlavního okna na `TimelineEditor` (per-karta). Sdílená
+  schránka (`_SHARED_CLIPBOARD` na úrovni modulu `timeline_editor.py`)
+  umožňuje kopírovat mezi kartami/písněmi — to byl původní požadavek.
+  Doky (Stopy/Náhledy) i toolbar (`snap_combo`/`time_lbl`) se přepínají
+  na aktivní kartu (`_on_active_tab_changed`). Zavření karty/okna s
+  neuloženými změnami se ptá Uložit/Zahodit/Zrušit. Opraven i latentní
+  bug v `LoadWorker` (výsledek načítání se dřív četl z `self._worker` v
+  době doručení signálu, ne z workeru, co ho spustil — u souběžného
+  načítání do dvou karet mohl skončit na špatné kartě; teď zachyceno
+  uzávěrem při spuštění).
+- **i18n přesunuto do `lang/*.json`.** `i18n.py` zeštíhlelo z 977 na 229
+  řádků — `_load_languages()` glob-scanuje `lang/*.json` při startu,
+  `available_languages()` staví nabídku Jazyk v menu DYNAMICKY (přidání
+  jazyka = jen nový soubor, žádný zásah do kódu). `FALLBACK_LANGS =
+  ("en", "cs")`. Nový `tools/check_translations.py` — validuje shodu
+  klíčů/placeholderů napříč jazyky a křížovou kontrolu proti `tr(...)`
+  voláním v kódu; spouštět po každé změně překladů.
+- **Kompletní i18n sweep `web_import.py` a `timeline_editor.py`** —
+  všechny dialogy (tempo/count-in/vlnovka/auto-zarovnání/přichycení na
+  mřížku…), kontextová menu, `PropertiesPanel`, `TrackMixPanel`, tooltips
+  doplněny přes `tr()`/`register_tr`. `lang/*.json` narostly na 427-428
+  klíčů/jazyk (z původních ~225). Pozůstatek: `_section_of()` (generuje
+  "Sloka N"/"Refrén" do EXPORTOVANÝCH karaoke dat pro displej ESP32)
+  záměrně ponechán česky — je to obsah písně pro hardware, ne UI appky.
+- **Bug nalezený uživatelem po commitu: "některé části jsou pouze
+  česky, například levý panel."** Příčina: sloupec "Typ" v levém panelu
+  (Stopy) se překládal jen JEDNOU — při importu GP/načtení JSON — text
+  zůstal napevno v `QTreeWidgetItem`, přepnutí jazyka přeložilo
+  záhlaví/titulek doku, ale ne už vyplněné řádky (stejná past, jaká byla
+  dřív u popisků karet). **Oprava:** ke každé stopě se teď ukládá i
+  strojový klíč druhu (`Qt.UserRole` sloupce 1, `_TRACK_TYPE_KEYS`
+  mapování), nová `_retranslate_track_tree()` je zaregistrovaná stejným
+  trikem jako `_refresh_all_tab_labels()` a přepočítá popisek při KAŽDÉM
+  přepnutí jazyka. Doplněn i chybějící klíč `track.type_vocal` (JSON
+  cesta zná i typ "zpěv", GP cesta ho nikdy nepoužívá). Ověřeno živě
+  cs/en/de na obou cestách (GP i JSON) bez nutnosti znovu otevřít soubor.
+- Regresní sada (45 headless testů ve scratchpadu): 37/45 prochází beze
+  změny; 8 selhání jsou PŘEDEXISTUJÍCÍ dluh nesouvisející s touhle prací
+  (2 testují starý přejmenovaný i18n klíč `file.open_gp`→`file.import_gp`,
+  1 volá starou pre-multidoc metodu `win.export_json`, 5 sdílí zastaralou
+  fixturu z 31.7. bez `drums_timeline`/`bass_timeline` z doby před
+  funkcí editace bicích/basy) — ověřeno jednotlivě, žádné nesouvisí s
+  i18n sweepem ani multi-dokumentem.
+
+**Zbývá (nezměněno od bodu 14):** anglický `docs/USER_GUIDE.md` +
+screenshoty, ověřovací checklist perzistence jazyka přes restart
+(mechanismus existuje — `settings.json` — ale nebyl explicitně
+otestován end-to-end přes reálný restart appky), PyInstaller build
+(`datas` pro `lang/`/`assets/`/`web/`/`drum_samples.json`,
+`SETTINGS_PATH` do `%APPDATA%`).
+**Volitelný úklid (nezadáno, jen poznamenáno):** 8 zastaralých testů výše
+by stálo za přepsání/smazání, až bude čas — testují API, které už
+neexistuje.

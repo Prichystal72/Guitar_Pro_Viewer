@@ -425,5 +425,6 @@
   "dialog.count_in_title_label": "Canción:",
   "dialog.count_in_tempo_info": "Tempo: {bpm} BPM · {beats_per_measure}/4  →  1 compás = {bar_s} s",
   "dialog.shift_selected_title": "Desplazar elementos seleccionados ({n})",
-  "dialog.shift_selected_label": "Desplazamiento ({n}× seleccionado, + = más tarde, − = antes):"
+  "dialog.shift_selected_label": "Desplazamiento ({n}× seleccionado, + = más tarde, − = antes):",
+  "track.type_vocal": "Voz"
 }

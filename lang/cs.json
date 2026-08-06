@@ -425,5 +425,6 @@
   "dialog.count_in_title_label": "Píseň:",
   "dialog.count_in_tempo_info": "Tempo: {bpm} BPM · {beats_per_measure}/4  →  1 takt = {bar_s} s",
   "dialog.shift_selected_title": "Posunout vybrané prvky ({n})",
-  "dialog.shift_selected_label": "Posun ({n}× vybráno, + = později, − = dřív):"
+  "dialog.shift_selected_label": "Posun ({n}× vybráno, + = později, − = dřív):",
+  "track.type_vocal": "Zpěv"
 }

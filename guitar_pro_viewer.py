@@ -298,6 +298,24 @@ def is_solo_like(track) -> bool:
     return False
 
 
+# Druh stopy → i18n klíč popisku ve sloupci "Typ" levého panelu. Skutečný
+# text se dopočítává přes `_track_type_label()` znovu při KAŽDÉM přepnutí
+# jazyka (viz `_retranslate_track_tree`, registrováno v `_setup_ui`) — bez
+# toho by řádky stromu zůstaly zamrzlé v jazyce, který byl aktivní v
+# okamžiku importu GP/načtení JSON (stejná past jako dřív u popisků karet).
+_TRACK_TYPE_KEYS = {
+    "drums": "track.type_drums",
+    "vocal": "track.type_vocal",
+    "bass": "track.type_bass",
+    "solo_guitar": "track.type_solo_guitar",
+    "guitar": "track.type_guitar",
+}
+
+
+def _track_type_label(kind: str) -> str:
+    return tr(_TRACK_TYPE_KEYS.get(kind, kind))
+
+
 # ---------------------------------------------------------------------------
 # Worker vlákno pro načítání (aby UI nezmrzlo)
 # ---------------------------------------------------------------------------
@@ -599,6 +617,20 @@ class GuitarProViewer(QMainWindow):
             if ed is not None:
                 self.doc_tabs.setTabText(i, self._tab_label_for(ed))
 
+    def _retranslate_track_tree(self) -> None:
+        """Přeznačí sloupec "Typ" levého panelu (Stopy) — volá se i po
+        přepnutí jazyka (viz `register_tr` v `_setup_ui`). Text sloupce se
+        jinak nastaví jen jednou při importu GP/načtení JSON a zůstal by
+        zamrzlý v jazyce z toho okamžiku (stejná past jako u popisků
+        karet, viz `_refresh_all_tab_labels`) — druh stopy je proto
+        uložený i jako data (`Qt.UserRole` sloupce 1), aby šlo popisek
+        kdykoli přepočítat znovu."""
+        for i in range(self.track_tree.topLevelItemCount()):
+            item = self.track_tree.topLevelItem(i)
+            kind = item.data(1, Qt.UserRole)
+            if kind:
+                item.setText(1, _track_type_label(kind))
+
     def _confirm_discard(self, ed: TimelineEditor) -> bool:
         """Karta `ed` má neuložené změny — zeptá se Uložit/Zahodit/Zrušit.
         Vrací True, když je bezpečné pokračovat v zavření (uloženo, NEBO
@@ -855,6 +887,11 @@ class GuitarProViewer(QMainWindow):
         # všech karet na klíč "tab.untitled": při přepnutí jazyka registr
         # zavolá tuhle lambdu a popisky se přepočítají.
         register_tr(lambda _text: self._refresh_all_tab_labels(), "tab.untitled")
+
+        # Stejná past jako u popisků karet výše — sloupec "Typ" levého
+        # panelu se jinak přepočítá jen při dalším importu/načtení, ne při
+        # pouhém přepnutí jazyka (viz `_retranslate_track_tree`).
+        register_tr(lambda _text: self._retranslate_track_tree(), "track.type_drums")
 
     def _build_menus(self) -> None:
         """Kompletní menu bar + toolbary — sjednocuje dřívější File menu
@@ -1271,8 +1308,10 @@ class GuitarProViewer(QMainWindow):
 
         self.track_tree.clear()
         for t in data.get("tracks", []):
+            kind = t.get("type", "")
             item = QTreeWidgetItem([f"{t.get('index', '?')}. {t.get('name', '')}",
-                                    t.get("type", "")])
+                                    _track_type_label(kind)])
+            item.setData(1, Qt.UserRole, kind)
             self.track_tree.addTopLevelItem(item)
 
         note = tr("present.no_gp_note")
@@ -1461,16 +1500,13 @@ class GuitarProViewer(QMainWindow):
         self.track_tree.clear()
         for i, t in enumerate(song.tracks):
             is_solo = is_solo_like(t)
-            if t.isPercussionTrack:
-                typ = tr("track.type_drums")
-            elif is_solo:
-                typ = tr("track.type_solo_guitar")
-            elif len(t.strings) == 4:
-                typ = tr("track.type_bass")
-            else:
-                typ = tr("track.type_guitar")
-            item = QTreeWidgetItem([f"{i+1}. {t.name}", typ])
+            kind = ("drums" if t.isPercussionTrack else
+                    "solo_guitar" if is_solo else
+                    "bass" if len(t.strings) == 4 else
+                    "guitar")
+            item = QTreeWidgetItem([f"{i+1}. {t.name}", _track_type_label(kind)])
             item.setData(0, Qt.UserRole, i)
+            item.setData(1, Qt.UserRole, kind)
             if t.isPercussionTrack:
                 item.setForeground(0, QBrush(QColor("#d99a5b")))   # světlejší "saddle brown" pro tmavý podklad
             elif is_solo:
