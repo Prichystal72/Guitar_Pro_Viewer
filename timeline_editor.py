@@ -2176,9 +2176,10 @@ class TimelineEditor(QWidget):
         """O kolik taktů dřív se má obrazovka přepnout (0 = na svém taktu)."""
         self._push_undo()
         self.data.setdefault("meta", {})["display_lead_bars"] = max(0, int(bars))
-        for c in self.clips:
-            c.clip["auto_track"] = True
-            self._sync_auto_display_clip(c)
+        # Předstih se promítne jedině přestavbou obrazovek — ty jsou po
+        # přestavbě označené jako ručně určené, takže je auto-sledování
+        # obsahu samo nepřesune.
+        self.data["display_timeline"] = self.build_screens_from_content()
         self._relayout()
 
     def display_lead_dialog(self) -> None:
@@ -2689,6 +2690,104 @@ class TimelineEditor(QWidget):
         return [(c[0]["time_s"], max(e["time_s"] + e.get("duration_s", 0.5) for e in c), c)
                 for c in clusters]
 
+    def build_screens_from_content(self) -> list[dict]:
+        """Poskládá obrazovky displeje z obsahu v JEDNOM setříděném průchodu.
+
+        Klíčové je, že se skládají **hranice, ne rozsahy**. Obrazovka nemá
+        konec — běží, dokud nezačne další — takže se překryv ani mezera
+        nedají vyrobit ani omylem. Dřívější verze počítala pro každý řádek
+        `start_s` i `end_s` zvlášť a k tomu akordové shluky nezávisle, takže
+        se navzájem překrývaly a musela to po nich uklízet sanitizace.
+
+        Hranice se přichytí na **taktovou čáru** a volitelně posunou o
+        `meta.display_lead_bars` taktů dřív, aby text běžel napřed. Když
+        dvě hranice spadnou na stejný takt, druhá si nechá svůj skutečný
+        čas — jinak by splynuly v jeden okamžik a jedna obrazovka by
+        zmizela.
+
+        Je to čistá funkce obsahu, mřížky a předstihu: dvakrát za sebou dá
+        totéž. Na tom stojí klepání, které bude obrazovky přestavovat po
+        každé změně.
+        """
+        grid = self._music_grid()
+        lead = int((self.data.get("meta") or {}).get("display_lead_bars", 0) or 0)
+
+        # --- hranice z obsahu: textové řádky + instrumentální shluky akordů ---
+        grouped: list[tuple[int, list[dict]]] = []
+        for ti in self._track_order():
+            for line in self._group_lines(ti):
+                if line:
+                    grouped.append((ti, line))
+        grouped.sort(key=lambda g: g[1][0]["time_s"])
+        line_ranges = [(min(e["time_s"] for e in line),
+                        max(e["time_s"] + e.get("duration_s", 0.5) for e in line))
+                       for _ti, line in grouped]
+
+        bounds: list[tuple[float, int, str, str, int | None]] = []
+        for li, (ti, line) in enumerate(grouped):
+            label = " ".join(e.get("text", "") for e in line).strip()
+            bounds.append((line_ranges[li][0], ti, "lyrics_chords", label[:24], li))
+
+        def inside_line(t: float) -> bool:
+            return any(s0 <= t < e0 for s0, e0 in line_ranges)
+
+        # Akordy se shlukují GLOBÁLNĚ, ne po stopách. Nový model má jeden
+        # seznam akordů na sekci, takže per-stopa vznikaly skoro duplicitní
+        # obrazovky pár desetin od sebe (53 místo 33) a při ukládání se
+        # zase zahazovaly, protože k nim nebyl obsah.
+        chords_all = sorted(self.data.get("chords_timeline", []) or [],
+                            key=lambda e: e["time_s"])
+        free = [c for c in chords_all if not inside_line(c["time_s"])]
+        from collections import Counter
+        for t0, _t1, cluster in self._cluster_events_by_gap(free, gap=1.5):
+            seen: list[str] = []
+            for c in cluster:
+                nm = c.get("chord", "")
+                if nm and nm not in seen:
+                    seen.append(nm)
+            # Stopa obrazovky musí být ta, které akordy SKUTEČNĚ patří.
+            # Napevno stopa 1 vypadá neškodně, ale kontrola obsahu při
+            # ukládání hledá akordy na stopě klipu — a když tam žádné
+            # nejsou, obrazovku zahodí jako prázdnou (ztratilo se takhle
+            # 17 z 50).
+            ti_common = Counter(c.get("track_index", 1) for c in cluster).most_common(1)
+            bounds.append((t0, ti_common[0][0] if ti_common else 1,
+                           "chords", " ".join(seen)[:24], None))
+
+        bounds.sort(key=lambda b: b[0])
+
+        # --- přichycení na takt + předstih, hranice musí zůstat rostoucí ---
+        clips: list[dict] = []
+        prev: float | None = None
+        for t, ti, mode, label, li in bounds:
+            # Bez nouzové větve `not_before`: v přestavbě chceme obrazovky
+            # VŽDY na taktové čáře. Když dvě hranice spadnou do stejného
+            # taktu, druhá se zahodí — obrazovka nemá konec, takže ten
+            # obsah stejně poběží dál pod tou první.
+            start = self.snap_down_to_bar(t)
+            if prev is not None and start <= prev + 1e-6:
+                continue
+            prev = start
+            # `auto_track: False` = tohle rozvržení je VÝSLEDEK přestavby,
+            # ne průběžný odhad. Kdyby se obrazovky po každém načtení znovu
+            # dopočítávaly z obsahu, ztratily by přichycení na takt i
+            # předstih, srazily by se a část by se zahodila (17 z 50).
+            # Znovu se přepočítají, až o to člověk požádá.
+            clip = {"id": "clip-%d" % (len(clips) + 1), "start_s": round(start, 3),
+                    "source_track": ti, "mode": mode, "label": label,
+                    "auto_track": False}
+            if li is not None:
+                clip["line"] = li
+            clips.append(clip)
+
+        # Konce jsou ODVOZENÉ: obrazovka běží do začátku další, poslední do
+        # konce písně. V datech se neukládají, editor je potřebuje jen
+        # k vykreslení šířky obdélníku.
+        song_end = max(self._song_end(), clips[-1]["start_s"] + 1.0) if clips else 1.0
+        for i, c in enumerate(clips):
+            c["end_s"] = round(clips[i + 1]["start_s"] if i + 1 < len(clips) else song_end, 3)
+        return clips
+
     def rebuild_display_track(self) -> None:
         """RADIKÁLNÍ oprava (na uživatelovo přání): DEFINITIVNĚ zahodí
         VŠECHNY klipy na Displej stopě (i ručně upravené) a poskládá je
@@ -2713,57 +2812,7 @@ class TimelineEditor(QWidget):
             return
         self._push_undo()
 
-        # 1) VŠECHNY textové řádky napříč VŠEMI stopami, seřazené globálně
-        #    podle času (stejně jako to_json()'s `grouped`).
-        grouped: list[tuple[int, list[dict]]] = []
-        for ti in self._track_order():
-            for line in self._group_lines(ti):
-                if line:
-                    grouped.append((ti, line))
-        grouped.sort(key=lambda g: g[1][0]["time_s"])
-        line_ranges = [(min(e["time_s"] for e in line),
-                        max(e["time_s"] + e.get("duration_s", 0.5) for e in line))
-                       for _ti, line in grouped]
-
-        def line_idx_at(t: float):
-            return next((li for li, (s, e) in enumerate(line_ranges) if s <= t < e), None)
-
-        chords_all = sorted(self.data.get("chords_timeline", []) or [], key=lambda e: e["time_s"])
-
-        clips: list[dict] = []
-        n = 0
-        for line_idx, (ti, line) in enumerate(grouped):
-            n += 1
-            start, end = line_ranges[line_idx]
-            label = " ".join(e.get("text", "") for e in line).strip()
-            clips.append({
-                "id": f"clip-{n}", "start_s": round(start, 3), "end_s": round(end, 3),
-                "source_track": ti, "mode": "lyrics_chords", "label": label[:24],
-                "auto_track": True,
-            })
-
-        # 2) Akordy, které NEPADAJÍ do žádného řádku (na kterékoliv stopě) —
-        #    čistě instrumentální úseky. Shlukují se PO STOPÁCH (jen kvůli
-        #    zobrazení — instrumentální part na jedné stopě, ne mixem všech).
-        unassigned = [c for c in chords_all if line_idx_at(float(c.get("time_s", 0.0))) is None]
-        for ti in self._track_order():
-            track_unassigned = sorted(
-                (c for c in unassigned if c.get("track_index", 1) == ti),
-                key=lambda e: e["time_s"])
-            for t0, t1, cluster in self._cluster_events_by_gap(track_unassigned, gap=1.5):
-                n += 1
-                seen: list[str] = []
-                for c in cluster:
-                    nm = c.get("chord", "")
-                    if nm and nm not in seen:
-                        seen.append(nm)
-                clips.append({
-                    "id": f"clip-{n}", "start_s": round(t0, 3), "end_s": round(t1, 3),
-                    "source_track": ti, "mode": "chords", "label": " ".join(seen)[:24],
-                    "auto_track": True,
-                })
-
-        clips.sort(key=lambda c: c["start_s"])
+        clips = self.build_screens_from_content()
         self.data["display_timeline"] = clips
         self._relayout()
         QMessageBox.information(self, tr("timeline.rebuild_display.done_title"),
