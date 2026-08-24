@@ -7,11 +7,18 @@
 > nese jen text, akordy a bicí. Návod je **obecný** — musí fungovat pro
 > *jakoukoli* skladbu v tomto formátu, ne jen pro přiložený test.
 >
-> **Vstup:** **výstup z vieweru** — JSON, který vyprodukuje tlačítko
-> **„💾 Export JSON"** v editoru časové osy (obsahuje `display_timeline`) nebo
-> hlavní **Export Karaoke JSON**. Formát viz `JSON_FORMAT.md`, `format_version: 2`.
+> **Vstup:** **výstup z vieweru** — JSON, který vyprodukuje uložení
+> (**💾 Uložit** / Ctrl+S, **💾 Uložit jako…** / Ctrl+Shift+S, nebo tlačítko
+> „💾 Uložit Karaoke JSON" v levém panelu) v editoru časové osy — obsahuje
+> `display_timeline`. Formát viz `JSON_FORMAT.md`, `format_version: 2`.
 > ESP nesmí spoléhat na žádný zvlášť generovaný/ručně upravený soubor — pracuje
 > přímo s tím, co viewer vyexportuje.
+>
+> **Referenční testovací soubor** (poslední známý stav formátu, se vším
+> výše): [`Olympic - Jasná Zpráva_final.json`](Olympic%20-%20Jasn%C3%A1%20Zpr%C3%A1va_final.json)
+> — obsahuje posunutý `count_in` klip, samostatné `chords`-only klipy
+> (akordy s `line: null`) i běžné `lyrics_chords` řádky. Konkrétní čísla
+> z něj používá příklad v §11.
 
 ---
 
@@ -22,8 +29,11 @@
 3. Renderuj **bezstavově**: každý snímek zavolej `render(t)`, které z dat samo
    spočítá, co má být na displeji. (Umožní to pauzu/přetáčení zdarma.)
 4. **Řídící osa = `display_timeline`.** Najdi klip aktivní v čase `t` → podle
-   jeho `mode` vykresli obsah `source_track` (text / text+akordy).
-   Když `display_timeline` chybí, odvoď řádky z `karaoke_lines`.
+   jeho `mode` vykresli obsah `source_track` (text / text+akordy). Je-li
+   `display_timeline` **přítomná, je autoritativní** — mezera mezi klipy
+   znamená idle displej, i kdyby `karaoke_lines` pro ten čas obsah měla
+   (§7, konkrétní příklad v §11). Fallback na `karaoke_lines` je jen pro
+   případ, že `display_timeline` v souboru **celá chybí**.
 5. Text je typicky **jeden blok na celý řádek** (ne po slovech) — zvýrazňuj
    celý řádek (progress bar) podle `time_s`/`duration_s` klipu, ne
    jednotlivá slova (viz §5).
@@ -62,11 +72,14 @@
 | `lyrics_timeline[]` | slova se `time_s`/`duration_s` (zdroj pro zvýraznění) | ✅ |
 | `chords_timeline[]` | akordy se `time_s` (nad text / samostatně) | – |
 | `drums_timeline[]` | kdy a jaký buben/sample zahrát | jen máš-li reprák/sampler |
+| `bass_timeline[]` | basová linka (jen po GP sloučení) | ✅ vždy ignoruj — jen pro editor |
 | `tempo_map[]` | přepočet ticků (obvykle ignoruj) | – |
 
-Formát je **jen text, akordy a bicí** — žádná tabulatura (`tracks[].beats`),
+Formát je v jádru **text, akordy a bicí** — žádná tabulatura (`tracks[].beats`),
 takže §8 z dřívějška (tab render) odpadá. `tracks[]` obsahuje jen stopy, co
-něco skutečně nesou (text/akord), plus bicí.
+něco skutečně nesou (text/akord), plus bicí. **Výjimka:** po GP sloučení
+(Ctrl+M v editoru) může přibýt `bass_timeline` — je to čistě vizuální
+referenční stopa pro editor, ESP32 přehrávač ji **vždy ignoruje**.
 
 \* Potřebuješ **buď** `display_timeline` **nebo** `karaoke_lines`/`lyrics_timeline`.
 
@@ -85,7 +98,13 @@ něco skutečně nesou (text/akord), plus bicí.
 
 ## 3. Řídící osa `display_timeline` (Vegas program)
 
-Seřazené, **nepřekrývající se** klipy = „okna" na displeji.
+Seřazené, **nepřekrývající se** klipy = „okna" na displeji. Na to se dá
+**spolehnout**: editor invariant vynucuje při každém uložení (JSON_FORMAT.md
+§3.7, „Zaručený invariant"), protože překryv by tvůj `find` níž vyřešil ve
+prospěch dřívějšího klipu a ten pozdější by se po celou dobu překryvu
+nezobrazil. Starší soubory (uložené dřívější verzí editoru) překryv mít
+můžou — chceš-li být robustní, ber prostě **poslední** klip, který vyhoví
+`start_s <= t < end_s`.
 
 ```jsonc
 { "id":"clip-3", "start_s":10.0, "end_s":13.5,
@@ -93,7 +112,13 @@ Seřazené, **nepřekrývající se** klipy = „okna" na displeji.
 ```
 
 - `start_s`/`end_s` — kdy je klip na obrazovce. Mezera mezi klipy = **prázdný /
-  idle displej** (nebo náhled dalšího řádku, viz §7).
+  idle displej** (nebo náhled dalšího řádku, viz §7). Editor umí mezery
+  **vyplnit** (přepínač „⇥ Vyplnit mezery na Displeji", `meta.display_fill_gaps:
+  true`) — pak `end_s` každého klipu sahá až na `start_s` toho následujícího a
+  idle stav v podstatě nenastane. **Pro firmware se tím nic nemění**: pořád
+  jen čte `start_s`/`end_s`; jen mu dorazí soubor bez děr. Klip může nést
+  i editorové pole `unfilled_end_s` (původní konec před výplní) — **ignoruj
+  ho**, stejně jako každý jiný neznámý klíč.
 - `source_track` — z které stopy brát obsah (odkaz na `tracks[].index`).
 - `mode` — JAK renderovat:
 
@@ -102,9 +127,13 @@ Seřazené, **nepřekrývající se** klipy = „okna" na displeji.
 | `lyrics_chords` | řádek textu + akordy nad ním (výchozí) |
 | `lyrics` | jen text |
 | `chords` | jen akordy (velké, doprostřed — intro/mezihra) |
+| `count_in` | odpočet před písní — `artist`/`title` místo obsahu stopy, viz §6c |
 
 (Starší soubory mohly mít i `tab`/`tab_chords` — žádná aktuální stopa už
-tabulaturu nenese, takže je stačí ošetřit jako fallback na `lyrics_chords`.)
+tabulaturu nenese, ale editor je stále nabízí v menu klipu, takže se i dnes
+teoreticky mohou objevit v exportu. Ošetři je jako fallback na
+`lyrics_chords`. **Neznámý/nerozpoznaný `mode` obecně → fallback
+`lyrics_chords`.**)
 
 **Algoritmus výběru aktivního klipu** (klipy jsou seřazené dle `start_s`):
 binární hledání posledního klipu s `start_s <= t`; pokud `t < end_s`, je aktivní,
@@ -128,6 +157,9 @@ void loop_frame() {
         case CHORDS:
             draw_chords_only(c, t);
             break;
+        case COUNT_IN:
+            draw_count_in(c, t);   // artist/title z klipu + číslo z §6c
+            break;
     }
 }
 ```
@@ -146,9 +178,20 @@ jeden záznam v `lyrics_timeline` = **celý řádek** (`text` = celá věta,
 `time_s`/`duration_s` = začátek/délka celého řádku). **Není tam** jemnější
 časování jednotlivých slov — `duration_s` pokrývá celý řádek najednou.
 
-Slova klipu = položky `lyrics_timeline` (nebo `karaoke_lines[].words`) se
-`track_index == source_track` a `start_s <= time_s < end_s`. Předpočítej si
-při načtení pro každý klip rozsah indexů (žádné hledání za běhu).
+**Primárně páruj přes `line`:** klip nese `clip.line` = index odpovídajícího
+`karaoke_lines[]` řádku (§3 `JSON_FORMAT.md`). Slova klipu = položky
+`lyrics_timeline` se `track_index == source_track` a `word.line == clip.line`.
+Tohle je jediný spolehlivý způsob — uživatel může v editoru klip ručně
+roztáhnout/zkrátit (§3.6 `JSON_FORMAT.md`), takže `clip.start_s/end_s` se pak
+**liší** od skutečného časového rozsahu slov a filtr `start_s <= time_s < end_s`
+by řádek buď oříznul, nebo vynechal úplně.
+
+Když klip `line` nemá (starší soubor, nebo klip typu `chords` — ty se s
+`line` nepárují, viz §6), spadni na fallback: `track_index == source_track`
+a `clip.start_s <= time_s < clip.end_s`.
+
+Předpočítej si při načtení pro každý klip rozsah indexů (žádné hledání za
+běhu).
 
 > **Seskupení do řádků napřímo:** když má JSON `meta.has_line_structure: true`
 > (u obou producentů vždy), nese každý záznam v `lyrics_timeline` klíč
@@ -197,15 +240,35 @@ bool active = cur >= 0 && t < words[cur].time_s + words[cur].duration_s;
 
 ## 6. Akordy nad textem (`*_chords`)
 
-Akordy = `chords_timeline` se `track_index == source_track` a časem uvnitř klipu.
+Akordy = `chords_timeline` se `track_index == source_track` a `chord.time_s`
+uvnitř okna aktivního klipu (`clip.start_s <= time_s < clip.end_s`) — na
+rozdíl od slov (§5.1) se akordy **nepárují přes `line`**, protože typický
+řádek nese jen jeden textový blok, ale víc akordů; a akordy MIMO libovolný
+karaoke řádek (intro/mezihra) mají `line: null` (§3.5 `JSON_FORMAT.md`) — na
+displeji je nese samostatný klip `mode: "chords"`, ne textový klip.
 
-**Zarovnání akordu nad slovo (obecně):**
-1. Spočítej x-souřadnice začátků slov na displeji (`word_x[i]`).
-2. Pro každý akord najdi **slovo s nejbližším `time_s`** (nebo poslední slovo
-   s `word.time_s <= chord.time_s`) → nakresli název akordu nad `word_x` toho
-   slova, o řádek výš.
-3. Když je akordů víc než místa, zobraz jen změny (akord vykresli, jen když se
-   liší od předchozího) — stejná logika jako „chord chart" v editoru.
+> **Pozor — `clip.line` na `chords`-only klipu IGNORUJ.** Editor ho
+> u těchhle klipů nepoužívá k párování (`to_json()` je z logiky `line`
+> párování výslovně vylučuje) a nechá ho, jak zrovna je — v reálném exportu
+> se tak objevují `mode: "chords"` klipy s `line` číslem, které vůbec
+> neodpovídá jejich vlastnímu času (např. `line: 0`, i když karaoke řádek 0
+> je úplně jinde na ose). `line` čti **jen** u `lyrics_chords`/`lyrics`
+> klipů (§5.1); u `chords` ho neexistuje-li nebo je-li přítomné, prostě
+> nepoužívej.
+
+**Zarovnání akordu vodorovně nad text** — poziční vzorec z `JSON_FORMAT.md`
+§3.5, ne hledání „nejbližšího slova" (typický řádek má stejně jen jeden
+blok textu na celou šířku, takže „nejbližší slovo" by dávalo jen jednu
+pozici pro všechny akordy řádku):
+
+```c
+float frac = (chord.time_s - clip.start_s) / (clip.end_s - clip.start_s);
+int x = text_x_start + (int)(frac * text_px_width);
+```
+
+Nakresli název akordu na `x`, o řádek výš než text. Když je akordů víc než
+místa, zobraz jen změny (akord vykresli, jen když se liší od předchozího) —
+stejná logika jako „chord chart" v editoru.
 
 Pro `mode == chords` (bez textu) zobraz **aktuální akord velkým fontem** doprostřed
 a případně malý náhled dalšího.
@@ -278,34 +341,43 @@ nehrozí, že by se pokusil otevřít něco jiného jako soubor).
 ## 6c. Count-in — odpočet před písní (`meta.count_in_s`)
 
 Bez odpočtu neví nikdo (na displeji ani na vysílání/přenosu), kdy má
-zpěv/hraní začít — proto je na začátku každé písně **tichý úvod** s klikací
-stopou (viz §6b, `drum: "Closed Hi-Hat"` v `drums_timeline` v okně
-`[0, meta.count_in_s)`) a **celá časová osa je posunutá** tak, aby první
-skutečná nota/slovo začínala až PO count-inu, ne se s ním nepřekrývala.
+zpěv/hraní začít — proto bývá na začátku písně **tichý úvod**, kolem kterého
+se **celá časová osa posune** tak, aby první skutečná nota/slovo začínala až
+PO count-inu, ne se s ním nepřekrývala.
 
-- **Vizuální odpočet je vždy jen ČÍSLA** (mezinárodní, nezávislé na jazyce
-  displeje) — `4, 3, 2, 1`, ne slova. Žádná zvláštní data v JSONu navíc —
-  dopočítá se z `meta.count_in_s` / `meta.count_in_bars` / `meta.tempo_bpm` /
-  `meta.beats_per_measure` (výchozí 4):
+**Zdroj pravdy je klip, ne `meta`.** Editor při vložení odpočtu postaví klip
+`display_timeline` s `mode: "count_in"` na `[0, meta.count_in_s)`, ale je to
+obyčejný klip — uživatel ho může (stejně jako kterýkoli jiný) přetáhnout
+nebo zkrátit. V reálném exportu proto bývá i posunutý (např.
+`[1.846 s, 5.539 s)` při `count_in_s = 3.692 s`). **Vždy počítej odpočet
+z `clip.start_s`/`clip.end_s` toho konkrétního klipu**, `meta.count_in_s`
+jen jako fallback, když `display_timeline` chybí nebo v něm žádný
+`count_in` klip není:
 
 ```c
-// t < count_in_s  →  jsme v count-in okně
+// aktivní klip c má mode == COUNT_IN, t je uvnitř [c->start_s, c->end_s)
+float rel_t = t - c->start_s;                            // 0 na začátku klipu
 float beat_s = 60.0f / tempo_bpm;
-int total_beats = count_in_bars * beats_per_measure;   // typicky 1×4 = 4
-int beats_elapsed = (int)(t / beat_s);                  // 0,1,2,3…
-int number = total_beats - beats_elapsed;               // 4,3,2,1
-if (number >= 1) draw_big_number(number);                // velký, uprostřed displeje
+int total_beats = count_in_bars * beats_per_measure;      // typicky 1×4 = 4
+int beats_elapsed = (int)(rel_t / beat_s);                 // 0,1,2,3…
+int number = total_beats - beats_elapsed;                  // 4,3,2,1
+if (number >= 1) draw_big_number(number);                   // velký, uprostřed displeje
 ```
 
-- Klikací zvuk (§6b) a vizuální číslo jsou SYNCHRONNÍ ze stejné mřížky —
-  žádné dodatečné párování netřeba, obojí se odvozuje jen z `t`.
-- Zvuk je zatím vždy `"Closed Hi-Hat"` — jde přes stejný `drum_samples.json`
-  jako běžné bicí. Až budou další zvuky metronomu (klasický „klik", odlišný
-  poslední úder apod.), přibude nové jméno do `drum_samples.json`, žádná
-  změna schématu ani firmwaru.
-- Po `t >= count_in_s` přepni na normální render (§3–§6) — první klip
-  `display_timeline` začíná přesně na `count_in_s` (nebo později, pokud má
-  song ještě instrumentální úvod navíc).
+- **Vizuální odpočet je vždy jen ČÍSLA** (mezinárodní, nezávislé na jazyce
+  displeje) — `4, 3, 2, 1`, ne slova. Žádná zvláštní data v JSONu navíc,
+  jen vzorec výše.
+- **Klikací stopa NENÍ vždy přítomná.** Vzniká jen tehdy, když song má bicí
+  stopu (GP soubor/sloučení) — čistý web import bez GP merge `drums_timeline`
+  vůbec nemá, časová osa je posunutá, ale nic necvaká. **Nespoléhej na to,
+  že v okně count-in klipu bude nějaký `drum` event** — vizuální odpočet
+  (kód výše) musí fungovat samostatně, klik (má-li song bicí) je jen bonus
+  navíc ze stejné `drums_timeline` fronty jako běžné bicí (§6b), žádné
+  extra párování. Zvuk je zatím vždy `"Closed Hi-Hat"`.
+- Po opuštění count-in klipu přepni na normální render (§3–§6) podle
+  dalšího klipu v `display_timeline` — žádný předpoklad o tom, kde přesně
+  začíná (nemusí to být přesně na `end_s` count-in klipu, pokud song má
+  ještě instrumentální úvod navíc).
 
 **Interpret + název během odpočtu (volitelný klip `mode: "count_in"`)** — timeline
 editor umí do `display_timeline` vložit klip přesně na `[0, count_in_s)` s
@@ -331,6 +403,11 @@ editor umí do `display_timeline` vložit klip přesně na `[0, count_in_s)` s
 
 ## 7. Idle / mezery / náhled dalšího řádku
 
+> Pozn.: u souboru s `meta.display_fill_gaps: true` (výplň mezer zapnutá
+> v editoru) mezery mezi klipy prakticky neexistují, takže se z celé téhle
+> kapitoly uplatní jen „před prvním klipem" a „za posledním klipem".
+> Implementuj ji ale i tak — soubory bez výplně jsou pořád platné.
+
 - **Mezera mezi klipy** (`active_clip == NULL`): nekresli „zmrzlý" starý řádek.
   Ukaž prázdno, název skladby, nebo **náhled nadcházejícího řádku** + odpočet:
   najdi nejbližší budoucí klip (`start_s > t`), zobraz jeho `label` a
@@ -344,15 +421,18 @@ editor umí do `display_timeline` vložit klip přesně na `[0, count_in_s)` s
 ## 8. Datové struktury (návrh v C)
 
 ```c
-typedef struct { float time_s, dur_s; const char* text; } Word;      // UTF-8!
+typedef struct { float time_s, dur_s; const char* text; int line; } Word;  // UTF-8!
 typedef struct { float time_s; const char* name; } Chord;
-typedef enum { M_LYRICS, M_LYRICS_CHORDS, M_CHORDS } Mode;
+typedef enum { M_LYRICS, M_LYRICS_CHORDS, M_CHORDS, M_COUNT_IN } Mode;
 
 typedef struct {
     float start_s, end_s;
     uint8_t source_track;
     Mode  mode;
     const char* label;
+    int   line;                  // -1 když klip nemá `line` (§5.1/§6) —
+                                  // párování slov pak spadne na časové okno
+    const char* artist, *title;  // jen mode == M_COUNT_IN
     uint16_t word_lo, word_hi;   // předpočítaný rozsah do pole Word[]
     uint16_t chord_lo, chord_hi; // předpočítaný rozsah do pole Chord[]
 } Clip;
@@ -366,8 +446,11 @@ typedef struct {
 ```
 
 **Při načtení (jednou):** ověř verzi → seřaď pole dle `time_s`/`start_s` (jsou
-už seřazená, ale nespoléhej) → pro každý `Clip` předpočítej `word_lo..hi` a
-`chord_lo..hi` binárním hledáním. **Za běhu** už jen binární hledání v čase.
+už seřazená, ale nespoléhej) → pro každý `Clip` předpočítej `word_lo..hi`
+(§5.1: podle `word.line == clip.line`, když `clip.line >= 0`, jinak podle
+časového okna) a `chord_lo..hi` (§6: vždy podle časového okna klipu,
+`chords_timeline` s `line: null` patří jen do `chords`-only klipů). **Za
+běhu** už jen binární hledání v čase.
 
 **Fallback bez `display_timeline`:** vyrob `Clip` z každého `karaoke_lines[i]`
 (`start_s`,`end_s`, `mode=M_LYRICS_CHORDS`, `source_track` = z prvního slova).
@@ -399,32 +482,61 @@ Nedrž „index řádku" napříč snímky jako pravdu; ber ho vždy z `t`.
 ## 11. Akceptační test (obecný) + konkrétní příklad
 
 **Obecné podmínky (musí platit pro každý validní JSON):**
-1. Odmítne `format_version != 2`; neznámé klíče ignoruje; neznámý `mode` → text.
+1. Odmítne `format_version != 2`; neznámé klíče ignoruje; neznámý `mode` →
+   fallback `lyrics_chords`.
 2. V každém `t` je aktivní ≤ 1 klip (klipy se nepřekrývají).
 3. Řádek se objeví v `start_s` a zmizí v `end_s` odpovídajícího klipu (i po
    ručním posunu okraje — viz `JSON_FORMAT.md` §3.6).
 4. Zvýrazněný/aktivní je blok, jehož `[time_s, time_s+duration_s)` obsahuje
    `t` — v typickém případě to je **celý řádek** (jeden blok), ne slovo.
-5. V mezeře mezi klipy displej „nezamrzne" na starém řádku.
-6. Akord se kreslí nad slovem s nejbližším časem; `chords` režim ukáže aktuální.
-7. Bicí (`drums_timeline`) hrají nezávisle na displeji, i v mezerách mezi klipy.
+5. V mezeře mezi klipy displej „nezamrzne" na starém řádku — a to i tehdy,
+   když `karaoke_lines`/`lyrics_timeline` pro daný čas obsah MÁ, ale žádný
+   `display_timeline` klip ho nepokrývá (viz konkrétní příklad níže —
+   `display_timeline`, je-li přítomná, je vždy autoritativní, `karaoke_lines`
+   je jen fallback pro její úplnou absenci, ne výplň jejích mezer).
+6. Akord se kreslí nad textem podle poziční frakce v okně klipu (§6:
+   `x = (chord.time_s − clip.start_s)/(clip.end_s − clip.start_s)`), ne
+   podle „nejbližšího slova"; `chords` režim ukáže aktuální akord.
+7. Bicí (`drums_timeline`) hrají nezávisle na displeji, i v mezerách mezi
+   klipy — a i v okně `count_in` klipu, pokud song má bicí stopu (§6c);
+   pokud ji nemá, `drums_timeline` může chybět úplně a zvuk se nehraje.
 8. Seek na libovolný `t` zobrazí správný řádek bez „dohánění".
 
-**Konkrétní příklad — JSON z importu webu** (song „Let It Be", The Beatles,
-80 BPM, `bars_per_line=2`, `count_in_bars=1` → `count_in_s=3.0`; 21 karaoke
-řádků, každý přesně 6.0 s = 2 takty). Získáš ho: **Ctrl+N** → vlož URL →
-✅ Použít v editoru → **💾 Export JSON**. Očekávané chování:
-- `t=0.0–3.0 s` → **count-in**, žádný klip aktivní → idle/odpočet (viz §7).
-- `t=3.0 s` → klip `clip-1` [3.0–9.0], řádek „1. When I find myself in times
-  of trouble" (celý jako jeden blok, žádné zvýrazňování po slovech — viz §5).
-- `t≈4.5 s` → nad textem akord **C**; později **G** (viz `chords_timeline`,
-  pozice dle pořadí slova na hudební mřížce, ne odhad).
-- `t=9.0 s` → přepnutí na `clip-2` [9.0–15.0] „Mother Mary comes to me",
-  akordy **Ami**, **F**.
-- Žádné mezery mezi řádky (`bars_per_line` je pravidelné, řádky na sebe
-  navazují) — pokud uživatel v editoru ručně natáhne/zkrátí klip (§3.6
-  `JSON_FORMAT.md`), mezera vzniknout může.
-- Seek na libovolné `t` (např. `t=45.0 s`) → rovnou správný klip, žádné
+**Konkrétní příklad — reálný export** (`Olympic - Jasná Zpráva_final.json`,
+65 BPM, `count_in_bars=1` → `count_in_s=3.692` — ale count-in KLIP je ručně
+posunutý na `[1.846, 5.539)`, viz §6c). Očekávané chování:
+- `t < 1.846 s` → idle, žádný klip aktivní (song ještě nezačal, klip je
+  posunutý dopředu — viz §7).
+- `1.846 s ≤ t < 5.539 s` → aktivní klip `clip-count-in` (`mode: "count_in"`).
+  `rel_t = t − 1.846`; při `beat_s = 60/65 ≈ 0.923 s` je na `t=1.846`
+  zobrazeno číslo **4**, na `t≈2.77` **3**, na `t≈3.69` **2**, na `t≈4.62`
+  **1** (§6c). Horní řádek „Olympic", spodní „Jasná zpráva" (`artist`/`title`
+  z klipu).
+- `5.539 s ≤ t < 7.385 s` → idle (mezera před prvním akordovým klipem).
+- `7.385 s ≤ t < 14.769 s` → klip `clip-29`, `mode: "chords"`, žádný `line`
+  → zobraz jen akord **G** velkým fontem uprostřed (žádný text, viz §6).
+- `14.769 s ≤ t < 20.808 s` → klip `clip-1`, `mode: "chords"`, akordy **G →
+  Gmaj7 → Emi → C → D → Ami** postupně. Klip MÁ `line: 0`, ale ten se u
+  `chords`-klipů ignoruje (viz §6 poznámka) — `karaoke_lines[0]` je úplně
+  jinde na ose (`51.692–55.385 s`), takže spoléhání na `line` by tu vedlo
+  ke špatnému výsledku.
+- `39.269 s ≤ t < 71.077 s` → **32sekundová mezera bez klipu**, přestože
+  `karaoke_lines[0..2]` (řádky „1. Skončili jsme, jasná zpráva,", „proč o
+  Tebe zakopávám dál," „projít bytem já abych se bál.", časy
+  `51.692–66.462 s`) v souboru existují. `display_timeline` je autoritativní
+  → displej v tomhle úseku zůstává idle/prázdný, text z `karaoke_lines`
+  se NEVYKRESLÍ (viz bod 5 výše — reálný, ne hypotetický případ).
+- `71.077 s ≤ t < 77.538 s` → klip `clip-4`, `mode: "lyrics_chords"`,
+  `line: 3` → páruj přes `line` na `karaoke_lines[3]` (ne přes časové okno —
+  klip i řádek mají shodné `start_s`/`end_s`, ale spoléhat na to obecně
+  nejde, viz §5.1). Řádek 3 je navíc reálný příklad **víc bloků na jednom
+  `line`** (§5.1 „neočekávej to jako běžný případ" — tady přesně nastává):
+  dva `lyrics_timeline` záznamy se stejným `line: 3` — „2. Dík tobě se vidím
+  zvenčí," (`71.077–74.769 s`) a „připadám si starší, menší sám," (od
+  `74.769 s`) — slož mezerou na „2. Dík tobě se vidím zvenčí, připadám si
+  starší, menší sám," a zvýrazňuj po blocích (§5.2/§5.3), ne jako jeden
+  statický celek.
+- Seek na libovolné `t` (např. `t=100.0 s`) → rovnou správný klip, žádné
   „dohánění" předchozích řádků.
 
 ---

@@ -168,6 +168,14 @@ TEXT_DISPLAY_MODES = ("lyrics_chords", "lyrics")
 # `tab_chords`/`count_in` nemají (zatím) žádný takový zdroj pravdy,
 # zůstávají čistě ručně nastavitelné.
 AUTO_TRACK_MODES = ("lyrics_chords", "lyrics", "chords")
+
+# Vyplňování mezer na master "Displej" stopě (`meta.display_fill_gaps`):
+# klip se natáhne až k ZAČÁTKU následujícího klipu, takže displej nikdy
+# nezůstane prázdný — mezera mezi klipy jinak znamená "nezobrazuj nic"
+# (viz JSON_FORMAT.md §3.7). Původní, z obsahu odvozený konec si klip
+# schová do `unfilled_end_s`, aby šlo výplň zase vypnout beze ztráty.
+DISPLAY_FILL_EPS = 0.01     # tolerance v sekundách (co je pod ní, není mezera)
+DISPLAY_MIN_CLIP_S = 0.05   # kratší klip už nemá smysl (na displeji by problikl)
 MODE_COLORS = {
     "lyrics_chords": QColor("#9141ac"),
     "lyrics": QColor("#2d7d2d"),
@@ -178,6 +186,7 @@ MODE_COLORS = {
 }
 
 PLAYHEAD_COLOR = QColor("#e01b24")   # červená = kurzor / playhead
+OVERLAP_COLOR = QColor("#e01b24")    # rámeček klipu, který se překrývá se sousedem
 
 import re as _re
 _SEC_NUM_RE = _re.compile(r'^\s*(\d+)\.')
@@ -435,13 +444,33 @@ class DisplayClipItem(QGraphicsRectItem):
         if self.isSelected():
             base = SEL_COLOR
         r = self.rect()
+        # Překryv se sousedním klipem = chyba pro firmware (viz
+        # TimelineEditor._mark_overlapping_clips) — přiznej ho červeným
+        # čárkovaným rámečkem, ne tiše.
+        overlapping = id(self.clip) in getattr(self.editor, "_overlapping_clips", ())
         p.setBrush(QBrush(base.lighter(160)))
-        p.setPen(QPen(base, 2))
+        p.setPen(QPen(OVERLAP_COLOR, 2, Qt.DashLine) if overlapping else QPen(base, 2))
         p.drawRoundedRect(r, 5, 5)
         # svislé úchyty na okrajích
         p.setPen(QPen(base.darker(130), 1))
         p.drawLine(r.left() + 3, r.top() + 4, r.left() + 3, r.bottom() - 4)
         p.drawLine(r.right() - 3, r.top() + 4, r.right() - 3, r.bottom() - 4)
+        # Natažená část (výplň mezery až k dalšímu klipu, viz
+        # TimelineEditor._apply_display_gap_fill) — světlejší pruh za
+        # čárkovanou čarou, ať je na první pohled poznat, kde končí
+        # SKUTEČNÝ obsah klipu a kde už jen "drží obraz" do dalšího.
+        natural_end = self.clip.get("unfilled_end_s")
+        if natural_end is not None:
+            x = (float(natural_end) - float(self.clip.get("start_s", 0.0))) * self.editor.pps
+            if 0 < x < r.width() - 1:
+                p.save()
+                p.setClipRect(r)
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(base.lighter(185)))
+                p.drawRect(QRectF(x, r.top() + 2, r.width() - x - 2, r.height() - 4))
+                p.setPen(QPen(base.darker(120), 1, Qt.DashLine))
+                p.drawLine(QPointF(x, r.top() + 3), QPointF(x, r.bottom() - 3))
+                p.restore()
         # popisky
         names = self.editor._track_names()
         ti = self.clip.get("source_track", 1)
@@ -452,6 +481,8 @@ class DisplayClipItem(QGraphicsRectItem):
         else:
             line1 = label if label else names.get(ti, _track_fallback_name(ti))
             line2 = f"{_mode_label(self._mode())} · {names.get(ti, _track_fallback_name(ti))}"
+        if overlapping:
+            line2 = "⚠ " + line2
         p.setPen(QPen(QColor("#1a1a1a")))
         f = QFont("Segoe UI", 9, QFont.Bold)
         p.setFont(f)
@@ -502,6 +533,7 @@ class DisplayClipItem(QGraphicsRectItem):
             self.prepareGeometryChange()
             self.setRect(0, 0, w, self.h)
             self.clip["end_s"] = round(end, 3)
+            self.clip.pop("unfilled_end_s", None)   # ruční konec = nový "přirozený"
             ev.accept()
             return
         if self._resizing == "left":
@@ -607,6 +639,7 @@ class DisplayClipItem(QGraphicsRectItem):
             dur = max(0.05, dur)
             self.clip["start_s"] = round(t, 3)
             self.clip["end_s"] = round(t + dur, 3)
+            self.clip.pop("unfilled_end_s", None)   # posunutý klip = nový "přirozený" konec
             return QPointF(HEADER_W + t * self.editor.pps, self.lane_y)
         return super().itemChange(change, value)
 
@@ -1507,6 +1540,7 @@ class PropertiesPanel(QWidget):
         def on_end(v):
             self._mark_dirty()
             clip["end_s"] = round(v, 3)
+            clip.pop("unfilled_end_s", None)   # ručně zadaný konec = nový "přirozený"
             item._sync_from_clip()
 
         start_sb = self._time_spin(float(clip.get("start_s", 0.0)), on_start)
@@ -1703,6 +1737,11 @@ class TimelineEditor(QWidget):
         self._display_lane_y: float = RULER_H + 4
         self._track_lane: dict[int, dict] = {}   # track_index → {'chord_y','lyric_y'}
         self.export_callback = None              # nastaví hlavní okno: fn(dict, path, silent)
+        # Co poslední `to_json()` musel na Displej stopě uklidit, aby JSON
+        # splnil invariant formátu (nepřekrývající se klipy) — hlavní okno
+        # to po uložení vypíše uživateli, ať se klipy nemažou potichu.
+        self.last_export_cleanup: dict[str, int] = {}
+        self._overlapping_clips: set[int] = set()   # viz _mark_overlapping_clips
         self._drum_icon_pixmaps: dict[tuple[str, int], QPixmap] = {}
         self.bpm: float = 120.0
         self.beats_per_measure: int = 4
@@ -2082,6 +2121,12 @@ class TimelineEditor(QWidget):
         data = self.data
         if data.get("display_timeline"):
             return
+        # Displej stopa se staví POPRVÉ (nová píseň z importu, nebo starý
+        # JSON, který tuhle sekci ještě neměl) — zapni u ní rovnou výplň
+        # mezer, ať na displeji něco je i mezi řádky. Soubory, které už
+        # svou Displej stopu mají, tím nikdy nesaháme; kdo výplň nechce,
+        # vypne ji přepínačem (`set_display_fill_gaps`), a to se uloží.
+        data.setdefault("meta", {}).setdefault("display_fill_gaps", True)
         clips: list[dict] = []
         n = 0
 
@@ -2328,13 +2373,20 @@ class TimelineEditor(QWidget):
         if content is None:
             return False
         t0, t1, label = round(content[0], 3), round(content[1], 3), content[2]
-        if clip.get("start_s") == t0 and clip.get("end_s") == t1 and clip.get("label") == label:
+        # `end_s` může být natažené výplní mezer — porovnávej proti
+        # PŘIROZENÉMU konci schovanému v `unfilled_end_s`, jinak by klip
+        # vypadal "změněně" při každé kontrole a výplň by se donekonečna
+        # bourala a stavěla znovu.
+        cur_end = float(clip.get("unfilled_end_s", clip.get("end_s", 0.0)))
+        if clip.get("start_s") == t0 and cur_end == t1 and clip.get("label") == label:
             return False
         clip["start_s"] = t0
         clip["end_s"] = t1
+        clip.pop("unfilled_end_s", None)   # konec je znovu z obsahu -> stará výplň neplatí
         clip["label"] = label
         clip_item._sync_from_clip()
         clip_item.update()
+        self._refresh_display_fill()       # obsah se pohnul -> mezery vyplň znovu
         return True
 
     def align_all_clips_to_content(self) -> None:
@@ -2363,6 +2415,163 @@ class TimelineEditor(QWidget):
         QMessageBox.information(self, tr("timeline.align_song.result_title"),
             tr("timeline.align_song.result_body_n", n=n) if n else
             tr("timeline.align_song.result_body_none"))
+
+    # --- automatická výplň mezer na Displej stopě ---
+    # Mezera mezi klipy = displej NEUKAZUJE NIC (display_timeline je vůči
+    # obsahu autoritativní, viz JSON_FORMAT.md §3.7). U reálné písně jsou
+    # mezery všude, kde zrovna nikdo nezpívá — mezi řádky, ve slokách,
+    # v mezihře — takže displej většinu času blikal naprázdno. Když je
+    # `meta.display_fill_gaps` zapnuté, každý klip se natáhne až
+    # k ZAČÁTKU toho následujícího: poslední řádek zůstane vidět, dokud
+    # ho nevystřídá další.
+    #
+    # Výplň je NEDESTRUKTIVNÍ — přirozený (z obsahu odvozený) konec se
+    # klipu schová do `unfilled_end_s`, takže vypnutí přepínače vrátí
+    # všechny okraje přesně tam, kde byly. Proto taky každý, kdo `end_s`
+    # přepíše ručně (tažení okraje, panel vlastností, auto-sledování
+    # obsahu), musí `unfilled_end_s` zahodit — jinak by se toggle vracel
+    # ke starému, už neplatnému konci.
+
+    def display_fill_gaps_enabled(self) -> bool:
+        return bool((self.data.get("meta") or {}).get("display_fill_gaps"))
+
+    def _apply_display_gap_fill(self) -> int:
+        """Natáhne konce klipů k začátku následujícího klipu (a naopak
+        zkrátí dřív vyplněný klip, když se ten následující posunul dopředu
+        — výplň nikdy nesmí klipy překrýt). Nikdy nezkracuje pod
+        `unfilled_end_s`, tedy pod skutečný obsah klipu. Idempotentní:
+        opakované volání už nic nemění. Vrací počet upravených klipů."""
+        if not self.display_fill_gaps_enabled():
+            return 0
+        clips = sorted(self.data.get("display_timeline", []) or [],
+                       key=lambda c: float(c.get("start_s", 0.0)))
+        n = 0
+        for cur, nxt in zip(clips, clips[1:]):
+            end = float(cur.get("end_s", 0.0))
+            natural = float(cur.get("unfilled_end_s", end))
+            target = max(float(nxt.get("start_s", 0.0)), natural)
+            if abs(target - end) <= DISPLAY_FILL_EPS:
+                continue
+            if target > natural + DISPLAY_FILL_EPS:
+                cur["unfilled_end_s"] = round(natural, 3)
+            else:
+                cur.pop("unfilled_end_s", None)   # zpátky na vlastní obsah
+            cur["end_s"] = round(target, 3)
+            n += 1
+        if clips and "unfilled_end_s" in clips[-1]:
+            # poslední klip nemá kam vyplňovat (za ním už nic není)
+            clips[-1]["end_s"] = round(float(clips[-1].pop("unfilled_end_s")), 3)
+            n += 1
+        return n
+
+    def _unfill_display_gaps(self) -> int:
+        """Vrátí všem klipům jejich přirozený konec (vypnutí přepínače)."""
+        n = 0
+        for c in self.data.get("display_timeline", []) or []:
+            if "unfilled_end_s" in c:
+                start = float(c.get("start_s", 0.0))
+                c["end_s"] = round(max(float(c.pop("unfilled_end_s")), start + 0.05), 3)
+                n += 1
+        return n
+
+    def _mark_overlapping_clips(self) -> None:
+        """Zapíše do `self._overlapping_clips` id klipů, které se
+        překrývají se sousedem. Překryv je pro firmware chyba (pozdější
+        klip se po dobu překryvu vůbec nezobrazí, viz
+        `_sanitize_display_overlaps`) — v editoru ho proto klip přizná
+        červeným rámečkem, ať to uživatel vidí DŘÍV, než ho při ukládání
+        uklidí export."""
+        clips = sorted(self.data.get("display_timeline", []) or [],
+                       key=lambda c: float(c.get("start_s", 0.0)))
+        bad: set[int] = set()
+        for a, b in zip(clips, clips[1:]):
+            if float(b.get("start_s", 0.0)) < float(a.get("end_s", 0.0)) - DISPLAY_FILL_EPS:
+                bad.add(id(a))
+                bad.add(id(b))
+        self._overlapping_clips = bad
+
+    def _refresh_display_fill(self) -> int:
+        """Přepočítá výplň a hned ji promítne do UŽ vykreslených klipů —
+        levná varianta pro živou editaci (tažení slova, auto-sledování),
+        kde by plný `_relayout()` byl zbytečně drahý."""
+        n = self._apply_display_gap_fill()
+        if n:
+            for it in self.clips:
+                it._sync_from_clip()
+                it.update()
+        return n
+
+    # --- vynucení invariantu "klipy se nepřekrývají" (kvůli firmwaru) ---
+    # ESP32 přehrávač hledá aktivní klip jako "první, kde start_s <= t <
+    # end_s" (ESP32_KARAOKE_IMPLEMENTATION.md §6) — jakmile se dva klipy
+    # překryjí, ten pozdější se po dobu překryvu VŮBEC nedostane ke slovu
+    # a displej ukazuje cizí řádek. Formát proto překryv zakazuje
+    # (JSON_FORMAT.md §3.7) a `to_json()` to při každém uložení vynutí.
+    #
+    # Kdo z překrývající se dvojice ustoupí, NEROZHODUJE pořadí, ale
+    # OBSAH: klip, který se při přepočtu spároval se skutečným řádkem
+    # (`bound_ids`), má co zobrazit; nespárovaný textový klip je osiřelý
+    # zbytek po přečíslování řádků (typicky po smazání/přeskládání textu —
+    # přesně ten případ, který „🔄 Zarovnat displej" neumí uklidit) a na
+    # displeji by stejně nevykreslil nic. Proto:
+    #   oba s obsahem  → dřívějšímu se zkrátí konec na start pozdějšího
+    #   jen jeden      → ten prázdný jde pryč (i kdyby byl dřív)
+    #   ani jeden      → zůstane ten dřívější
+    # Prázdný klip, který se s NIČÍM nepřekrývá, se nemaže — nikomu
+    # nevadí a uživatel si ho tam mohl nechat schválně.
+
+    def _sanitize_display_overlaps(self, bound_ids: set[int]) -> tuple[int, int]:
+        """Vrátí (kolik klipů se zkrátilo, kolik se zahodilo)."""
+        clips = sorted(self.data.get("display_timeline", []) or [],
+                       key=lambda c: (float(c.get("start_s", 0.0)), float(c.get("end_s", 0.0))))
+        kept: list[dict] = []
+        shortened = dropped = 0
+        for c in clips:
+            c_bound = id(c) in bound_ids
+            drop_c = False
+            while kept and not drop_c:
+                prev = kept[-1]
+                if float(c.get("start_s", 0.0)) >= float(prev.get("end_s", 0.0)) - DISPLAY_FILL_EPS:
+                    break                     # bez překryvu, dvojice je v pořádku
+                if c_bound and id(prev) in bound_ids:
+                    new_end = round(float(c.get("start_s", 0.0)), 3)
+                    if new_end - float(prev.get("start_s", 0.0)) < DISPLAY_MIN_CLIP_S:
+                        kept.pop()            # z předchozího by nezbylo nic
+                        dropped += 1
+                        continue              # porovnej `c` s tím ještě dřívějším
+                    prev["end_s"] = new_end
+                    prev.pop("unfilled_end_s", None)
+                    shortened += 1
+                    break
+                if id(prev) in bound_ids:
+                    drop_c = True             # `c` nemá co zobrazit
+                elif c_bound:
+                    kept.pop()                # `prev` nemá co zobrazit
+                    dropped += 1
+                else:
+                    drop_c = True             # ani jeden; nech ten dřívější
+            if drop_c:
+                dropped += 1
+            else:
+                kept.append(c)
+        self.data["display_timeline"] = kept
+        return shortened, dropped
+
+    def set_display_fill_gaps(self, on: bool) -> None:
+        """Přepínač „⇥ Vyplnit mezery na Displeji" (menu Časová osa).
+        Uloží se do `meta.display_fill_gaps`, takže zůstane s písní i po
+        uložení/načtení a nová výplň se sama dopočítá po každé editaci."""
+        if not self.data:
+            return
+        if self.display_fill_gaps_enabled() == bool(on):
+            return
+        self._push_undo()
+        self.data.setdefault("meta", {})["display_fill_gaps"] = bool(on)
+        if on:
+            self._apply_display_gap_fill()
+        else:
+            self._unfill_display_gaps()
+        self._relayout()
 
     @staticmethod
     def _cluster_events_by_gap(events: list[dict], gap: float) -> list[tuple[float, float, list[dict]]]:
@@ -2678,7 +2887,11 @@ class TimelineEditor(QWidget):
         # pozadí pruhů + names + pravítko
         self._draw_ruler(max_t, total_h)
 
-        # master "Displej" stopa navrchu
+        # master "Displej" stopa navrchu — mezery mezi klipy se (je-li to
+        # zapnuté) vyplní TĚSNĚ PŘED vykreslením, aby se výplň dopočítala
+        # po každé editaci sama, ať do dat sáhl kdokoliv
+        self._apply_display_gap_fill()
+        self._mark_overlapping_clips()
         self._display_lane_y = RULER_H + 4
         self._draw_display_bg(total_w)
         for clip in self.data.get("display_timeline", []):
@@ -4142,7 +4355,9 @@ class TimelineEditor(QWidget):
         right = dict(c)
         right["id"] = f"clip-{len(clips) + 1}"
         right["start_s"] = round(t, 3)
+        right.pop("unfilled_end_s", None)
         c["end_s"] = round(t, 3)
+        c.pop("unfilled_end_s", None)
         clips.append(right)
         self._relayout()
 
@@ -4247,6 +4462,8 @@ class TimelineEditor(QWidget):
             for c in self.data.get("display_timeline", []):
                 c["start_s"] = round(float(c.get("start_s", 0.0)) * ratio, 3)
                 c["end_s"] = round(float(c.get("end_s", 0.0)) * ratio, 3)
+                if "unfilled_end_s" in c:
+                    c["unfilled_end_s"] = round(float(c["unfilled_end_s"]) * ratio, 3)
 
         self.bpm = new_bpm
         meta = self.data.setdefault("meta", {})
@@ -4336,6 +4553,8 @@ class TimelineEditor(QWidget):
                     continue   # tenhle klip přestavíme níž od nuly
                 c["start_s"] = round(max(0.0, float(c.get("start_s", 0.0)) + delta), 3)
                 c["end_s"] = round(max(0.0, float(c.get("end_s", 0.0)) + delta), 3)
+                if "unfilled_end_s" in c:
+                    c["unfilled_end_s"] = round(max(0.0, float(c["unfilled_end_s"]) + delta), 3)
             # NAHRÁVKA se posouvá taky — je ukotvená přes `audio_offset_s`
             # (kolikátou sekundou časové osy začíná t=0 souboru), takže bez
             # tohohle by odpočet posunul VŠECHNO ostatní, ale nahrávka by
@@ -4485,6 +4704,7 @@ class TimelineEditor(QWidget):
                 d["auto_track"] = False   # kopie nemá vazbu na konkrétní řádek, viz replace_text_and_chords
                 d["start_s"] = new_t
                 d["end_s"] = round(new_t + dur, 3)
+                d.pop("unfilled_end_s", None)
                 clips = self.data.setdefault("display_timeline", [])
                 d["id"] = f"clip-{len(clips) + 1}-paste"
                 clips.append(d)
@@ -4618,6 +4838,7 @@ class TimelineEditor(QWidget):
             start = round(max(0.0, float(it.clip.get("start_s", 0.0)) + delta_s), 3)
             it.clip["start_s"] = start
             it.clip["end_s"] = round(start + dur, 3)
+            it.clip.pop("unfilled_end_s", None)
             it._sync_from_clip()
 
     def shift_selected_dialog(self) -> None:
@@ -4715,6 +4936,11 @@ class TimelineEditor(QWidget):
         MAX_LINE_CLIP_DRIFT_S = 6.0
 
         karaoke: list[dict] = []
+        # Klipy, které se spárovaly se skutečným řádkem — vstup pro
+        # `_sanitize_display_overlaps()` (kdo z překrývající se dvojice
+        # ustoupí) a pro dosrovnání `karaoke_lines` po sanitizaci/výplni.
+        bound_ids: set[int] = set()
+        clip_of_line: dict[int, dict] = {}
         for line_idx, (ti, _line) in enumerate(grouped):
             words = line_words[line_idx]
             start, end = line_ranges[line_idx]
@@ -4738,6 +4964,8 @@ class TimelineEditor(QWidget):
 
             disp_start, disp_end = start, end
             if clip is not None:
+                bound_ids.add(id(clip))
+                clip_of_line[line_idx] = clip
                 disp_start = float(clip.get("start_s", start))
                 disp_end = max(float(clip.get("end_s", end)), disp_start + 0.05)
 
@@ -4761,6 +4989,44 @@ class TimelineEditor(QWidget):
                 kl["section"] = sec
             karaoke.append(kl)
         data["karaoke_lines"] = karaoke
+
+        # Netextové klipy: `chords` má obsah, když v jeho okně vůbec nějaký
+        # akord na jeho stopě zní; `count_in` (a případný ruční `tab*`)
+        # si obsah nese sám / nastavil ho uživatel — ty bereme vždy jako
+        # plnohodnotné, sanitizace je nikdy neobětuje.
+        for c in display_clips:
+            mode = c.get("mode", "lyrics_chords")
+            if mode in TEXT_MODES:
+                continue
+            if mode != "chords":
+                bound_ids.add(id(c))
+                continue
+            c0, c1, cti = (float(c.get("start_s", 0.0)), float(c.get("end_s", 0.0)),
+                           c.get("source_track", 1))
+            if any(c0 - DISPLAY_FILL_EPS <= float(e.get("time_s", 0.0)) < c1
+                   and e.get("track_index", 1) == cti for e in chords):
+                bound_ids.add(id(c))
+
+        # Klipy se NESMÍ překrývat (firmware jinak pozdější klip vůbec
+        # nezobrazí — viz `_sanitize_display_overlaps`), a teprve na
+        # uklizené ose má smysl vyplňovat mezery.
+        n_short, n_dropped = self._sanitize_display_overlaps(bound_ids)
+        n_filled = self._apply_display_gap_fill()
+        self.last_export_cleanup = {"shortened": n_short, "dropped": n_dropped,
+                                    "filled": n_filled}
+        display_clips = self.data["display_timeline"]
+
+        # `karaoke_lines` se počítaly z klipů PŘED úklidem — dosrovnej
+        # zobrazovaný rozsah podle toho, co z klipů skutečně zbylo (řádek
+        # bez klipu si nechá svůj přirozený rozsah ze slov).
+        alive = {id(c) for c in display_clips}
+        for kl in karaoke:
+            clip = clip_of_line.get(kl["line"])
+            if clip is None or id(clip) not in alive:
+                continue
+            cs = round(float(clip.get("start_s", kl["start_s"])), 3)
+            kl["start_s"] = cs
+            kl["end_s"] = round(max(float(clip.get("end_s", kl["end_s"])), cs + 0.05), 3)
 
         # master "Displej" stopa (co a kdy uvidí karaoke) — setříděné dle času
         data["display_timeline"] = sorted(display_clips, key=lambda c: float(c.get("start_s", 0.0)))

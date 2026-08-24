@@ -1003,6 +1003,17 @@ class GuitarProViewer(QMainWindow):
                                          slot=lambda: self.timeline.rebuild_display_track(),
                                          icon=std_icon(self, QStyle.StandardPixmap.SP_BrowserReload))
         timeline_menu.addAction(act_rebuild_display)
+        act_fill_gaps = tr_action(self, "timeline.fill_gaps",
+                                   tooltip_key="timeline.fill_gaps.tooltip",
+                                   checkable=True, icon=icon("fill_gaps"),
+                                   slot=lambda checked: self.timeline.set_display_fill_gaps(checked))
+        timeline_menu.addAction(act_fill_gaps)
+        self._act_fill_gaps = act_fill_gaps
+        # Přepínač patří PÍSNI (`meta.display_fill_gaps`), ne oknu — stav
+        # zaškrtnutí proto načti až při otevření menu/toolbaru, ať sedí
+        # s AKTIVNÍ kartou i po přepnutí karty nebo načtení jiného souboru
+        # (jinak by zůstal viset stav té předchozí).
+        timeline_menu.aboutToShow.connect(self._sync_fill_gaps_action)
         timeline_menu.addSeparator()
         act_add_lyric = tr_action(self, "timeline.add_lyric",
                                    slot=lambda: self.timeline.add_block("lyric"),
@@ -1144,6 +1155,7 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addSeparator()
         tb_timeline.addAction(act_add_clip)
         tb_timeline.addAction(act_align_song)
+        tb_timeline.addAction(act_fill_gaps)
         tb_timeline.addAction(act_split)
         tb_timeline.addAction(act_autotime)
         tb_timeline.addAction(act_tempo)
@@ -1154,6 +1166,15 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addAction(act_shift_sel)
         tb_timeline.addSeparator()
         tb_timeline.addAction(act_rewrite_text)
+
+    def _sync_fill_gaps_action(self) -> None:
+        """Zaškrtnutí „Vyplnit mezery na Displeji" podle AKTIVNÍ karty —
+        volá se při otevření menu Časová osa i po přepnutí karty."""
+        act = getattr(self, "_act_fill_gaps", None)
+        if act is None:
+            return
+        ed = self.timeline
+        act.setChecked(ed is not None and ed.display_fill_gaps_enabled())
 
     def _swap_toolbar_widgets(self, active: TimelineEditor) -> None:
         """Vymění snap_combo/time_lbl v toolbaru „Časová osa“ za widgety
@@ -1171,6 +1192,7 @@ class GuitarProViewer(QMainWindow):
         active.snap_combo.currentIndexChanged.connect(self._sync_snap_radio)
         self._connected_snap_combo = active.snap_combo
         self._sync_snap_radio(active.snap_combo.currentIndex())
+        self._sync_fill_gaps_action()
 
     # ------------------------------------------------------------------
     # Načítání souboru
@@ -2170,18 +2192,29 @@ class GuitarProViewer(QMainWindow):
             self.current_json_file = path
             self.timeline._dirty = False
             self._refresh_tab_label(self.timeline)
+            # Co musel export na Displej stopě uklidit, aby JSON splnil
+            # invariant formátu (nepřekrývající se klipy — firmware jinak
+            # pozdější klip vůbec nezobrazí). Klipy se tím můžou i zahodit,
+            # takže se to uživateli VŽDY řekne, ne jen tiše provede.
+            fix = getattr(self.timeline, "last_export_cleanup", {}) or {}
+            cleanup = ""
+            if fix.get("shortened") or fix.get("dropped"):
+                cleanup = tr("export.cleanup_note", n_short=fix.get("shortened", 0),
+                             n_dropped=fix.get("dropped", 0))
             if silent:
-                self.status.showMessage(tr("export.status_done", path=path))
+                self.status.showMessage(
+                    tr("export.status_done", path=path) + (("  " + cleanup) if cleanup else ""))
             else:
                 n_tracks = len(data.get("tracks", []))
                 n_lyrics = len(data.get("lyrics_timeline", []))
                 n_chords = len(data.get("chords_timeline", []))
                 n_drums = len(data.get("drums_timeline", []))
                 n_lines = len(data.get("karaoke_lines", []))
-                QMessageBox.information(
-                    self, tr("export.done_title"),
-                    tr("export.done_body", path=path, n_tracks=n_tracks,
-                       n_lyrics=n_lyrics, n_chords=n_chords, n_drums=n_drums, n_lines=n_lines))
+                body = tr("export.done_body", path=path, n_tracks=n_tracks,
+                          n_lyrics=n_lyrics, n_chords=n_chords, n_drums=n_drums, n_lines=n_lines)
+                if cleanup:
+                    body += "\n\n" + cleanup
+                QMessageBox.information(self, tr("export.done_title"), body)
                 self.status.showMessage(tr("export.status_done", path=path))
         except Exception as ex:
             QMessageBox.critical(self, tr("export.error_title"), str(ex))

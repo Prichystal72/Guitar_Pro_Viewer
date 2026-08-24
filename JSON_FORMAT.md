@@ -8,6 +8,14 @@ desktopová aplikace zobrazující text + akordy + tabulatury).
 > s verzí, kterou parser umí, odmítni soubor / spusť migraci. Neznámé klíče
 > parser **ignoruje** (dopředná kompatibilita).
 
+> **Referenční testovací soubor:** [`Olympic - Jasná Zpráva_final.json`](Olympic%20-%20Jasn%C3%A1%20Zpr%C3%A1va_final.json)
+> je poslední známý stav formátu — prošel web importem, GP sloučením
+> (přidalo `drums_timeline`), ruční editací v editoru časové osy (posunutý
+> `count_in` klip, ruční `chords`-only klipy s `line: null`, audio
+> offset/stretch) i uložením (`edited_in_timeline: true`). Pokrývá víc
+> okrajových případů než kterýkoli jiný soubor v repu — používej ho k
+> testování parseru/firmwaru.
+
 ---
 
 ## 1. Kódování a obecné konvence
@@ -86,6 +94,7 @@ na starší soubor, který je má, ignoruj je (dopředná kompatibilita).
 | `audio_file` | str | cesta k MP3/WAV nahrávce pro přehrávač v editoru časové osy (tlačítko „🎵 Načíst MP3/WAV…", synchronizované s playheadem + shuttle ovladač `jog_shuttle.py`) — nepovinné, jen pro editor; cesta je lokální k počítači, kde se soubor vybral, takže se na jiném stroji nemusí najít (editor to ošetří tichým „(žádné audio)", ne pádem). ESP32 firmware toto pole nepoužívá |
 | `audio_offset_s` | float | posun CELÉ nahrávky (`audio_file`) na časové ose — v kolikáté sekundě timeline začíná t=0 souboru. Nastavuje se tažením vlnovky (`WaveformItem`) nebo dialogem „🎚 Poloha/roztažení…". Výchozí `0.0`. Jen pro editor |
 | `audio_stretch` | float | ±10 % natažení/stlačení DÉLKY nahrávky (0.90–1.10, výchozí `1.0`) kvůli sladění reálné nahrávky s kulatým BPM — mění i rychlost přehrávání (`setPlaybackRate`), aby zvuk a vlnovka zůstaly synchronní. Jen pro editor, karaoke časy (`lyrics_timeline` apod.) se tím NEPŘEPOČÍTAJÍ |
+| `display_fill_gaps` | bool | `true` = klipy `display_timeline` jsou **natažené do sebe**, aby na displeji nikdy nebyla mezera (přepínač „⇥ Vyplnit mezery na Displeji" v editoru, §3.7). Pro parser jen informace, co za daty stojí — časy čte pořád z `clip.start_s`/`end_s`. Nepovinné, chybí = vypnuto. Editor ho nastaví na `true` u **nově zakládané** Displej stopy (import nové písně / starý JSON bez `display_timeline`); existujícím souborům ho sám nikdy nedopisuje |
 | `waveform_track_height` | float | výška řádku vlnovky v editoru (px, tažením dolního okraje) — čistě UI preference, výchozí `64` |
 
 ### 3.2 `tempo_map`
@@ -124,9 +133,16 @@ exportuje).
 s `karaoke_lines`). Text jen ze zpěvní stopy (`type: "vocal"`).
 
 ```jsonc
-{ "time_s": 18.0, "duration_s": 3.6, "text": "Mother Mary comes to me",
-  "line": 3, "track_index": 1 }
+{ "time_s": 51.692, "duration_s": 3.693, "text": "1. Skončili jsme, jasná zpráva,",
+  "measure": 8, "line": 0, "track_index": 1, "line_start": false }
 ```
+
+- `measure` (int, nepovinné) — číslo taktu, kam řádek spadá. Jen informační,
+  parser ho nepotřebuje (má `time_s`).
+- `line_start` (bool, nepovinné) — editorová značka „tenhle záznam je první
+  blok nového vizuálního řádku" (`timeline_editor.py`). Relevantní jen pro
+  editor při ručním zalamování textu — `line` sám o sobě už jednoznačně
+  říká, do kterého řádku záznam patří, přehrávač tenhle klíč nepotřebuje.
 
 ### 3.5 `chords_timeline[]` — časová osa akordů
 
@@ -137,11 +153,22 @@ slova (`beat_index = i × beaty_v_řádku / počet_slov`) — pravidelné, žád
 odhady ze slabik. V editoru se dá tažením přemístit/přichytit na mřížku
 (**⏱ Na mřížku**). Displej umístí akord vodorovně nad text dle času:
 `x = (chord.time_s − line.start_s) / (line.end_s − line.start_s)`.
-**`line`** = index řádku, do kterého akord spadá.
+**`line`** = index řádku, do kterého akord spadá — **může být `null`**,
+když akord zní MIMO rozsah libovolného karaoke řádku (typicky intro/mezihra
+před prvním slovem nebo pauza mezi řádky). Takový akord nepatří k žádnému
+textovému klipu; na displeji ho nese samostatný `display_timeline` klip
+s `mode: "chords"` (§3.7) — ten se páruje podle `source_track` + časového
+okna klipu, ne podle `line`.
 
 ```jsonc
-{ "time_s": 16.0, "chord": "Am", "line": 3, "track_index": 1 }
+{ "time_s": 16.615, "chord": "C", "measure": 4, "line": 0, "track_index": 1 }
 ```
+
+- `measure` (int, nepovinné) — takt, kdy akord zní. Jen informační.
+- `duration_s` (float, nepovinné) — u některých akordů přítomné (typicky
+  první akord delšího samostatného úseku), jinde chybí. Parser ho
+  nepotřebuje — pro zobrazení stačí `time_s` následujícího akordu / konec
+  klipu.
 
 ### 3.5b `drums_timeline[]` — kdy a jaký buben/sample zní
 
@@ -218,9 +245,11 @@ odvozovat z plochých os.
 `lyrics_timeline` / `chords_timeline`). Je to **střihová osa (EDL)** ve stylu
 Sony Vegas: seřazený seznam **klipů**, kde každý klip říká, že v okně
 `[start_s, end_s)` má displej ukázat obsah zdrojové stopy v daném režimu.
-Klipy se **nepřekrývají** (jsou seřazené dle `start_s`); mezera = displej nic
-neukazuje. Obsah (slova/akordy/tab noty) klip neduplikuje — jen na něj odkazuje
-přes `source_track` a čas.
+Klipy se **nepřekrývají** (jsou seřazené dle `start_s`) — a **editor to při
+každém uložení vynucuje** (viz „Zaručený invariant" níže), takže parser se na
+to může spolehnout; mezera = displej nic neukazuje — proto existuje **výplň mezer** (`meta.display_fill_gaps`, viz
+níže), která je umí odstranit. Obsah (slova/akordy/tab noty) klip
+neduplikuje — jen na něj odkazuje přes `source_track` a čas.
 
 ```jsonc
 {
@@ -258,6 +287,38 @@ napříč všemi stopami** podle časového překryvu — stejně jako `karaoke_
 v `to_json()`, takže akordy na jiné stopě než zpěv se správně spojí s textovým
 řádkem, místo aby vyrobily falešný samostatný akordový klip).
 
+**Výplň mezer (`meta.display_fill_gaps`, `unfilled_end_s`).** Mezi klipy
+vzniká přirozeně spousta mezer (pauzy mezi řádky, mezihry) a v každé z nich
+displej **nezobrazuje nic** — přesně to řešíme přepínačem „⇥ Vyplnit mezery
+na Displeji" v editoru. Když je zapnutý (`meta.display_fill_gaps: true`),
+editor natáhne `end_s` každého klipu až na `start_s` toho následujícího,
+takže poslední řádek zůstane na displeji, dokud ho nevystřídá další.
+Přirozený, z obsahu odvozený konec si klip přitom schová do
+**`unfilled_end_s`** (float, nepovinné) — jen aby šla výplň zase vypnout
+beze ztráty ručních/obsahových okrajů. **`unfilled_end_s` je čistě editorové
+pole; parser/firmware ho ignoruje** a řídí se jako vždy `start_s`/`end_s`.
+Poslední klip v souboru se nevyplňuje (nemá kam) a výplň nikdy nezkrátí klip
+pod jeho vlastní obsah.
+
+**Zaručený invariant: klipy se nepřekrývají.** Překryv je pro přehrávač
+zákeřný — hledá aktivní klip jako „první, kde `start_s <= t < end_s`", takže
+po dobu překryvu ten pozdější klip **vůbec nedostane slovo** a na displeji
+visí cizí řádek. V editoru přitom překryvy vznikají snadno (přetažené okraje,
+osiřelé klipy po přečíslování řádků). `to_json()` je proto při **každém
+uložení uklidí** — v editoru je navíc takový klip vidět s červeným
+čárkovaným rámečkem a ⚠ v popisku, a po uložení se vypíše, co se dělo:
+
+- **oba klipy mají obsah** (spárovaly se se skutečným řádkem / mají ve svém
+  okně akordy) → dřívějšímu se **zkrátí konec** na `start_s` toho pozdějšího
+  (pozdější klip má přednost — jeho obsah v tu chvíli opravdu zní),
+- **jen jeden má obsah** → ten prázdný se **zahodí** (typicky osiřelý klip
+  s `line`, které už v obsahu neexistuje — na displeji by stejně nevykreslil
+  nic), i kdyby byl na ose dřív,
+- **ani jeden** → zůstane ten dřívější.
+
+Prázdný klip, který se **s ničím nepřekrývá**, se nemaže — nikomu nevadí.
+Zkracování/mazání je vratné přes Zpět (Ctrl+Z).
+
 | `mode` | Význam pro displej |
 |--------|--------------------|
 | `lyrics_chords` | text zpěvu s akordy nad ním (výchozí) |
@@ -265,14 +326,23 @@ v `to_json()`, takže akordy na jiné stopě než zpěv se správně spojí s te
 | `chords` | jen akordy (intro/mezihra bez textu) |
 | `count_in` | odpočet před písní — viz níže |
 
-(Módy `tab`/`tab_chords` z dřívějška se už negenerují — žádná stopa nenese
-tabulaturu. Parser je pro jistotu nechá jako fallback na `lyrics_chords`,
-kdyby na ně narazil ve starším souboru.)
+(Módy `tab`/`tab_chords` z dřívějška žádný producent do JSONu negeneruje —
+žádná stopa nenese tabulaturu, takže by pro ně nebyl žádný obsah k
+zobrazení. Editor je pro jistotu **stále nabízí v menu klipu** (`MODE_ORDER`
+v `timeline_editor.py`), takže ruční výběr uživatele je teoreticky může do
+`mode` dostat i dnes — parser je proto musí ošetřit stejně jako starší
+soubor: fallback na `lyrics_chords`.)
 
-**`mode: "count_in"`** — volitelný klip vždy na `[0, meta.count_in_s)`
-(vkládá/upravuje ho tlačítko „🥁⏱ Odpočet…" v editoru časové osy — viz
-`ESP32_KARAOKE_IMPLEMENTATION.md` §6c). Má navíc dvě pole místo obvyklého
-`source_track`/textu ze stopy:
+**`mode: "count_in"`** — volitelný klip pro odpočet před písní (vkládá ho
+tlačítko „🥁⏱ Odpočet…" v editoru časové osy — viz
+`ESP32_KARAOKE_IMPLEMENTATION.md` §6c). Editor ho **při vložení** postaví na
+`[0, meta.count_in_s)`, ale je to obyčejný klip — jde přetáhnout/zkrátit
+jako kterýkoli jiný (v reálném exportu bývá i posunutý, např.
+`[1.846, 5.539)` při `count_in_s = 3.692`). **Parser vychází vždy z
+`clip.start_s`/`clip.end_s`, ne z `meta.count_in_s`** — to je jen výchozí
+hodnota při vložení a vstup do vzorce pro odpočítávací čísla (§6c), samotné
+umístění klipu na ose je na něm nezávislé. Klip má navíc dvě pole místo
+obvyklého `source_track`/textu ze stopy:
 
 ```jsonc
 { "id": "clip-count-in", "start_s": 0.0, "end_s": 4.0,
@@ -286,9 +356,22 @@ si ho dopočítá z `meta.count_in_s`/`count_in_bars`/`tempo_bpm` (viz §6c).
 
 Parser vezme `mode` + `source_track`, dohledá odpovídající eventy v daném
 časovém okně a vykreslí je. Neznámý `mode` → fallback `lyrics_chords`.
-Nepřekrývající se klipy 1:1 odpovídají řádkům z `karaoke_lines` — `clip.start_s`/
-`end_s` **jsou** to, co se má na displeji zobrazit (viz poznámka v §3.6 o ručním
-posunu konce řádku).
+`clip.start_s`/`end_s` **jsou** to, co se má na displeji zobrazit (viz
+poznámka v §3.6 o ručním posunu konce řádku).
+
+**Klipy NEODPOVÍDAJÍ nutně 1:1 všem řádkům z `karaoke_lines`.** Klip pro
+daný řádek může chybět úplně (uživatel ho v editoru smazal a znovu
+nevygeneroval — „🔄🗑 Znovu poskládat Displej stopu"), takže v `display_timeline`
+může být mezera i tam, kde `karaoke_lines`/`lyrics_timeline` obsah MAJÍ.
+**`display_timeline`, je-li přítomná, je vůči obsahu autoritativní** — parser
+zobrazí přesně to, co říkají klipy, ne víc. `karaoke_lines` je fallback jen
+pro úplnou absenci `display_timeline`, nikoli výplň jejích mezer.
+
+**`clip.line` je spolehlivé jen u `lyrics_chords`/`lyrics` klipů.** U klipů
+`mode: "chords"` editor `line` k párování vůbec nepoužívá a nechá ho být, i
+když je zastaralý — v reálném exportu se tak objevují `chords` klipy s
+`line`, které vůbec neodpovídá jejich vlastnímu času. Parser proto `line` u
+`chords`-only klipů ignoruje a pracuje jen s časovým oknem klipu.
 
 ---
 
@@ -346,6 +429,11 @@ Verze zůstává **2** — jde o nepovinné klíče, které starší parser igno
   displeji k oddělovačům sekcí; klipy `display_timeline` ho mají i v `label`.
 - **`karaoke_lines[].start_s/end_s` může být ruční** (§3.6) — přetažené přes
   klip na master „Displej" stopě, nezávisle na časování posledního slova.
+- **`meta.display_fill_gaps` (bool) + `display_timeline[].unfilled_end_s`
+  (float)** — výplň mezer na Displej stopě (§3.7): klipy jsou natažené až
+  k začátku toho následujícího, aby displej nezůstával prázdný.
+  `unfilled_end_s` je jen editorová záloha původního konce, firmware ho
+  ignoruje.
 - **`meta.edited_in_timeline: true`** — příznak, že JSON prošel editorem časové
   osy (přerovnané časy, ruční zalomení řádků, klipy Displeje).
 - Časy (`lyrics_timeline[].time_s/duration_s`, `chords_timeline[].time_s`)

@@ -20,7 +20,8 @@
     "edited_in_timeline": true,
     "audio_file": "C:/Users/prich/Documents/Arduino/Guitar_Pro_Viewer/jasna_zprava.wav",
     "audio_offset_s": 5.767,
-    "audio_stretch": 0.986
+    "audio_stretch": 0.986,
+    "display_fill_gaps": true
   },
   "tempo_map": [
     {
@@ -975,7 +976,7 @@
     {
       "line": 3,
       "start_s": 71.077,
-      "end_s": 77.538,
+      "end_s": 81.231,
       "chords": [
         "G",
         "Gmaj7",
@@ -1006,7 +1007,7 @@
     {
       "line": 4,
       "start_s": 81.231,
-      "end_s": 84.923,
+      "end_s": 88.615,
       "chords": [
         "Ami",
         "C",
@@ -1069,7 +1070,7 @@
     {
       "line": 7,
       "start_s": 103.385,
-      "end_s": 111.269,
+      "end_s": 110.769,
       "chords": [
         "Emi",
         "Hmi"
@@ -1168,7 +1169,7 @@
     {
       "line": 12,
       "start_s": 129.231,
-      "end_s": 132.923,
+      "end_s": 136.615,
       "chords": [
         "Emi",
         "C",
@@ -1189,7 +1190,7 @@
     {
       "line": 13,
       "start_s": 136.615,
-      "end_s": 143.999,
+      "end_s": 144.923,
       "chords": [
         "Ami",
         "C",
@@ -1281,7 +1282,7 @@
     {
       "line": 17,
       "start_s": 192.0,
-      "end_s": 199.385,
+      "end_s": 203.077,
       "chords": [
         "Ami",
         "D"
@@ -1332,7 +1333,7 @@
     {
       "line": 19,
       "start_s": 210.462,
-      "end_s": 218.346,
+      "end_s": 217.846,
       "chords": [
         "Ami",
         "C",
@@ -1356,13 +1357,14 @@
     {
       "id": "clip-count-in",
       "start_s": 1.846,
-      "end_s": 5.539,
+      "end_s": 7.385,
       "source_track": 1,
       "mode": "count_in",
       "artist": "Olympic",
       "title": "Jasná zpráva",
       "label": "Olympic / Jasná zpráva",
-      "auto_track": false
+      "auto_track": false,
+      "unfilled_end_s": 5.539
     },
     {
       "id": "clip-29",
@@ -1376,39 +1378,43 @@
     {
       "id": "clip-1",
       "start_s": 14.769,
-      "end_s": 20.808,
+      "end_s": 33.231,
       "source_track": 1,
       "mode": "chords",
       "label": "G Gmaj7 Emi C D Ami",
       "line": 0,
-      "auto_track": false
+      "auto_track": false,
+      "unfilled_end_s": 20.808
     },
     {
       "id": "clip-3",
       "start_s": 33.231,
-      "end_s": 39.269,
+      "end_s": 71.077,
       "source_track": 1,
       "mode": "chords",
       "label": "Gmaj7 Emi C D Ami G",
-      "line": 2
+      "line": 2,
+      "unfilled_end_s": 39.269
     },
     {
       "id": "clip-4",
       "start_s": 71.077,
-      "end_s": 77.538,
+      "end_s": 81.231,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "2. Dík tobě se vidím zve",
-      "line": 3
+      "line": 3,
+      "unfilled_end_s": 77.538
     },
     {
       "id": "clip-5",
       "start_s": 81.231,
-      "end_s": 84.923,
+      "end_s": 88.615,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "kam se kouknu, kousek Te",
-      "line": 4
+      "line": 4,
+      "unfilled_end_s": 84.923
     },
     {
       "id": "clip-6",
@@ -1431,7 +1437,7 @@
     {
       "id": "clip-8",
       "start_s": 103.385,
-      "end_s": 111.269,
+      "end_s": 110.769,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "Knížku krásně zbytečnou,",
@@ -1476,29 +1482,32 @@
     {
       "id": "clip-13",
       "start_s": 129.231,
-      "end_s": 132.923,
+      "end_s": 136.615,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "mám snad bloudit vlastní",
-      "line": 12
+      "line": 12,
+      "unfilled_end_s": 132.923
     },
     {
       "id": "clip-14",
       "start_s": 136.615,
-      "end_s": 143.999,
+      "end_s": 144.923,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "kam se kouknu, kousek Te",
-      "line": 13
+      "line": 13,
+      "unfilled_end_s": 143.999
     },
     {
       "id": "clip-19",
       "start_s": 144.923,
-      "end_s": 150.962,
+      "end_s": 162.462,
       "source_track": 1,
       "mode": "chords",
       "label": "Gmaj7 Emi C D Ami G",
-      "line": 18
+      "line": 18,
+      "unfilled_end_s": 150.962
     },
     {
       "id": "clip-15",
@@ -1519,15 +1528,6 @@
       "line": 15
     },
     {
-      "id": "clip-21",
-      "start_s": 173.538,
-      "end_s": 180.922,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "telefon, cos ustřihla mu",
-      "line": 20
-    },
-    {
       "id": "clip-17",
       "start_s": 177.231,
       "end_s": 191.999,
@@ -1537,31 +1537,14 @@
       "line": 16
     },
     {
-      "id": "clip-22",
-      "start_s": 180.923,
-      "end_s": 188.308,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "Knížku krásně zbytečnou,",
-      "line": 21
-    },
-    {
-      "id": "clip-23",
-      "start_s": 180.923,
-      "end_s": 188.307,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "píše se v ní, jak se lít",
-      "line": 22
-    },
-    {
       "id": "clip-18",
       "start_s": 192.0,
-      "end_s": 199.385,
+      "end_s": 203.077,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "lítá vzhůru, ve dvou vzh",
-      "line": 17
+      "line": 17,
+      "unfilled_end_s": 199.385
     },
     {
       "id": "clip-24",
@@ -1575,38 +1558,21 @@
     {
       "id": "clip-20",
       "start_s": 210.462,
-      "end_s": 218.346,
+      "end_s": 217.846,
       "source_track": 1,
       "mode": "lyrics_chords",
       "label": "jasná zpráva, rub, co ne",
       "line": 19
     },
     {
-      "id": "clip-25",
-      "start_s": 210.462,
-      "end_s": 217.847,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "4. Skončili jsme jasná z",
-      "line": 24
-    },
-    {
-      "id": "clip-26",
-      "start_s": 217.846,
-      "end_s": 225.23,
-      "source_track": 1,
-      "mode": "lyrics_chords",
-      "label": "není komu z okna mávat v",
-      "line": 25
-    },
-    {
       "id": "clip-28",
       "start_s": 217.846,
-      "end_s": 223.885,
+      "end_s": 225.231,
       "source_track": 1,
       "mode": "chords",
       "label": "Gmaj7 Emi C D Ami G",
-      "line": 27
+      "line": 27,
+      "unfilled_end_s": 223.885
     },
     {
       "id": "clip-27",

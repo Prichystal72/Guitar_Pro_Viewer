@@ -89,6 +89,23 @@ Přepínač je v menu **Zobrazit ▸ Jazyk**, volba se pamatuje mezi spuštění
     **🔄🗑 Znovu poskládat Displej stopu** — zahodí všechny klipy a poskládá je
     znovu od nuly z aktuálního obsahu (řádky se počítají napříč všemi stopami,
     takže akordy na jiné stopě než zpěv se správně spojí s textem).
+  - **⇥ Vyplnit mezery na Displeji** — přepínač: každý klip se natáhne až
+    k začátku toho následujícího, takže na displeji je pořád něco vidět
+    (mezera mezi klipy jinak znamená prázdný displej). Poslední řádek tam
+    zůstane, dokud ho nevystřídá další; natažená část je v klipu odlišená za
+    čárkovanou čarou. Výplň se sama dopočítává po každé editaci, vypnutím se
+    okraje vrátí přesně tam, kde byly. Ukládá se s písní
+    (`meta.display_fill_gaps`) a u **nově importované** písně je rovnou
+    zapnutá; písním, které Displej stopu už mají, se nic nemění, dokud
+    přepínač sám nezapneš.
+  - **⚠ Klipy se nesmí překrývat** — firmware hledá aktivní klip jako první,
+    kde `start_s <= t < end_s`, takže při překryvu by ten pozdější klip vůbec
+    nezobrazil. Překrývající se klip je proto v editoru vidět s **červeným
+    čárkovaným rámečkem** a ⚠ v popisku a **při uložení se to uklidí**:
+    dřívějšímu klipu se zkrátí konec na začátek pozdějšího, a klip, který
+    nemá co zobrazit (osiřelý po přečíslování řádků) a přitom leze do klipu
+    se skutečným obsahem, se zahodí. Po uložení se vypíše, co se dělo;
+    vrátit to jde přes Zpět (Ctrl+Z).
   - Posun bloků, editace dvojklikem, zalomení řádků pravým klikem, zoom
     (Ctrl+kolečko). Náhledy (Chord Chart, Noty, JSON…) jsou ve sbalitelném docku.
   - **Hromadný výběr (ripple)** — `]` / `[` (nebo pravý klik → „Vybrat od zde
@@ -221,7 +238,7 @@ Všechny akce jsou v hlavním menu (a zároveň jako ikony v toolbarech
 |------|-------|
 | **Soubor** | Nová píseň z webu/textu (`Ctrl+N`), Sloučit s webem (`Ctrl+M`) · Otevřít… (`Ctrl+O`, JSON), Importovat z Guitar Pro… (`Ctrl+I`) · Uložit (`Ctrl+S`), Uložit jako… (`Ctrl+Shift+S`) · Konec (`Ctrl+Q`) |
 | **Úpravy** | Zpět (`Ctrl+Z`), Znovu (`Ctrl+Shift+Z`/`Ctrl+Y`) · Vybrat vše (`Ctrl+A`), Kopírovat (`Ctrl+C`), Vyjmout (`Ctrl+X`), Vložit (`Ctrl+V`) · Rozdělit v kurzoru (`S`), Smazat vybrané (`Del`), Posunout vybrané… · ✎ Upravit text a akordy… (`Ctrl+Shift+T`) |
-| **Časová osa** | ＋ Klip displeje (`Ctrl+D`, nebo pravý klik přímo na Displej stopu = klip přesně tam), 🔄 Zarovnat displej, 🔄🗑 Znovu poskládat Displej stopu · ＋ Text, ＋ Akord · ⏱ Na mřížku…, ✏️ Tempo…, 🥁⏱ Odpočet…, Přichytit k mřížce ▸ |
+| **Časová osa** | ＋ Klip displeje (`Ctrl+D`, nebo pravý klik přímo na Displej stopu = klip přesně tam), 🔄 Zarovnat displej, 🔄🗑 Znovu poskládat Displej stopu, ⇥ Vyplnit mezery na Displeji · ＋ Text, ＋ Akord · ⏱ Na mřížku…, ✏️ Tempo…, 🥁⏱ Odpočet…, Přichytit k mřížce ▸ |
 | **Zobrazit** | Panel stop, Panel náhledů · Přiblížit (`Ctrl+=`), Oddálit (`Ctrl+-`) · **Jazyk ▸** (Čeština / English / Deutsch / Español / Polski) |
 | **Nápověda** | Nápověda k časové ose (strukturovaná, s tabulkou zkratek), O aplikaci |
 
