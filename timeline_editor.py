@@ -2027,6 +2027,30 @@ class TimelineEditor(QWidget):
             return round(t / self.snap_s) * self.snap_s
         return max(0.0, t)
 
+    @staticmethod
+    def _normalize_input(data: dict) -> dict:
+        """Cokoli, co přijde zvenčí, převede na vnitřní tvar editoru.
+
+        - `schemaVersion: 1` (soubor z disku) → rozbalí se do plochých
+          sekundových os a konce se dopočítají; v novém formátu se
+          neukládají.
+        - Cokoli jiného je **plochý pracovní tvar** rovnou od producenta
+          (web import, GP import) — ten se nikam nepřevádí, protože JE
+          vnitřní model editoru. Na disk se stejně dostane až přes
+          `to_json()`, které vydá nový formát.
+
+        Žádný převod starých souborů tu schválně není: na disk se od teď
+        zapisuje jen nový model. Kdo potřebuje překlopit starší soubor,
+        má na to `format_migrate.py` jako samostatný nástroj — do běhu
+        aplikace nepatří.
+        """
+        if not data:
+            return {}
+        if int(data.get("schemaVersion", 0) or 0) == 1:
+            from format_migrate import to_editor_model
+            return to_editor_model(data)
+        return data
+
     def load_data(self, data: dict) -> None:
         self._dirty = False   # čerstvě načtená/prezentovaná data = zatím žádné neuložené změny
         self._stop_shuttle_timer()
@@ -2048,7 +2072,11 @@ class TimelineEditor(QWidget):
         if hasattr(self, "gp_audio_label"):
             self.gp_audio_label.setText(tr("audio.gp_mix_not_generated"))
             self.gp_audio_label.setStyleSheet("color:#999999;")
-        self.data = data or {}
+        # Vstupní hranice formátu: editor uvnitř pracuje s plochým sekundovým
+        # tvarem, ale na disku je nový model (`schemaVersion: 1`). Starý
+        # `format_version: 2` se cestou převede, takže se dřívější soubory
+        # otevřou beze změny chování a uloží se už v novém formátu.
+        self.data = self._normalize_input(data or {})
         self.tracks = self.data.get("tracks", []) or []
         self._undo_stack.clear()   # nová/jiná píseň → historie z předchozí neplatí
         self._redo_stack.clear()
@@ -2093,6 +2121,73 @@ class TimelineEditor(QWidget):
         }.get(key, 0.0)
 
     # --- master "Displej" stopa (Vegas program) ---
+
+    def _music_grid(self):
+        """Mřížka taktů a dob pro aktuální píseň (tempo + metrum).
+
+        Jediná implementace převodu sekundy ↔ takt je v `music_grid.py` a
+        používá ji i konvertor formátu — dvě mírně odlišná číslování taktů
+        by se dřív nebo později rozešla a hledalo by se to špatně.
+
+        Cachuje se, protože pravítko se překresluje při každém posunu, ale
+        zneplatní se, jakmile se změní tempo nebo metrum.
+        """
+        from music_grid import TimeGrid
+        tempo_map = self.data.get("tempo_map") or [{"tick": 960, "bpm": self.bpm}]
+        meter_map = self.data.get("meter_map") or None
+        key = (id(tempo_map), len(tempo_map), self.bpm, self.beats_per_measure,
+               len(meter_map or ()), repr(meter_map))
+        if getattr(self, "_grid_key", None) != key:
+            self._grid_cache = TimeGrid(tempo_map, self.beats_per_measure,
+                                        meter_map=meter_map)
+            self._grid_key = key
+        return self._grid_cache
+
+    def snap_down_to_bar(self, t: float, not_before: float | None = None) -> float:
+        """Nejbližší začátek taktu v čase `t` nebo PŘED ním.
+
+        Obrazovka displeje se má přepnout na taktové čáře, ne uprostřed
+        taktu. Zpěv často nastupuje až po ní (v notách bývá na začátku
+        verše osminová pauza — v Jasné zprávě začíná takt 14 na 46,154 s,
+        ale zpívá se od 46,615 s). Kdyby se displej řídil nástupem zpěvu,
+        přepnul by se o půl doby pozdě a text by se objevil až ve chvíli,
+        kdy ho má člověk zpívat. Text má běžet napřed."""
+        grid = self._music_grid()
+        bar = max(1, grid.bar_of(max(0.0, t)))
+        start = grid.bar_start_seconds(bar)
+        if start > t + 1e-6:
+            bar = max(1, bar - 1)
+            start = grid.bar_start_seconds(bar)
+        # Předstih displeje: kdo zpívá, potřebuje řádek vidět DŘÍV, než na
+        # něj dojde. Posouvá se výhradně displej — hudba (bicí, basa, audio)
+        # zůstává na svém, jinak by se rozešla s nahrávkou.
+        lead = int((self.data.get("meta") or {}).get("display_lead_bars", 0) or 0)
+        if lead > 0:
+            start = grid.bar_start_seconds(max(1, bar - lead))
+        # Dva řádky v jednom taktu se nesmí přichycením slít do jednoho
+        # okamžiku — druhý by měl nulovou délku a při ukládání by zmizel
+        # (chyceno testem stability: soubor se při každém načtení zmenšoval).
+        # V takovém případě má přednost skutečný čas obsahu před mřížkou.
+        if not_before is not None and start <= not_before + 1e-6:
+            return round(max(t, not_before + 0.05), 3)
+        return round(start, 3)
+
+    def set_display_lead(self, bars: int) -> None:
+        """O kolik taktů dřív se má obrazovka přepnout (0 = na svém taktu)."""
+        self._push_undo()
+        self.data.setdefault("meta", {})["display_lead_bars"] = max(0, int(bars))
+        for c in self.clips:
+            c.clip["auto_track"] = True
+            self._sync_auto_display_clip(c)
+        self._relayout()
+
+    def display_lead_dialog(self) -> None:
+        from PySide6.QtWidgets import QInputDialog
+        cur = int((self.data.get("meta") or {}).get("display_lead_bars", 0) or 0)
+        bars, ok = QInputDialog.getInt(self, tr("timeline.display_lead"),
+                                       tr("timeline.display_lead.label"), cur, 0, 8)
+        if ok:
+            self.set_display_lead(bars)
 
     def _track_names(self) -> dict[int, str]:
         names = {t.get("index", i + 1): (t.get("name") or _track_fallback_name(i + 1))
@@ -3800,22 +3895,24 @@ class TimelineEditor(QWidget):
         show_beats = (beat_s * self.pps) >= 6          # ať se beaty nepřehustí
         label_every = max(1, -(-40 // max(1, int(bar_px))))   # ceil(40/bar_px)
 
-        bar_i = 0
-        t = 0.0
-        while t <= max_t + bar_s:
+        # Takty se NESMÍ krokovat konstantou: metrum se v písni může měnit
+        # (Jasná zpráva má takt 1 ve 2/4 a zbytek ve 4/4) a přičítání jedné
+        # délky by od druhého taktu dál kreslilo čáry mimo noty. Délku i
+        # počet dob dodá mřížka, která zná mapu metra.
+        grid = self._music_grid()
+        for bar_i, (bar_no, t, bar_len) in enumerate(grid.iter_bars(max_t + 1.0)):
             x = HEADER_W + t * self.pps
             self.scene.addLine(x, 0, x, total_h, pen_bar)
             if bar_i % label_every == 0:
-                lbl = self.scene.addSimpleText(tr("ruler.bar_label", bar=bar_i + 1, t=f"{t:g}"))
+                lbl = self.scene.addSimpleText(tr("ruler.bar_label", bar=bar_no, t=f"{t:g}"))
                 lbl.setFont(QFont("Segoe UI", 7, QFont.Bold))
                 lbl.setPos(x + 3, RULER_H - 13)
                 lbl.setBrush(QBrush(QColor("#555")))
             if show_beats:
-                for bi in range(1, beats_per_bar):
-                    bx = x + bi * beat_s * self.pps
+                n_beats = grid.beats_in_bar(bar_no)
+                for bi in range(1, n_beats):
+                    bx = x + (bar_len / n_beats) * bi * self.pps
                     self.scene.addLine(bx, RULER_H * 0.35, bx, total_h, pen_beat)
-            t += bar_s
-            bar_i += 1
 
         # Roh pravítka nad sloupcem hlaviček — přimrazený, aby popisky taktů
         # neprojížděly skrz levý sloupec, když se osa odroluje doprava.
@@ -4052,6 +4149,7 @@ class TimelineEditor(QWidget):
             "drum": drum_name,
             "midi": DRUM_NAME_TO_MIDI.get(drum_name, 0),
             "track_index": ti,
+            "source": "manual",   # naklikal uživatel, viz JSON_FORMAT.md §6
         }
         self.data.setdefault("drums_timeline", []).append(ev)
         self._relayout()
@@ -4080,6 +4178,7 @@ class TimelineEditor(QWidget):
             "midi": midi,
             "note_name": _bass_note_name(midi),
             "track_index": ti,
+            "source": "manual",
         }
         self.data.setdefault("bass_timeline", []).append(ev)
         self._relayout()
@@ -4204,11 +4303,11 @@ class TimelineEditor(QWidget):
         ti = order[0] if order else 1
         if kind == "chord":
             ev = {"time_s": 0.0, "duration_s": self.default_chord_dur,
-                  "chord": "C", "measure": 1, "track_index": ti}
+                  "chord": "C", "measure": 1, "track_index": ti, "source": "manual"}
             self.data.setdefault("chords_timeline", []).append(ev)
         else:
             ev = {"time_s": 0.0, "duration_s": 0.5, "text": "text",
-                  "measure": 1, "track_index": ti}
+                  "measure": 1, "track_index": ti, "source": "manual"}
             self.data.setdefault("lyrics_timeline", []).append(ev)
         self._add_block_item(ev, kind)
 
@@ -4570,6 +4669,7 @@ class TimelineEditor(QWidget):
                     "time_s": round(i * self.beat_s, 3),
                     "duration_s": round(self.beat_s * 0.3, 3),
                     "drum": "Closed Hi-Hat", "midi": 42, "track_index": drum_ti,
+                    "source": "generated",   # klikací stopa, ne obsah písně
                 })
             clicks.sort(key=lambda e: e["time_s"])
 
@@ -5033,4 +5133,11 @@ class TimelineEditor(QWidget):
         meta = data.setdefault("meta", {})
         meta["edited_in_timeline"] = True
         meta["has_line_structure"] = True   # slova nesou index řádku `line`
-        return data
+
+        # Výstupní hranice formátu: na disk jde VŽDY nový model. Vnitřní
+        # sekundový tvar výš je jen pracovní — konce, `karaoke_lines` ani
+        # ploché osy se do souboru nedostanou (viz `_normalize_input`).
+        from format_migrate import migrate
+        new_doc, warnings = migrate(data)
+        self.last_export_notes = warnings
+        return new_doc

@@ -434,6 +434,29 @@ Verze zůstává **2** — jde o nepovinné klíče, které starší parser igno
   k začátku toho následujícího, aby displej nezůstával prázdný.
   `unfilled_end_s` je jen editorová záloha původního konce, firmware ho
   ignoruje.
+- **`source` (str, nepovinné)** na událostech v `lyrics_timeline`,
+  `chords_timeline`, `drums_timeline` a `bass_timeline` — **odkud událost
+  pochází**:
+
+  | hodnota | znamená | kdo ji nastaví |
+  |---------|---------|----------------|
+  | `"gp"` | přišlo z Guitar Pro souboru | GP import (`_build_karaoke_json`, GP sloučení) |
+  | `"manual"` | napsal/naklikal člověk | web import (vložený text s akordy), ＋ Text, ＋ Akord, ruční úder bicích, ruční basová nota |
+  | `"generated"` | dopočítal program | klikací stopa odpočtu (`add_count_in`), do budoucna groove šablony a basová linka z akordů |
+
+  Slouží editoru k tomu, aby odlišil, co přišlo automaticky (a mělo by se
+  zkontrolovat sluchem) od toho, co člověk potvrdil. Parser/firmware ho
+  **ignoruje**. Chybí u souborů uložených starší verzí — v tom případě se
+  původ prostě neví, neodvozuj ho. **Pozn.:** pozdější ruční úprava události
+  `source` zatím NEPŘEPÍŠE (přetažené GP slovo zůstane `"gp"`).
+- **`linear_map[]`** (jen GP import) — skutečné pořadí přehrávání. Jeden záznam
+  na takt: `{ "bar": 9, "source_measure": 5, "pass": 2 }`, kde `bar` je pozice
+  v PŘEHRÁVÁNÍ (1-based, souvislá řada), `source_measure` číslo taktu ve
+  ZDROJOVÉM GP souboru a `pass` kolikáté je to zaznění téhož taktu. Vzniká
+  rozbalením repetic, 1./2. zakončení a navigačních skoků (Segno, Coda, Fine,
+  D.C., D.S. — `expand_measure_plan()` v `guitar_pro_viewer.py`). Přehrávač ho
+  nepotřebuje (časy má spočítané), slouží ke zpětnému dohledání, ze kterého
+  místa partitury úsek pochází, a ke kontrole repetic proti notám.
 - **`meta.edited_in_timeline: true`** — příznak, že JSON prošel editorem časové
   osy (přerovnané časy, ruční zalomení řádků, klipy Displeje).
 - Časy (`lyrics_timeline[].time_s/duration_s`, `chords_timeline[].time_s`)

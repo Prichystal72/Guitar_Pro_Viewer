@@ -460,7 +460,7 @@ def build_karaoke_json(
                 if chord != active_chord:
                     chords_timeline.append({'time_s': ticks_to_s(onset), 'chord': chord,
                                             'measure': measure_at(onset), 'line': line_idx,
-                                            'track_index': 1})
+                                            'track_index': 1, 'source': 'manual'})
                     active_chord = chord
                 if chord not in kline_chords:
                     kline_chords.append(chord)
@@ -490,9 +490,11 @@ def build_karaoke_json(
         n_words = len(words)
 
         # jeden text na celý řádek (ne po slovech)
+        # Text i akordy sem přišly z toho, co uživatel vložil/napsal do dialogu
+        # — tedy `source: "manual"`, ne "gp". Viz JSON_FORMAT.md §6.
         lyrics_timeline.append({'time_s': line_start_s, 'duration_s': round(line_dur, 3),
                                 'text': lyric_text, 'measure': measure_at(line_tick),
-                                'line': line_idx, 'track_index': 1})
+                                'line': line_idx, 'track_index': 1, 'source': 'manual'})
 
         # akordy: na beat odpovídající pořadí slova v řádku (jen akordy TOHOTO
         # řádku — bez přenášení z předchozího, aby to sedělo s webem)
@@ -505,7 +507,7 @@ def build_karaoke_json(
                 ts = ticks_to_s(onset)
                 chords_timeline.append({'time_s': ts, 'chord': chord,
                                         'measure': measure_at(line_tick), 'line': line_idx,
-                                        'track_index': 1})
+                                        'track_index': 1, 'source': 'manual'})
                 prev = chord
                 active_chord = chord
                 if chord not in kline_chords:
@@ -617,7 +619,17 @@ def retime_web_to_gp(web: dict, gp_words: list[dict]) -> dict:
     line_start: dict[int, float] = {}
     for (li, _), t in zip(web_flat, times):
         line_start.setdefault(li, t)
+    return apply_line_starts(web, line_start)
 
+
+def apply_line_starts(web: dict, line_start: dict) -> dict:
+    """Přepočte časy řádků, slov i akordů podle NOVÝCH začátků řádků.
+
+    Konec řádku = začátek dalšího, akordy se uvnitř řádku přeškálují na
+    poměrnou pozici. Sdílené mezi `retime_web_to_gp()` (zarovnání na zpěv
+    z GP) a `place_lines_on_structure()` (rozložení na takty, když GP zpěvní
+    text nemá) — dvě kopie tohohle přepočtu by se rozešly."""
+    lines = sorted(web.get('karaoke_lines', []), key=lambda k: k.get('line', 0))
     ordered = sorted(lines, key=lambda k: line_start.get(k.get('line', 0), k.get('start_s', 0)))
     chords = web.get('chords_timeline', [])
     lyr = web.get('lyrics_timeline', [])
@@ -652,6 +664,98 @@ def retime_web_to_gp(web: dict, gp_words: list[dict]) -> dict:
     chords.sort(key=lambda e: e['time_s'])
     web['karaoke_lines'].sort(key=lambda k: k['start_s'])
     return web
+
+
+def place_lines_on_structure(web: dict, grid, markers: list[dict],
+                             total_bars: int) -> tuple[dict, list[str]]:
+    """Rozloží textové řádky na SKUTEČNOU taktovou strukturu z GP.
+
+    Používá se, když GP **nemá zpěvní text** — což je běžnější případ než
+    ten opačný (ze čtyř tabů v repu má použitelný text jeden). Bez tohohle
+    spadne časování na pravidelnou mřížku `bars_per_line`, která se skutečnou
+    délkou písně nemá nic společného: text pak skončí dávno před koncem
+    (naměřeno: 177 s textu proti 262 s hudby) a zbytek displeje je prázdný.
+
+    Když jsou v GP značky sekcí (Intro / Verse / Chorus / Guitar solo…),
+    text jde **jen do zpívaných** a instrumentální úseky dostanou vytečkovaný
+    řádek — přesně to střídání „text – mezera s akordy – text". Bez značek
+    se text rozloží rovnoměrně přes celou píseň.
+
+    Vrací (web, varování).
+    """
+    warnings: list[str] = []
+    lines = sorted(web.get('karaoke_lines', []), key=lambda k: k.get('line', 0))
+    if not lines or total_bars < 1:
+        return web, ["Není co rozkládat (žádné řádky nebo takty)."]
+
+    # --- úseky: (od taktu, do taktu, jméno, zpívá se) ---
+    segs: list[tuple[int, int, str, bool]] = []
+    if markers:
+        for i, mk in enumerate(markers):
+            end = markers[i + 1]["bar"] if i + 1 < len(markers) else total_bars + 1
+            segs.append((int(mk["bar"]), int(end), str(mk.get("name", "")),
+                         bool(mk.get("sung"))))
+        if segs[0][0] > 1:
+            segs.insert(0, (1, segs[0][0], "Intro", False))
+    else:
+        segs = [(1, total_bars + 1, "Píseň", True)]
+        warnings.append("GP nemá značky sekcí — text rozložen rovnoměrně přes "
+                        "celou píseň, hranice sekcí si zkontroluj.")
+
+    sung = [sg for sg in segs if sg[3]]
+    if not sung:
+        sung = segs
+        warnings.append("Žádná sekce nevypadá jako zpívaná — text rozložen "
+                        "přes všechny.")
+    else:
+        warnings.append("Text rozložen do %d zpívaných sekcí z %d (%s)."
+                        % (len(sung), len(segs),
+                           ", ".join(sg[2] for sg in sung)))
+
+    # --- rozdělení řádků mezi zpívané úseky podle jejich délky ---
+    total_sung = sum(sg[1] - sg[0] for sg in sung) or 1
+    counts, left = [], len(lines)
+    for k, sg in enumerate(sung):
+        n = len(lines) - sum(counts) if k == len(sung) - 1 else             max(1, round(len(lines) * (sg[1] - sg[0]) / total_sung))
+        n = max(0, min(n, left))
+        counts.append(n)
+        left -= n
+
+    line_start: dict[int, float] = {}
+    idx = 0
+    for sg, n in zip(sung, counts):
+        span = max(1, sg[1] - sg[0])
+        for j in range(n):
+            if idx >= len(lines):
+                break
+            bar = sg[0] + int(j * span / max(1, n))
+            line_start[lines[idx].get('line', idx)] = round(grid.bar_start_seconds(bar), 3)
+            idx += 1
+
+    # --- vytečkované řádky do instrumentálních úseků ---
+    dots = tr("timeline.instrumental_dots")
+    next_line = max((l.get('line', 0) for l in lines), default=0) + 1
+    added = 0
+    for sg in segs:
+        if sg[3]:
+            continue
+        t = round(grid.bar_start_seconds(sg[0]), 3)
+        kl = {'line': next_line, 'start_s': t, 'end_s': t + 1.0, 'chords': [],
+              'text': dots, 'words': [], 'track_index': 1, 'section': sg[2],
+              'instrumental': True}
+        web.setdefault('karaoke_lines', []).append(kl)
+        web.setdefault('lyrics_timeline', []).append(
+            {'time_s': t, 'duration_s': 1.0, 'text': dots, 'line': next_line,
+             'track_index': 1, 'source': 'generated'})
+        line_start[next_line] = t
+        next_line += 1
+        added += 1
+    if added:
+        warnings.append("Doplněno %d vytečkovaných řádků do instrumentálních "
+                        "úseků, ať displej nezůstane prázdný." % added)
+
+    apply_line_starts(web, line_start)
+    return web, warnings
 
 
 def attach_drums(web: dict, gp_drums: list[dict], drum_track: dict | None) -> dict:
@@ -732,6 +836,7 @@ def add_count_in(data: dict, bars: int = 1, drum_track_index: int | None = None)
                 'duration_s': round(beat_s * 0.3, 3),
                 'drum': 'Closed Hi-Hat', 'midi': 42,
                 'track_index': ti,
+                'source': 'generated',   # klikací stopa, ne obsah písně
             })
         clicks.sort(key=lambda e: e['time_s'])
 

@@ -16,6 +16,7 @@ from timeline_editor import TimelineEditor
 from i18n import (tr, tr_action, register_tr, tr_label, tr_dock_title, tr_tab,
                    tr_window_title, get_language, set_language, available_languages)
 from icons import icon, std_icon
+from music_grid import meter_map_from_measures
 
 from PySide6.QtWidgets import (
      QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -142,6 +143,166 @@ def ticks_to_seconds(tick: int, tempo_map: list[tuple[int, int]]) -> float:
     return round(seconds, 4)
 
 
+# --- navigační značky (Segno / Coda / Fine / D.C. / D.S.) ------------------
+# GP5 je čte jako pevný seznam jmen (viz `readDirections` v guitarpro/gp5.py):
+# KOTVY ("sem skoč") sedí na `header.direction`, SKOKY ("odtud skoč") na
+# `header.fromDirection`. Obojí je na ÚROVNI SKLADBY — každá značka je
+# v souboru nejvýš jednou, takže se dá celá sada sesbírat předem.
+
+# Kam který skok míří. `None` = úplný začátek skladby (Da Capo).
+_JUMP_ANCHOR = {
+    "Da Capo": None,
+    "Da Capo al Coda": None,
+    "Da Capo al Double Coda": None,
+    "Da Capo al Fine": None,
+    "Da Segno": "Segno",
+    "Da Segno al Coda": "Segno",
+    "Da Segno al Double Coda": "Segno",
+    "Da Segno al Fine": "Segno",
+    "Da Segno Segno": "Segno Segno",
+    "Da Segno Segno al Coda": "Segno Segno",
+    "Da Segno Segno al Double Coda": "Segno Segno",
+    "Da Segno Segno al Fine": "Segno Segno",
+}
+# Skoky „al Coda": (značka, která TEPRVE PO tomhle skoku spustí odskok,
+# cílová kotva). Dokud skok neproběhl, je „Da Coda" v partituře mrtvá —
+# přehrávání jí projde skrz, přesně jak to funguje v notách.
+_JUMP_CODA = {
+    "Da Capo al Coda":               ("Da Coda", "Coda"),
+    "Da Segno al Coda":              ("Da Coda", "Coda"),
+    "Da Segno Segno al Coda":        ("Da Coda", "Coda"),
+    "Da Capo al Double Coda":        ("Da Double Coda", "Double Coda"),
+    "Da Segno al Double Coda":       ("Da Double Coda", "Double Coda"),
+    "Da Segno Segno al Double Coda": ("Da Double Coda", "Double Coda"),
+}
+# Skoky „al Fine": po skoku se hraje jen do taktu s kotvou Fine.
+_JUMP_FINE = {"Da Capo al Fine", "Da Segno al Fine", "Da Segno Segno al Fine"}
+
+
+def _direction_name(header, attr_name: str):
+    """Jméno navigační značky z hlavičky taktu, nebo `None`."""
+    sign = getattr(header, attr_name, None)
+    return getattr(sign, "name", None) if sign is not None else None
+
+
+def expand_measure_plan(measures) -> tuple[list[tuple[int, int]], list[str]]:
+    """Skutečné pořadí přehrávání jako `[(index_zdrojového_taktu, průchod)]`
+    plus seznam varování. `průchod` je 1-based pořadí, kolikáté je to zaznění
+    TÉHOŽ zdrojového taktu — přesně to, co potřebuje `linearMap` v exportu
+    (stejný takt může při druhém průchodu znít jinak).
+
+    Respektuje:
+
+    - **repetice** (`isRepeatOpen`/`repeatClose`) a **1./2. zakončení**
+      (`repeatAlternative`, bitmaska průchodů) — podrobnosti v
+      `expand_measure_order`;
+    - **navigační skoky** Segno / Coda / Fine / D.C. / D.S. Každý skok se
+      provede **nejvýš jednou** — tak to funguje v notaci a zároveň to samo
+      o sobě brání zacyklení. Repetice se po skoku už neopakují (jejich
+      počitadla zůstávají vyčerpaná), což odpovídá běžné konvenci „na druhý
+      průchod bez repetic".
+
+    U **nekonzistentních značek** (D.S. bez Segna, „al Coda" bez Cody) se
+    NEHÁDÁ: skok se přeskočí, pokračuje se lineárně a důvod se vrátí ve
+    varováních, ať se dá ukázat uživateli."""
+    n = len(measures)
+    if n == 0:
+        return [], []
+
+    warnings: list[str] = []
+
+    # Kotvy a skoky se sesbírají dopředu — jsou to pozice v PARTITUŘE,
+    # nezávislé na tom, kudy zrovna přehrávání běží.
+    anchors: dict[str, int] = {}
+    jumps: dict[int, str] = {}
+    for idx, m in enumerate(measures):
+        h = m.header
+        anchor = _direction_name(h, "direction")
+        if anchor and anchor not in anchors:
+            anchors[anchor] = idx
+        jump = _direction_name(h, "fromDirection")
+        if jump:
+            jumps[idx] = jump
+
+    plan: list[tuple[int, int]] = []
+    played: dict[int, int] = {}        # zdrojový takt -> kolikrát už zazněl
+    repeat_start = 0
+    pass_count: dict[int, int] = {}
+    used_jumps: set[str] = set()
+    coda_from: str | None = None       # značka, která teď spustí odskok na Codu
+    coda_to: str | None = None
+    stop_at_fine = False
+
+    i = 0
+    SAFETY = n * 8 + 64   # tvrdý strop proti nekonečné smyčce na poškozených datech
+    steps = 0
+    while i < n and steps < SAFETY:
+        steps += 1
+        h = measures[i].header
+        alt = getattr(h, "repeatAlternative", 0) or 0
+        cur_pass = pass_count.get(repeat_start, 1)
+        if alt == 0 or (alt & (1 << (cur_pass - 1))):
+            played[i] = played.get(i, 0) + 1
+            plan.append((i, played[i]))
+        if getattr(h, "isRepeatOpen", False):
+            repeat_start = i
+            pass_count.setdefault(repeat_start, 1)
+        close = getattr(h, "repeatClose", -1) or -1
+        if close > 0:
+            done = pass_count.get(repeat_start, 1)
+            if done <= close:
+                pass_count[repeat_start] = done + 1
+                i = repeat_start
+                continue
+
+        # Navigační značky se řeší AŽ když je repetice na tomhle taktu
+        # vyčerpaná — jinak by D.S. odpálilo hned na prvním průchodu.
+        if stop_at_fine and _direction_name(h, "direction") == "Fine":
+            break
+
+        mark = jumps.get(i)
+        if mark is not None and mark == coda_from:
+            target = anchors.get(coda_to)
+            if target is None:
+                warnings.append("Odskok z " + mark + " se přeskočil — cílová "
+                                "značka " + str(coda_to) + " v souboru není.")
+            else:
+                coda_from = coda_to = None
+                i = target
+                continue
+        elif mark in _JUMP_ANCHOR and mark not in used_jumps:
+            used_jumps.add(mark)
+            anchor_name = _JUMP_ANCHOR[mark]
+            target = 0 if anchor_name is None else anchors.get(anchor_name)
+            if target is None:
+                warnings.append("Skok " + mark + " se přeskočil — značka "
+                                + str(anchor_name) + " v souboru není.")
+            else:
+                if mark in _JUMP_FINE:
+                    if "Fine" in anchors:
+                        stop_at_fine = True
+                    else:
+                        warnings.append("Skok " + mark + " nemá značku Fine — "
+                                        "hraje se až do konce skladby.")
+                elif mark in _JUMP_CODA:
+                    coda_mark, coda_anchor = _JUMP_CODA[mark]
+                    if coda_anchor in anchors:
+                        coda_from, coda_to = coda_mark, coda_anchor
+                    else:
+                        warnings.append("Skok " + mark + " nemá značku "
+                                        + coda_anchor + " — odskok na Codu "
+                                        "se neprovede.")
+                i = target
+                continue
+        i += 1
+
+    if steps >= SAFETY:
+        warnings.append("Rozbalení taktů narazilo na bezpečnostní strop — "
+                        "značky repetic/skoků jsou nejspíš poškozené, zbytek "
+                        "skladby se vynechal.")
+    return plan, warnings
+
+
 def expand_measure_order(measures) -> list[int]:
     """Vrátí pořadí INDEXŮ do `measures` tak, jak by se skladba SKUTEČNĚ
     přehrála — respektuje repeat značky (`isRepeatOpen`/`repeatClose`) a
@@ -160,38 +321,11 @@ def expand_measure_order(measures) -> list[int]:
     přepis v tabu není nikdy zvukově přesný na sekundu). Uživatelův odhad
     "cca 240s" byl jen hrubý odhad, ne přesná data.)
 
-    Nezohledňuje Segno/Coda/D.S./D.C./Fine skoky (`header.direction`) —
-    vzácnější a podstatně složitější (skoky přes celou skladbu, ne jen
-    lokální blok)."""
-    n = len(measures)
-    if n == 0:
-        return []
-
-    order: list[int] = []
-    repeat_start = 0
-    pass_count: dict[int, int] = {}
-    i = 0
-    SAFETY = n * 8 + 64   # tvrdý strop proti nekonečné smyčce na poškozených datech
-    steps = 0
-    while i < n and steps < SAFETY:
-        steps += 1
-        h = measures[i].header
-        alt = getattr(h, "repeatAlternative", 0) or 0
-        cur_pass = pass_count.get(repeat_start, 1)
-        if alt == 0 or (alt & (1 << (cur_pass - 1))):
-            order.append(i)
-        if getattr(h, "isRepeatOpen", False):
-            repeat_start = i
-            pass_count.setdefault(repeat_start, 1)
-        close = getattr(h, "repeatClose", -1) or -1
-        if close > 0:
-            done = pass_count.get(repeat_start, 1)
-            if done <= close:
-                pass_count[repeat_start] = done + 1
-                i = repeat_start
-                continue
-        i += 1
-    return order
+    Zohledňuje i navigační skoky Segno / Coda / Fine / D.C. / D.S.
+    (`header.direction` a `header.fromDirection`) — viz `expand_measure_plan`,
+    kde je celá logika i vracená varování."""
+    plan, _warnings = expand_measure_plan(measures)
+    return [idx for idx, _pass in plan]
 
 
 def tempo_at_tick(tick: int, tempo_map: list[tuple[int, int]]) -> int:
@@ -319,6 +453,29 @@ def _track_type_label(kind: str) -> str:
 # ---------------------------------------------------------------------------
 # Worker vlákno pro načítání (aby UI nezmrzlo)
 # ---------------------------------------------------------------------------
+
+def _unsupported_gp_format(path: str) -> str:
+    """Vrátí jméno formátu, když soubor Guitar Pro číst NEUMÍME, jinak "".
+
+    `pyguitarpro` zvládá jen GP3, GP4 a GP5 — ty začínají délkou textu a
+    řetězcem "FICHIER GUITAR PRO". Novější formáty jsou úplně jiné
+    kontejnery: GP6 (`.gpx`) je komprimovaný BCFZ/BCFS, GP7 a novější
+    (`.gp`) je ZIP s XML uvnitř. Ani jeden nejde otevřít a jediná cesta je
+    uložit soubor v Guitar Pro znovu jako GP5.
+    """
+    try:
+        with open(path, "rb") as f:
+            head = f.read(8)
+    except OSError:
+        return ""
+    if head[:4] in (b"BCFZ", b"BCFS"):
+        return "Guitar Pro 6 (.gpx)"
+    if head[:2] == b"PK":
+        return "Guitar Pro 7 a novější (.gp)"
+    if b"FICHIER" not in head[:8]:
+        return ""      # není to GP soubor — ať se o to postará parser
+    return ""
+
 
 class LoadWorker(QThread):
     done = Signal(object)   # Song
@@ -1003,6 +1160,10 @@ class GuitarProViewer(QMainWindow):
                                          slot=lambda: self.timeline.rebuild_display_track(),
                                          icon=std_icon(self, QStyle.StandardPixmap.SP_BrowserReload))
         timeline_menu.addAction(act_rebuild_display)
+        act_lead = tr_action(self, "timeline.display_lead",
+                              tooltip_key="timeline.display_lead.tooltip",
+                              slot=lambda: self.timeline.display_lead_dialog())
+        timeline_menu.addAction(act_lead)
         act_fill_gaps = tr_action(self, "timeline.fill_gaps",
                                    tooltip_key="timeline.fill_gaps.tooltip",
                                    checkable=True, icon=icon("fill_gaps"),
@@ -1265,6 +1426,16 @@ class GuitarProViewer(QMainWindow):
         s více souběžnými načítáními/kartami mohlo přiřadit výsledek
         špatné kartě). `self._workers` drží VŠECHNY běžící načítání
         najednou (dřív jen jedno, `self._worker`, přepisované)."""
+        # Formát se pozná z hlavičky DŘÍV, než se pustí parser. Jinak
+        # `pyguitarpro` u GP6/GP7 přečte první bajt jako délku textu a
+        # vrátí "unsupported version" s kusem binárních dat, ze kterého
+        # uživatel nepozná vůbec nic.
+        unsupported = _unsupported_gp_format(path)
+        if unsupported:
+            QMessageBox.warning(self, tr("load.unsupported_title"),
+                                tr("load.unsupported_body", fmt=unsupported))
+            self.status.showMessage(tr("status.load_error"))
+            return
         self.status.showMessage(tr("status.loading", path=path))
         worker = LoadWorker(path)
         self._workers.append(worker)
@@ -1380,27 +1551,51 @@ class GuitarProViewer(QMainWindow):
             QMessageBox.warning(
                 self, tr("merge.need_gp_title"), tr("merge.need_gp_body"))
             return
-        url, ok = QInputDialog.getText(
-            self, tr("merge.url_dialog_title"),
-            tr("merge.url_dialog_label"), QLineEdit.Normal, "")
-        if not ok or not url.strip():
+        # Text se bere ze STEJNÉHO dialogu jako u nové písně — umí vložený
+        # vlastní text i stažení z URL, takže sloučení s GP není napevno
+        # svázané s webem (dřív šlo jen zadat URL a nic jiného).
+        # `edit_mode` tu neznamená „opravuju text": jen zamkne tempo a úvodní
+        # takty, což je přesně správně — v tomhle postupu je pánem časování
+        # Guitar Pro, ne mřížka z textu.
+        dlg = WebImportDialog(self, edit_mode=True, initial_meta={
+            "title": self.song.title, "artist": self.song.artist,
+            "tempo_bpm": self.song.tempo})
+        dlg.ok_btn.setText(tr("web_import.ok_btn_new"))
+        dlg.ok_btn.setToolTip(tr("web_import.ok_btn_new.tooltip"))
+        if dlg.exec() != QDialog.Accepted or not dlg.result_json:
             return
-        url = url.strip()
+        url = dlg.url_input.text().strip()
         self.status.showMessage(tr("status.merging"))
         try:
             import web_import as W
-            import requests
-            gp_title, gp_artist = self.song.title, self.song.artist
             gp_words = self._gp_vocal_words()
             drums, drum_track = self._gp_drums_for_merge()
             bass, bass_track = self._gp_bass_for_merge()
 
-            r = requests.get(url, timeout=25, headers=W.BROWSER_HEADERS)
-            r.encoding = W.detect_encoding(r)
-            title, artist, det = W.parse_pisnicky_akordy(r.text, url=url)
-            web = W.build_karaoke_json(det, title or gp_title, artist or gp_artist,
-                                       self.song.tempo, url)
-            W.retime_web_to_gp(web, gp_words)
+            web = dlg.result_json
+            n_lines = len(web.get("karaoke_lines") or [])
+            # Dvě cesty podle toho, co GP skutečně nese. Zpěvní text v tabu
+            # spíš NEBÝVÁ (ze čtyř tabů v repu ho má použitelný jediný),
+            # takže tichý fallback na mřížku by byl past — text by zase
+            # skončil dávno před koncem písně.
+            if len(gp_words) >= max(4, n_lines // 2):
+                W.retime_web_to_gp(web, gp_words)
+                merge_notes = ["Řádky napasované na zpěvní stopu z GP (%d slov)."
+                               % len(gp_words)]
+            else:
+                from music_grid import TimeGrid, meter_map_from_measures, markers_from_measures
+                plan, _lin_warn = expand_measure_plan(self.song.tracks[0].measures)
+                order = [src for src, _p in plan]
+                meter_map = meter_map_from_measures(self.song.tracks[0].measures, order)
+                grid = TimeGrid([{"tick": t, "bpm": b} for t, b in self.tempo_map],
+                                meter_map[0]["num"] if meter_map else 4,
+                                meter_map=meter_map)
+                markers = markers_from_measures(self.song.tracks[0].measures, order)
+                web, merge_notes = W.place_lines_on_structure(web, grid, markers, len(order))
+                merge_notes.insert(0, "GP nemá použitelný zpěvní text (%d slov) — "
+                                      "text rozložen na skutečnou taktovou strukturu."
+                                   % len(gp_words))
+                web.setdefault("meta", {})["meter_map"] = meter_map
             W.attach_drums(web, drums, drum_track)
             W.attach_bass(web, bass, bass_track)
             web.setdefault("meta", {})
@@ -1412,13 +1607,19 @@ class GuitarProViewer(QMainWindow):
             return
 
         self.current_json_file = None   # nová kombinace GP+web — zatím nikam neuložená
-        self._present_karaoke_data(web, source_desc=tr("source.gp_web", url=url))
+        # Text nemusel přijít z webu (šlo ho i vložit), tak popisek zdroje
+        # nesmí hlásit prázdnou URL — pak je zdrojem prostě ten GP soubor.
+        origin = url or (Path(self.current_gp_file).name if self.current_gp_file else "GP")
+        self._present_karaoke_data(web, source_desc=tr("source.gp_web", url=origin))
+        # Jak se text načasoval NENÍ vedlejší detail — rozhoduje o tom, jestli
+        # sedí na nahrávku. Musí to být vidět, ne jen v konzoli.
         QMessageBox.information(
             self, tr("merge.done_title"),
             tr("merge.done_body", n_lines=len(web.get('karaoke_lines', [])),
                n_chords=len(web.get('chords_timeline', [])),
                n_drums=len(web.get('drums_timeline', [])),
-               n_bass=len(web.get('bass_timeline', []))))
+               n_bass=len(web.get('bass_timeline', [])))
+            + "\n\n" + "\n".join("• " + n for n in merge_notes))
 
     def _on_loaded(self, song, path: str, target: TimelineEditor) -> None:
         """Dokončení `_load_file()` — `target` je karta zachycená UZÁVĚREM
@@ -1562,6 +1763,15 @@ class GuitarProViewer(QMainWindow):
         if target.song and target.song.tracks:
             self._show_track(0)
             self.track_tree.setCurrentItem(self.track_tree.topLevelItem(0))
+        # Nekonzistentní repeat/navigační značky (D.S. bez Segna apod.) —
+        # rozbalení taktů se v takovém případě nehádá, jede lineárně a řekne
+        # proč. Tiše to spolknout nejde: časová osa by byla jinak dlouhá než
+        # skladba a uživatel by netušil, čím to je.
+        warns = getattr(self, "last_linearize_warnings", None)
+        if warns:
+            QMessageBox.warning(self, tr("import.linearize_warn_title"),
+                                tr("import.linearize_warn_body",
+                                   details="\n• " + "\n• ".join(warns)))
 
     def _build_chord_chart(self):
         """Chord chart: akordy nad textem v notové osnově, 2 takty na řádek."""
@@ -1855,6 +2065,14 @@ class GuitarProViewer(QMainWindow):
         TICKS_PER_BEAT = 960
         vocal_ti = self._detect_vocal_track_index(song)
 
+        # Skutečné pořadí přehrávání (repetice, zakončení, Segno/Coda/D.C./D.S.).
+        # Ukládá se jako `linear_map`, aby šlo pro každý takt v přehrávání
+        # dohledat, ze kterého taktu GP souboru pochází a kolikátý je to
+        # průchod — bez toho se zpětný import do GP nemá o co opřít a
+        # repetice se nedají očima zkontrolovat proti notám.
+        measure_plan, self.last_linearize_warnings = (
+            expand_measure_plan(song.tracks[0].measures) if song.tracks else ([], []))
+
         result = {
             "meta": {
                 "format_version": 2,
@@ -1869,6 +2087,17 @@ class GuitarProViewer(QMainWindow):
                 "has_line_structure": True,
             },
             "tempo_map": [{"tick": t, "bpm": v} for t, v in self.tempo_map],
+            # Metrum se v GP může měnit (Jasná zpráva: takt 1 je 2/4, zbytek
+            # 4/4). Bez téhle mapy se všechny takty počítají jako plné a
+            # čísla taktů se rozejdou s notami. Bere se ROZBALENÉ pořadí —
+            # s repeticemi se číslování v přehrávání a v partituře liší.
+            "meter_map": meter_map_from_measures(
+                song.tracks[0].measures, [src for src, _p in measure_plan]
+            ) if song.tracks else [],
+            "linear_map": [
+                {"bar": play_idx + 1, "source_measure": src_idx + 1, "pass": pass_no}
+                for play_idx, (src_idx, pass_no) in enumerate(measure_plan)
+            ],
             "tracks": [],
             "lyrics_timeline": [],
             "chords_timeline": [],
@@ -1910,6 +2139,12 @@ class GuitarProViewer(QMainWindow):
                             "time_s": time_s, "duration_s": duration_s,
                             "drum": drum_name(midi), "midi": midi,
                             "track_index": ti,
+                            # `source` = odkud událost je: "gp" (z Guitar Pro),
+                            # "manual" (napsal člověk), "generated" (dopočítal
+                            # program — klikací stopa, groove šablona, basová
+                            # linka z akordů). Editor podle toho pozná, co má
+                            # uživatel ještě zkontrolovat sluchem.
+                            "source": "gp",
                         })
                     continue
 
@@ -1918,6 +2153,7 @@ class GuitarProViewer(QMainWindow):
                     all_chord_events.append({
                         "time_s": time_s, "chord": chord_name,
                         "measure": m_idx + 1, "track_index": ti,
+                        "source": "gp",
                     })
                     contributes[ti] = True
 
@@ -1939,14 +2175,22 @@ class GuitarProViewer(QMainWindow):
         all_lyrics_events, line_ranges = self._vocal_beats_to_lines(vocal_beats, vocal_ti)
 
         def line_for(t: float):
-            """Řádek znějící v čase t — poslední řádek začínající <= t."""
-            li = None
-            for s, _e, idx in line_ranges:
-                if s <= t:
-                    li = idx
-                else:
-                    break
-            return li if li is not None else (line_ranges[0][2] if line_ranges else None)
+            """Řádek, DO KTERÉHO čas `t` spadá, nebo `None`.
+
+            `None` je správná odpověď pro intro, sólo a mezihry — akord,
+            který zní mimo jakýkoli zpívaný řádek, k žádnému řádku nepatří
+            (JSON_FORMAT.md §3.5).
+
+            Dřív se tu vracel řádek 0, když byl čas PŘED prvním veršem.
+            Tím dostalo intro i sólo Jasné zprávy (17 akordů, 1,8–49,8 s)
+            značku `line: 0` a klip prvního verše se k nim natáhl — první
+            verš pak visel na displeji od druhého taktu, tedy 45 sekund
+            předtím, než se vůbec zazpíval.
+            """
+            for s, e, idx in line_ranges:
+                if s <= t < e:
+                    return idx
+            return None
 
         for ev in all_chord_events:
             ev["line"] = line_for(ev["time_s"])
@@ -2029,7 +2273,8 @@ class GuitarProViewer(QMainWindow):
                 end = next_t if (next_t - t0) < 8 else round(t0 + 2.0, 3)
                 end = max(end, t0 + 0.3)
                 events.append({"time_s": round(t0, 3), "duration_s": round(end - t0, 3),
-                               "text": text, "line": li, "track_index": vocal_ti})
+                               "text": text, "line": li, "track_index": vocal_ti,
+                               "source": "gp"})
                 line_ranges.append((round(t0, 3), round(end, 3), li))
         else:
             groups: list[list[dict]] = []
@@ -2044,7 +2289,8 @@ class GuitarProViewer(QMainWindow):
                 end = g[-1]["time_s"] + g[-1]["duration_s"]
                 events.append({"time_s": round(t0, 3), "duration_s": round(max(0.3, end - t0), 3),
                                "text": " ".join(b["text"] for b in g),
-                               "line": li, "track_index": vocal_ti})
+                               "line": li, "track_index": vocal_ti,
+                               "source": "gp"})
                 line_ranges.append((round(t0, 3), round(end, 3), li))
 
         return events, line_ranges
@@ -2098,7 +2344,7 @@ class GuitarProViewer(QMainWindow):
                     midi = note_to_midi(n, track)
                     drums.append({"time_s": time_s, "duration_s": duration_s,
                                   "drum": drum_name(midi), "midi": midi,
-                                  "track_index": ti})
+                                  "track_index": ti, "source": "gp"})
             break
         drums.sort(key=lambda e: e["time_s"])
         return drums, drum_track
@@ -2127,7 +2373,7 @@ class GuitarProViewer(QMainWindow):
                     bass_notes.append({"time_s": time_s, "duration_s": duration_s,
                                        "note_name": midi_to_name(midi), "midi": midi,
                                        "string": n.string, "fret": n.value,
-                                       "track_index": ti})
+                                       "track_index": ti, "source": "gp"})
             break
         bass_notes.sort(key=lambda e: e["time_s"])
         return bass_notes, bass_track
