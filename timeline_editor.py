@@ -2212,75 +2212,37 @@ class TimelineEditor(QWidget):
         return round(max_t, 3)
 
     def _seed_display(self) -> None:
-        """Poprvé sestaví klipy master stopy: jedno okno (text+akordy) na
-        každý karaoke řádek. Když už display_timeline existuje, nechá ho být."""
+        """Poprvé sestaví klipy master stopy. Když už display_timeline
+        existuje, nechá ho být.
+
+        Dřív měla vlastní, samostatnou logiku (klip 1:1 na `karaoke_lines`,
+        nebo fallback po pauzách) — NEZÁVISLOU na `build_screens_from_content()`,
+        se kterou později stavějí obrazovky `rebuild_display_track`,
+        `shift_lyrics_track` i `set_display_lead`. Ty dvě implementace se
+        rozcházely: na reálné písni s repetikovaným instrumentálním sólem
+        dala stará cesta 36 klipů začínajících až PRVNÍM zpívaným veršem
+        (50,5 s) — celé intro a sólo (0–50 s) nemělo na Displej stopě
+        VŮBEC NIC — zatímco `build_screens_from_content()` na TÝCHŽ datech
+        dá 60 klipů včetně instrumentálních úseků. Uživatel pak viděl, že
+        po libovolné akci, která obrazovky přestaví (posun textu, „Zarovnat
+        displej"…), se najednou objeví/zmizí desítky klipů — vypadalo to,
+        že se něco nehýbe nebo že klipy „zůstávají na místě", zatímco ve
+        skutečnosti šlo o přepnutí mezi dvěma neshodujícími se algoritmy.
+
+        Teď je JEDNA implementace pro úplně první sestavení i pro každou
+        pozdější přestavbu — žádná šance na rozchod."""
         data = self.data
         if data.get("display_timeline"):
             return
-        # Displej stopa se staví POPRVÉ (nová píseň z importu, nebo starý
-        # JSON, který tuhle sekci ještě neměl) — zapni u ní rovnou výplň
-        # mezer, ať na displeji něco je i mezi řádky. Soubory, které už
-        # svou Displej stopu mají, tím nikdy nesaháme; kdo výplň nechce,
-        # vypne ji přepínačem (`set_display_fill_gaps`), a to se uloží.
-        data.setdefault("meta", {}).setdefault("display_fill_gaps", True)
-        clips: list[dict] = []
-        n = 0
-
-        # A) EXPLICITNÍ řádky (z JSONu) → klip na každý karaoke řádek 1:1.
-        #    Řádek bez slov (intro / mezihra) = klip „jen akordy". Klip nese
-        #    `line` = index řádku, díky čemuž `to_json()` pozná, že jde o TENTO
-        #    řádek, i když se s ním později hne (přetažení konce, viz níže).
-        meta = data.get("meta", {}) or {}
-        klines = data.get("karaoke_lines") or []
-        explicit = bool(meta.get("has_line_structure")) or any("chords" in l for l in klines)
-        if explicit and klines:
-            for idx, l in enumerate(klines):
-                words = l.get("words") or []
-                has_words = bool(words)
-                ti = words[0].get("track_index", 1) if has_words else 1
-                start = float(l.get("start_s", words[0]["time_s"] if has_words else 0.0))
-                end = float(l.get("end_s", start + 2.0))
-                label = (l.get("text") or " ".join(l.get("chords", []))).strip()
-                n += 1
-                clips.append({
-                    "id": f"clip-{n}",
-                    "start_s": round(start, 3),
-                    "end_s": round(end, 3),
-                    "source_track": ti,
-                    "mode": "lyrics_chords" if has_words else "chords",
-                    "label": label[:24],
-                    "line": l.get("line", idx),
-                })
-            clips.sort(key=lambda c: c["start_s"])
-            data["display_timeline"] = clips
-            return
-
-        # B) fallback bez explicitní struktury: jedno okno na každý řádek
-        #    odvozený z pauz mezi slovy.
-        for ti in self._track_order():
-            for line in self._group_lines(ti):
-                if not line:
-                    continue
-                n += 1
-                start = min(float(e["time_s"]) for e in line)
-                end = max(float(e["time_s"]) + float(e.get("duration_s", 0.5)) for e in line)
-                label = " ".join(e.get("text", "") for e in line).strip()
-                clips.append({
-                    "id": f"clip-{n}",
-                    "start_s": round(start, 3),
-                    "end_s": round(end, 3),
-                    "source_track": ti,
-                    "mode": "lyrics_chords",
-                    "label": label[:24],
-                })
+        clips = self.build_screens_from_content()
         if not clips:
             order = self._track_order()
-            clips.append({
+            clips = [{
                 "id": "clip-1", "start_s": 0.0, "end_s": self._song_end(),
                 "source_track": order[0] if order else 1,
                 "mode": "lyrics_chords", "label": "Displej",
-            })
-        clips.sort(key=lambda c: c["start_s"])
+                "auto_track": False,
+            }]
         data["display_timeline"] = clips
 
     # --- karaoke řádky: seskupení slov, hranice ---
