@@ -1295,7 +1295,7 @@ class WaveformItem(QGraphicsRectItem):
                 self.editor._push_undo()
                 self._undo_pushed = True
             dt = (ev.scenePos().x() - self._drag_start_x) / self.editor.pps
-            new_offset = max(0.0, self._drag_start_offset + dt)
+            new_offset = self._drag_start_offset + dt   # smí i do záporna
             self.editor.set_audio_offset(new_offset, relayout=False)
             self.update()
             ev.accept()
@@ -3507,7 +3507,16 @@ class TimelineEditor(QWidget):
         return self.audio_offset_s + audio_t * (self.audio_stretch or 1.0)
 
     def set_audio_offset(self, offset_s: float, relayout: bool = True) -> None:
-        self.audio_offset_s = max(0.0, round(offset_s, 3))
+        # Záporný offset je legitimní: znamená, že t=0 nahrávky leží PŘED
+        # začátkem časové osy — tedy že v čase t=0 osy se má přehrávat
+        # nahrávka už o kus dál (typicky: nahrávka má na začátku něco
+        # navíc — potlesk, ladění, delší předehru — co se do časové osy
+        # nevejde). `_seek_audio`/`WaveformItem.paint` s tím počítají
+        # (`_timeline_to_audio_t` je prostý součet, žádné místo v playbacku
+        # zápornou hodnotu nepředpokládá jako chybu) — jen se v takovém
+        # případě reálně přehraje/vykreslí až OD té pozdější chvíle
+        # nahrávky, začátek souboru zůstane "uřezaný" před osou.
+        self.audio_offset_s = round(offset_s, 3)
         self.data.setdefault("meta", {})["audio_offset_s"] = self.audio_offset_s
         if relayout and self.waveform_item is not None:
             self.waveform_item.update()
@@ -3541,7 +3550,7 @@ class TimelineEditor(QWidget):
         form.addRow(info)
 
         offset_sb = QDoubleSpinBox()
-        offset_sb.setRange(0.0, 99999.0)
+        offset_sb.setRange(-99999.0, 99999.0)
         offset_sb.setDecimals(3)
         offset_sb.setSuffix(" s")
         offset_sb.setValue(self.audio_offset_s)
@@ -3998,6 +4007,28 @@ class TimelineEditor(QWidget):
             it = self.scene.addSimpleText(txt)
             it.setPos(12, y); it.setBrush(QBrush(QColor(col)))
             self._register_header_item(it, 12)
+        self._add_lyrics_shift_controls(ti, top)
+
+    def _add_lyrics_shift_controls(self, ti: int, top: float) -> None:
+        """Tlačítka v hlavičce textové stopy pro posun VŠECH slov i akordů
+        dané stopy v čase najednou — obdoba `_add_drum_shift_controls`,
+        pro případ, kdy GP (samo se sebou konzistentní) sedí proti reálné
+        nahrávce jako celek jinde, než mají bicí/basa."""
+        x0 = HEADER_W - 72
+        y0 = top + 3
+        specs = [
+            ("◀", tr("lyrics_shift.earlier.tooltip"),
+             lambda: self.shift_lyrics_track(ti, -self._nudge_step())),
+            ("▶", tr("lyrics_shift.later.tooltip"),
+             lambda: self.shift_lyrics_track(ti, self._nudge_step())),
+            ("⋯", tr("lyrics_shift.exact.tooltip"),
+             lambda: self._shift_lyrics_track_dialog(ti)),
+        ]
+        for i, (label, tip, cb) in enumerate(specs):
+            btn = DrumShiftButton(label, tip, cb)
+            btn.setPos(x0 + i * 22, y0)
+            self.scene.addItem(btn)
+            self._register_header_item(btn, x0 + i * 22)
 
     def _track_is_drums(self, ti: int) -> bool:
         for t in self.tracks:
@@ -4171,13 +4202,28 @@ class TimelineEditor(QWidget):
     def shift_drum_track(self, ti: int, delta_s: float) -> None:
         """Posune ČASY VŠECH úhozů bicích dané stopy o delta_s (+ později,
         − dřív). Jen bicí (drums_timeline) — text/akordy zůstávají beze
-        změny, protože právě jejich vzájemný posun je cílem."""
+        změny, protože právě jejich vzájemný posun je cílem.
+
+        Časy nesmí jít do záporna (formát/mřížka zápornou pozici nezná —
+        `bar`/`beat` začíná na 1). Dřív se to hlídalo PO JEDNOM úderu
+        (`max(0.0, ...)`), takže při větším posunu doleva se všechny
+        úhozy před hranicí SLILY na čas 0 — vizuálně to vypadalo, že
+        zbytek stopy „zmizel" (zůstal jeden bod na nule, ne posunuté
+        rozestupy). Teď se místo toho ořízne DELTA jako celek, takže
+        se buď posune CELÁ stopa se zachovanými rozestupy, nebo (když by
+        to poslalo nejstarší úder pod nulu) se posun zastaví přesně na
+        hranici — nic se nikdy nepřekryje ani neztratí."""
+        evs = [ev for ev in self.data.get("drums_timeline", []) if ev.get("track_index") == ti]
+        if not evs or not delta_s:
+            return
+        if delta_s < 0:
+            min_t = min(float(ev.get("time_s", 0.0)) for ev in evs)
+            delta_s = max(delta_s, -min_t)
         if not delta_s:
             return
         self._push_undo()
-        for ev in self.data.get("drums_timeline", []):
-            if ev.get("track_index") == ti:
-                ev["time_s"] = round(max(0.0, float(ev.get("time_s", 0.0)) + delta_s), 3)
+        for ev in evs:
+            ev["time_s"] = round(float(ev.get("time_s", 0.0)) + delta_s, 3)
         self._relayout()
 
     def _shift_drum_track_dialog(self, ti: int) -> None:
@@ -4187,6 +4233,38 @@ class TimelineEditor(QWidget):
             0.0, -60.0, 60.0, 3)
         if ok and delta:
             self.shift_drum_track(ti, delta)
+
+    def shift_lyrics_track(self, ti: int, delta_s: float) -> None:
+        """Posune ČASY textu i akordů dané stopy společně o delta_s — obdoba
+        `shift_drum_track`, jen pro `lyrics_timeline`/`chords_timeline`.
+        Stejná ochrana proti záporným časům: posun se ořízne jako celek,
+        ne po jednotlivých událostech (viz `shift_drum_track`).
+
+        Displej stopa (obrazovky) se po posunu PŘESTAVÍ z obsahu
+        (`build_screens_from_content`) — jinak by text/akordy odjely, ale
+        obrazovky by zůstaly viset na starých časech."""
+        evs = [ev for key in ("lyrics_timeline", "chords_timeline")
+               for ev in self.data.get(key, []) if ev.get("track_index") == ti]
+        if not evs or not delta_s:
+            return
+        if delta_s < 0:
+            min_t = min(float(ev.get("time_s", 0.0)) for ev in evs)
+            delta_s = max(delta_s, -min_t)
+        if not delta_s:
+            return
+        self._push_undo()
+        for ev in evs:
+            ev["time_s"] = round(float(ev.get("time_s", 0.0)) + delta_s, 3)
+        self.data["display_timeline"] = self.build_screens_from_content()
+        self._relayout()
+
+    def _shift_lyrics_track_dialog(self, ti: int) -> None:
+        delta, ok = QInputDialog.getDouble(
+            self, tr("dialog.shift_lyrics_track_title"),
+            tr("dialog.shift_lyrics_track_label"),
+            0.0, -60.0, 60.0, 3)
+        if ok and delta:
+            self.shift_lyrics_track(ti, delta)
 
     def add_drum_hit(self, ti: int, drum_name: str, time_s: float) -> None:
         """Přidá nový úder bicích (jeden konkrétní buben) v daném čase —
