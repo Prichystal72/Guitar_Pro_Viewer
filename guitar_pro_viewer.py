@@ -16,7 +16,7 @@ from timeline_editor import TimelineEditor
 from i18n import (tr, tr_action, register_tr, tr_label, tr_dock_title, tr_tab,
                    tr_window_title, get_language, set_language, available_languages)
 from icons import icon, std_icon
-from music_grid import meter_map_from_measures
+from music_grid import meter_map_from_measures, TimeGrid
 
 from PySide6.QtWidgets import (
      QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -342,18 +342,37 @@ def walk_track_beats(track, tempo_map: list[tuple[int, int]]):
     """Generuje `(measure_idx0, beat, time_s, duration_s)` pro stopu **v
     reálném pořadí přehrávání** — repetice rozbalené (`expand_measure_order`).
 
-    `time_s` NEJDE spočítat z absolutního GP ticku (`ticks_to_seconds`) —
-    při repetici se surové ticky opakují (2. průchod repeatovaným úsekem má
-    stejné ticky jako 1.), takže absolutní přepočet by dal STEJNÝ čas pro
-    oba průchody. Místo toho se `time_s` kumuluje sekvenčně: běžící součet
-    délek beatů v EXPANDOVANÉM pořadí. Tempo pro délku beatu se čte z
-    `tempo_map` podle jeho původního (surového) ticku — to zůstává platné
-    i při opakování, protože říká „jaké tempo je v tomhle místě partitury"."""
+    `time_s` se skládá ze DVOU nezávislých částí:
+
+    1. **Začátek taktu** — z autoritativní `TimeGrid` (repetice + mapa metra
+       ze sdílené hlavičky taktu, stejná pro všechny stopy v souboru).
+    2. **Pozice beatu UVNITŘ taktu** — z rozdílu jeho ticku a ticku začátku
+       toho taktu (`b.start - m.header.start`), převedená tempem platným
+       v tom místě.
+
+    Dřív se `time_s` počítal jako běžící součet délek beatů TÉ KTERÉ stopy
+    napříč celým rozbaleným pořadím. To je křehké: když stopa v „tichém"
+    taktu nemá notovanou plnou pauzu (typicky vokální stopa přes
+    instrumentální mezihru — jedna čtvrťová nota místo taktu 2/4 nebo 4/4),
+    chyba se od té chvíle KUMULUJE přes všechny další takty. Naměřeno na
+    reálném souboru: na tomtéž taktu (autoritativně 50,000 s) vyšly bicí
+    (plně notované) přesně, ale zpěv byl mimo o 37 sekund — o tolik se
+    ztratilo v „tichých" taktech před ním.
+
+    S resetem na každé taktové čáře se špatná notace utrhne maximálně
+    uvnitř JEDNOHO taktu, ne kumulativně přes celou píseň."""
     TICKS_PER_BEAT = 960
     order = expand_measure_order(track.measures)
-    elapsed = 0.0
-    for m_idx in order:
+    if not order:
+        return
+    meter_map = meter_map_from_measures(track.measures, order)
+    beats_per_bar = meter_map[0]["num"] if meter_map else 4
+    grid = TimeGrid([{"tick": t, "bpm": b} for t, b in tempo_map],
+                    beats_per_bar, meter_map=meter_map)
+    for play_idx, m_idx in enumerate(order):
         m = track.measures[m_idx]
+        bar_start_s = grid.bar_start_seconds(play_idx + 1)
+        bar_start_tick = m.header.start
         for v_idx, v in enumerate(m.voices):
             if v_idx > 0:
                 continue
@@ -363,8 +382,8 @@ def walk_track_beats(track, tempo_map: list[tuple[int, int]]):
                     dur_ticks = int(dur_ticks * 1.5)
                 bpm = tempo_at_tick(b.start, tempo_map)
                 duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / bpm), 4)
-                yield m_idx, b, round(elapsed, 4), duration_s
-                elapsed += duration_s
+                offset_s = (b.start - bar_start_tick) / TICKS_PER_BEAT * (60.0 / bpm)
+                yield m_idx, b, round(bar_start_s + offset_s, 4), duration_s
 
 
 def note_to_midi(note, track) -> int:
