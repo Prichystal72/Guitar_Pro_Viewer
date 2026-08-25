@@ -576,28 +576,31 @@ class TrackDetailWidget(QWidget):
     def load_track(self, track, tempo_map: list):
         self.filter_from.clear()
         self.filter_to.clear()
+        # Repeat-aware: dřív se čas počítal ze SUROVÉHO ticku (`ticks_to_seconds`),
+        # takže takt PO repetici ukazoval čas o délku repetice napřed proti
+        # tomu, kdy se skutečně hraje — repetice se v surových tickách vůbec
+        # neopakuje, jen ji přehrávač čte dvakrát. `walk_track_beats` počítá
+        # totéž, co GP import (autoritativní mřížka + pozice v taktu), takže
+        # tahle tabulka konečně ukazuje SKUTEČNÝ čas, ne odhad ze čtení shora
+        # dolů. Repetice se teď zobrazí jako dva řádky se stejným číslem
+        # taktu, ale jiným časem — to je věcně správně, zní to dvakrát.
         rows = []
-        for m_idx, m in enumerate(track.measures):
-            for v_idx, v in enumerate(m.voices):
-                if v_idx > 0:
-                    continue  # GP3 má jen 1 hlas; přeskočíme prázdné hlasy
-                for b in v.beats:
-                    chord_name = get_chord_name(b)
-                    text = get_beat_text(b)
-                    tab = beat_to_tab_str(b, track)
-                    effects_all = []
-                    midis = []
-                    for n in b.notes:
-                        efx = note_effects_str(n)
-                        if efx:
-                            effects_all.append(efx)
-                        m_val = note_to_midi(n, track)
-                        if m_val:
-                            midis.append(f"{midi_to_name(m_val)}{m_val // 12 - 1}")
-                    time_s = ticks_to_seconds(b.start, tempo_map)
-                    rows.append({
-                        "measure": m_idx + 1,
-                        "time_s": time_s,
+        for m_idx, b, time_s, _dur in walk_track_beats(track, tempo_map):
+            chord_name = get_chord_name(b)
+            text = get_beat_text(b)
+            tab = beat_to_tab_str(b, track)
+            effects_all = []
+            midis = []
+            for n in b.notes:
+                efx = note_effects_str(n)
+                if efx:
+                    effects_all.append(efx)
+                m_val = note_to_midi(n, track)
+                if m_val:
+                    midis.append(f"{midi_to_name(m_val)}{m_val // 12 - 1}")
+            rows.append({
+                "measure": m_idx + 1,
+                "time_s": time_s,
                         "duration": duration_name(b.duration.value),
                         "tab": tab,
                         "effects": ",".join(effects_all),
@@ -1953,18 +1956,15 @@ class GuitarProViewer(QMainWindow):
                 lines.append(tr("overview.tempo_change_line", tick=tick, t_s=f"{t_s:.1f}", tempo=tempo))
             lines.append("")
 
-        # Celková délka (odhadovaná)
+        # Celková délka (odhadovaná) — repeat-aware. Počítat z posledního
+        # SUROVÉHO taktu by u písně s repeticí ukázalo kratší délku, než
+        # píseň skutečně má (repetice se v surových tickách neopakuje,
+        # jen ji přehrávač čte vícekrát).
         if song.tracks:
-            last_track = song.tracks[0]
-            last_measure = last_track.measures[-1]
-            last_voice = last_measure.voices[0]
-            if last_voice.beats:
-                last_beat = last_voice.beats[-1]
-                last_tick = last_beat.start
-                dur_ticks = 960 * 4 // last_beat.duration.value
-                if last_beat.duration.isDotted:
-                    dur_ticks = int(dur_ticks * 1.5)
-                total_s = ticks_to_seconds(last_tick + dur_ticks, self.tempo_map)
+            total_s = max((time_s + dur for t in song.tracks
+                          for _m, _b, time_s, dur in walk_track_beats(t, self.tempo_map)),
+                         default=0.0)
+            if total_s:
                 lines.append(tr("overview.estimated_duration",
                                 mm=int(total_s // 60), ss=f"{int(total_s % 60):02d}"))
 
@@ -1985,13 +1985,10 @@ class GuitarProViewer(QMainWindow):
         # Beat-level text
         beat_texts = []
         for t in song.tracks:
-            for m_idx, m in enumerate(t.measures):
-                for v in m.voices[:1]:
-                    for b in v.beats:
-                        txt = get_beat_text(b)
-                        if txt:
-                            time_s = ticks_to_seconds(b.start, self.tempo_map)
-                            beat_texts.append((time_s, m_idx + 1, t.name, txt))
+            for m_idx, b, time_s, _dur in walk_track_beats(t, self.tempo_map):
+                txt = get_beat_text(b)
+                if txt:
+                    beat_texts.append((time_s, m_idx + 1, t.name, txt))
 
         if beat_texts:
             lines.append(tr("lyrics.beat_header"))
@@ -2011,14 +2008,11 @@ class GuitarProViewer(QMainWindow):
         chords_dict: dict[str, int] = {}
 
         for t in song.tracks:
-            for m_idx, m in enumerate(t.measures):
-                for v in m.voices[:1]:
-                    for b in v.beats:
-                        name = get_chord_name(b)
-                        if name:
-                            time_s = ticks_to_seconds(b.start, self.tempo_map)
-                            chord_events.append((time_s, m_idx + 1, t.name, name))
-                            chords_dict[name] = chords_dict.get(name, 0) + 1
+            for m_idx, b, time_s, _dur in walk_track_beats(t, self.tempo_map):
+                name = get_chord_name(b)
+                if name:
+                    chord_events.append((time_s, m_idx + 1, t.name, name))
+                    chords_dict[name] = chords_dict.get(name, 0) + 1
 
         lines = []
         if chords_dict:
