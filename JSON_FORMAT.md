@@ -1,467 +1,314 @@
-# Karaoke / Tab JSON — specifikace formátu (`format_version: 2`)
+# Karaoke JSON — specifikace formátu (`schemaVersion: 1`)
 
-Tento dokument je **závazná specifikace** výstupního JSONu. Slouží jako zadání
-pro AI/vývojáře, který píše **parser** (typicky na ESP32 čtoucí z SD karty, nebo
-desktopová aplikace zobrazující text + akordy + tabulatury).
+Tento dokument je **závazná specifikace** výstupního JSONu, jak ho dnes
+produkuje `format_migrate.py::migrate()` (volané z `TimelineEditor.to_json()`
+při každém uložení). Slouží jako zadání pro AI/vývojáře, který píše **parser**
+na ESP32 (nebo jinde).
 
-> Pravidlo pro parser: **čti podle `meta.format_version`.** Když nesouhlasí
-> s verzí, kterou parser umí, odmítni soubor / spusť migraci. Neznámé klíče
-> parser **ignoruje** (dopředná kompatibilita).
+> **Tohle NAHRAZUJE dřívější `format_version: 2`.** Ten formát (ploché
+> `lyrics_timeline`/`chords_timeline`/`drums_timeline` v sekundách + řídící
+> osa `display_timeline` — "klipy") se v editoru **už negeneruje ani nečte**.
+> Pokud narazíš na starší dokumentaci/kód, který mluví o `display_timeline`,
+> `format_version: 2` nebo "klipech" — je to **zastaralé**. Viz §6 níže pro
+> shrnutí, co přesně zaniklo a proč.
 
-> **Referenční testovací soubor:** [`Olympic - Jasná Zpráva_final.json`](Olympic%20-%20Jasn%C3%A1%20Zpr%C3%A1va_final.json)
-> je poslední známý stav formátu — prošel web importem, GP sloučením
-> (přidalo `drums_timeline`), ruční editací v editoru časové osy (posunutý
-> `count_in` klip, ruční `chords`-only klipy s `line: null`, audio
-> offset/stretch) i uložením (`edited_in_timeline: true`). Pokrývá víc
-> okrajových případů než kterýkoli jiný soubor v repu — používej ho k
-> testování parseru/firmwaru.
+> Pravidlo pro parser: **čti podle `meta` a `schemaVersion`.** `schemaVersion
+> != 1` → odmítni / spusť migraci. Neznámé klíče parser **ignoruje** (dopředná
+> kompatibilita).
+
+> **Referenční testovací soubor:**
+> [`schema_v1_reference_iron_maiden.json`](schema_v1_reference_iron_maiden.json)
+> — reálný export z `Iron Maiden - Run To the Hills (2).gp3` (GP import,
+> žádný web import), obsahuje **bicí (5168 úderů)**, **basu (1511 not)** a
+> count-in (`countInBars: 2`). Použij ho k testování parseru — je bohatší na
+> hrany než jakýkoli soubor uložený starší verzí editoru.
 
 ---
 
 ## 1. Kódování a obecné konvence
 
-- Soubor je **UTF-8** (bez závislosti na BOM). Diakritika je v textu přímo.
-- Časy (`*_s`) jsou **sekundy** od začátku skladby (`float`, zaokrouhleno).
-- `tick` jsou Guitar Pro tiky. **`ticks_per_beat = 960`**, první beat začíná
-  na ticku `960` (ne 0). Převod: `time_s = (tick - 960)/960 * 60/bpm`
-  (při konstantním tempu; jinak viz `tempo_map`).
-- `track_index` je **1-based** a odkazuje na `tracks[].index`. Tím se stopa
-  v každém eventu **neopakuje jménem** — jen malým celým číslem.
+- Soubor je **UTF-8** (bez závislosti na BOM).
+- **Autorita je `bar` + `beat`, ne sekundy.** Každá událost nese svou pozici
+  jako takt (`bar`, 1-based) a dobu v taktu (`beat`, 1-based, desetinné číslo
+  — např. `4.5` = půl doby za 4. dobou). Přesný čas v milisekundách se
+  dopočítá z `tempoMap`/`meterMap` (viz §3). Firmware si ho spočítá jednou při
+  načtení a dál pracuje s milisekundami/sekundami, jak potřebuje.
+- **Výjimka — `tMsOverride`.** Nahrávky, které nehrají přesně na klik (volná
+  interpretace, mírné tempové výkyvy), mají u události navíc `tMsOverride`
+  (int, milisekundy od začátku skladby) — **má přednost** před dopočtem
+  z mřížky. Bez toho by taková událost "ujela" o desítky až stovky ms.
+- **Konec se (až na basu) NIKDE neukládá.** Text/akordy/bicí končí tam, kde
+  začíná další událost stejného druhu — jediná délka písně je
+  `meta.durationMs`. Basová nota si drží `durationBeats`, protože jde
+  o skutečnou hudební vlastnost (délka tónu), ne o hranici zobrazení.
+- **Žádná samostatná "displej" vrstva.** Dřívější `display_timeline`
+  (explicitní klipy CO/KDY/JAK) je pryč — firmware si aktivní řádek/akord
+  **spočítá sám za běhu** z `sections[].lyrics`/`chords`, viz §5.
 
 ---
 
-## 2. Dva producenti, jedno schéma
-
-Formát je **v jádru karaoke text + akordy + bicí** — žádná tabulatura, žádné
-struny/pražce/efekty. `tracks[]` obsahuje **pouze** stopy, které něco skutečně
-přispívají: co má text nebo akord (typicky zpěv/kytara nesoucí chord chart),
-a bicí (kvůli přehrávání samplů) — i když bicí nemají žádný text ani akord.
-Basa, klávesy nebo doprovodná kytara bez vlastního textu/akordu se do
-**čistě GP nebo web** exportu nedostanou. **Výjimka:** GP sloučení (Ctrl+M,
-nebo otevření GP AŽ PO textu/akordech) může navíc přidat **`bass_timeline`**
-(§3.5c) — basová stopa jen pro náhled v editoru, do ESP32 přehrávače určená
-není.
-
-| Sekce | GP viewer (`guitar_pro_viewer.py`) | Web import (`web_import.py`) |
-|-------|-----------------------------------|------------------------------|
-| `meta`, `tempo_map`, `tracks` | ✅ (jen přispívající stopy + bicí) | ✅ (1 stopa) |
-| `lyrics_timeline`, `chords_timeline`, `karaoke_lines` | ✅ | ✅ |
-| `drums_timeline` | ✅ (má-li song bicí stopu) | ❌ (chybí = žádné bicí) |
-| `bass_timeline` | jen po GP sloučení (§3.5c) | ❌ |
-
-Žádný producent už negeneruje `tracks[].beats[]`/tabulaturu — pokud narazíš
-na starší soubor, který je má, ignoruj je (dopředná kompatibilita).
-
----
-
-## 3. Kořenová struktura
+## 2. Kořenová struktura
 
 ```jsonc
 {
+  "schemaVersion": 1,
   "meta": { ... },
-  "tempo_map": [ { "tick": 960, "bpm": 120 } ],
-  "tracks": [ { ... } ],
-  "lyrics_timeline": [ { ... } ],
-  "chords_timeline": [ { ... } ],
-  "drums_timeline": [ { ... } ],
-  "karaoke_lines":  [ { ... } ]
+  "tempoMap": [ { "bar": 1, "beat": 1.0, "bpm": 120 } ],
+  "meterMap": [ { "bar": 1, "num": 4, "den": 4 } ],
+  "linearMap": [ { "bar": 9, "sourceMeasure": 5, "pass": 2 } ],
+  "pickupBeats": 0,
+  "sections": [ { ... } ]
 }
 ```
 
-### 3.1 `meta`
+### 2.1 `meta`
 
 | klíč | typ | pozn. |
 |------|-----|-------|
-| `format_version` | int | **vždy `2`**. Rozhoduje o parsování. |
 | `title` | str | název skladby |
 | `artist` | str | interpret |
-| `album` | str | (jen GP viewer) |
-| `tempo_bpm` | int | základní tempo |
-| `ticks_per_beat` | int | vždy `960` |
-| `total_measures` | int | počet taktů |
-| `track_count` | int | počet položek v `tracks[]` |
-| `source_file` | str | zdrojový GP soubor (jen GP viewer) |
-| `source` | str | zdrojová URL / `"web_import"` (jen web import) |
-| `duration_seconds` | float | délka (jen web import) |
-| `beats_per_measure` | int | beatů v taktu (web import; vždy `4`) |
-| `time_signature` | str | `"4/4"` (web import) |
-| `bars_per_line` | int | kolik taktů zabere KAŽDÝ karaoke řádek (web import, výchozí `2`) — pravidelná mřížka, ne odhad z textu |
-| `count_in_bars` | int | počet úvodních taktů ticha před prvním řádkem s klikací stopou pro odpočítávání (`drums_timeline`, `drum: "Closed Hi-Hat"`, viz `ESP32_KARAOKE_IMPLEMENTATION.md` §6c). Web import ho nastaví vždy (výchozí `1`); GP sloučení jen když se zavolá `add_count_in()` — nepovinné |
-| `count_in_s` | float | totéž v sekundách (`count_in_bars × beats_per_measure × 60/tempo_bpm`) — o tolik je POSUNUTÁ celá časová osa dopředu (žádné záporné časy) |
-| `has_line_structure` | bool | `true` u obou producentů vždy — řádky jsou explicitní přes `line`, ne odvozené |
-| `merged_web_gp` | bool | `true`, pokud data vznikla GP sloučením (Ctrl+M nebo GP-po-textu) — nepovinné, chybí u čistě GP/web dat |
-| `edited_in_timeline` | bool | `true`, pokud JSON prošel `to_json()` editoru časové osy |
-| `audio_file` | str | cesta k MP3/WAV nahrávce pro přehrávač v editoru časové osy (tlačítko „🎵 Načíst MP3/WAV…", synchronizované s playheadem + shuttle ovladač `jog_shuttle.py`) — nepovinné, jen pro editor; cesta je lokální k počítači, kde se soubor vybral, takže se na jiném stroji nemusí najít (editor to ošetří tichým „(žádné audio)", ne pádem). ESP32 firmware toto pole nepoužívá |
-| `audio_offset_s` | float | posun CELÉ nahrávky (`audio_file`) na časové ose — v kolikáté sekundě timeline začíná t=0 souboru. Nastavuje se tažením vlnovky (`WaveformItem`) nebo dialogem „🎚 Poloha/roztažení…". Výchozí `0.0`. Jen pro editor |
-| `audio_stretch` | float | ±10 % natažení/stlačení DÉLKY nahrávky (0.90–1.10, výchozí `1.0`) kvůli sladění reálné nahrávky s kulatým BPM — mění i rychlost přehrávání (`setPlaybackRate`), aby zvuk a vlnovka zůstaly synchronní. Jen pro editor, karaoke časy (`lyrics_timeline` apod.) se tím NEPŘEPOČÍTAJÍ |
-| `display_fill_gaps` | bool | `true` = klipy `display_timeline` jsou **natažené do sebe**, aby na displeji nikdy nebyla mezera (přepínač „⇥ Vyplnit mezery na Displeji" v editoru, §3.7). Pro parser jen informace, co za daty stojí — časy čte pořád z `clip.start_s`/`end_s`. Nepovinné, chybí = vypnuto. Editor ho nastaví na `true` u **nově zakládané** Displej stopy (import nové písně / starý JSON bez `display_timeline`); existujícím souborům ho sám nikdy nedopisuje |
-| `waveform_track_height` | float | výška řádku vlnovky v editoru (px, tažením dolního okraje) — čistě UI preference, výchozí `64` |
+| `durationMs` | int | délka celé skladby v ms — **jediný zdroj konce**, nic jiného se neukládá |
+| `countInBars` | int | počet úvodních taktů ticha PŘED prvním taktem hudby (`bar 1` už je hudba). `0` = žádný odpočet. Klikací stopa metronomu se v tomhle formátu **neukládá** — firmware si ji (má-li reprák) dopočítá sám z tempa/metra, viz §5.4 |
+| `sampleSet` | str | název sady bicích samplů, dnes vždy `"kit_default_v1"` — **POZOR, viz §7.1**: neodpovídá skutečnému názvu složky na SD kartě (`rock`), je potřeba sjednotit než na tom firmware začne stavět |
+| `audioFile` | str | (nepovinné) cesta k MP3/WAV nahrávce — **jen pro editor**, ESP32 ho nepoužívá |
+| `audioOffsetMs` | int | (nepovinné) posun nahrávky — **jen pro editor** |
+| `audioStretch` | float | (nepovinné) ±10 % roztažení nahrávky — **jen pro editor** |
+| `migrationNotes` | str[] | co konvertor odhadl/nedokázal převést — **jen pro editor** (diagnostika), firmware ignoruje |
 
-### 3.2 `tempo_map`
+Žádné `format_version`, žádné `has_line_structure`, žádné `time_signature`
+jako string — metrum je v `meterMap` (§2.3).
 
-Pole změn tempa, seřazené podle `tick`. Minimálně jeden záznam.
+### 2.2 `tempoMap[]`
+
+Změny tempa, seřazené podle pozice. Minimálně jeden záznam (na `bar: 1,
+beat: 1.0`).
 
 ```jsonc
-{ "tick": 960, "bpm": 120 }
+{ "bar": 1, "beat": 1.0, "bpm": 120 }
 ```
 
-Parser počítá `time_s` po úsecích mezi změnami. Pokud stačí konstantní tempo,
-lze vzít první záznam.
+### 2.3 `meterMap[]`
 
-### 3.3 `tracks[]` — stopy (jen přispívající + bicí)
+Změny metra (počet a hodnota dob v taktu), seřazené podle `bar`. Minimálně
+jeden záznam.
 
 ```jsonc
-{
-  "index": 1,                     // 1-based, cíl pro track_index
-  "name": "Pták Rosomák",
-  "type": "guitar",               // vocal | guitar | solo_guitar | bass | drums
-  "is_drums": false,
-  "instrument_midi": 25
-}
+{ "bar": 1, "num": 4, "den": 4 }
 ```
 
-To je **celý** záznam — žádná tabulatura, žádné `beats`/`tuning`. Obsah stopy
-je v plochých osách (`lyrics_timeline`/`chords_timeline`/`drums_timeline`),
-propojený přes `track_index`. `type` je jen informační štítek (`solo_guitar`
-= heuristika „tahle stopa je asi sólo/lead", bez vlivu na to, co se
-exportuje).
+Beze změny metra v písni je tu jeden záznam s metrem od `bar: 1`.
 
-### 3.4 `lyrics_timeline[]` — časová osa textu (PO ŘÁDCÍCH)
+### 2.4 `linearMap[]` (nepovinné, jen z GP importu)
 
-**Jeden záznam = jeden celý řádek** (ne po slovech). `text` je celý řádek,
-`time_s` jeho začátek, `duration_s` délka. **`line`** = index řádku (shodný
-s `karaoke_lines`). Text jen ze zpěvní stopy (`type: "vocal"`).
+Skutečné pořadí přehrávání takt po taktu — vzniká rozbalením repetic, 1./2.
+zakončení a navigačních skoků (Segno/Coda/D.C./D.S.). Firmware ho
+**nepotřebuje** (má přímo `bar` = pozici v přehrávání), slouží jen ke
+zpětnému dohledání, ze kterého místa partitury takt pochází.
 
 ```jsonc
-{ "time_s": 51.692, "duration_s": 3.693, "text": "1. Skončili jsme, jasná zpráva,",
-  "measure": 8, "line": 0, "track_index": 1, "line_start": false }
+{ "bar": 9, "sourceMeasure": 5, "pass": 2 }
 ```
 
-- `measure` (int, nepovinné) — číslo taktu, kam řádek spadá. Jen informační,
-  parser ho nepotřebuje (má `time_s`).
-- `line_start` (bool, nepovinné) — editorová značka „tenhle záznam je první
-  blok nového vizuálního řádku" (`timeline_editor.py`). Relevantní jen pro
-  editor při ručním zalamování textu — `line` sám o sobě už jednoznačně
-  říká, do kterého řádku záznam patří, přehrávač tenhle klíč nepotřebuje.
+### 2.5 `pickupBeats`
 
-### 3.5 `chords_timeline[]` — časová osa akordů
-
-Akord má **časové razítko** = kdy v řádku zní. Počáteční pozice se počítá z
-**hudební mřížky** (ne z odhadu délky textu): řádek má `bars_per_line × 4`
-beatů, akord u i-tého slova sedí na nejbližším beatu úměrném pořadí toho
-slova (`beat_index = i × beaty_v_řádku / počet_slov`) — pravidelné, žádné
-odhady ze slabik. V editoru se dá tažením přemístit/přichytit na mřížku
-(**⏱ Na mřížku**). Displej umístí akord vodorovně nad text dle času:
-`x = (chord.time_s − line.start_s) / (line.end_s − line.start_s)`.
-**`line`** = index řádku, do kterého akord spadá — **může být `null`**,
-když akord zní MIMO rozsah libovolného karaoke řádku (typicky intro/mezihra
-před prvním slovem nebo pauza mezi řádky). Takový akord nepatří k žádnému
-textovému klipu; na displeji ho nese samostatný `display_timeline` klip
-s `mode: "chords"` (§3.7) — ten se páruje podle `source_track` + časového
-okna klipu, ne podle `line`.
-
-```jsonc
-{ "time_s": 16.615, "chord": "C", "measure": 4, "line": 0, "track_index": 1 }
-```
-
-- `measure` (int, nepovinné) — takt, kdy akord zní. Jen informační.
-- `duration_s` (float, nepovinné) — u některých akordů přítomné (typicky
-  první akord delšího samostatného úseku), jinde chybí. Parser ho
-  nepotřebuje — pro zobrazení stačí `time_s` následujícího akordu / konec
-  klipu.
-
-### 3.5b `drums_timeline[]` — kdy a jaký buben/sample zní
-
-Jeden záznam = jeden úder jednoho bubnu (více bubnů najednou = více záznamů se
-stejným `time_s`, např. kick + hi-hat). `drum` je jméno z **GM Percussion Key
-Map** (MIDI kanál 10, čísla 35–81 → `GM_PERCUSSION` v `guitar_pro_viewer.py`);
-`midi` je totéž číselně, pro přímé mapování na sample bez porovnávání řetězců.
-
-```jsonc
-{ "time_s": 13.12, "duration_s": 0.24, "drum": "Acoustic Snare", "midi": 38,
-  "line": 3, "track_index": 5 }
-```
-
-Časté hodnoty `drum`: `"Acoustic Bass Drum"`, `"Acoustic Snare"`,
-`"Closed Hi-Hat"`, `"Open Hi-Hat"`, `"Low/Mid/High Tom"`, `"Crash Cymbal 1/2"`,
-`"Ride Cymbal 1/2"`. Přehrávač jen vezme `drum`/`midi`, dohledá odpovídající
-sample a spustí ho v `time_s`.
-
-### 3.5c `bass_timeline[]` — basová linka (nepovinné, jen z GP merge)
-
-Vzniká **jen** při sloučení s GP souborem (Ctrl+M, nebo otevřením GP AŽ PO
-načtení textu/akordů — viz §6). Jeden záznam = jedna nota. `string` je 1
-(nejtenčí) až 4 (nejtlustší) — editor podle něj kreslí basu ve 4 řadách,
-podobně jako bicí. Basa se **do exportu ESP32 nepoužívá** (přehrávač ji může
-ignorovat) — je to jen referenční vizuální stopa v editoru.
-
-```jsonc
-{ "time_s": 12.5, "duration_s": 0.25, "note_name": "E", "midi": 40,
-  "string": 4, "fret": 0, "track_index": 3 }
-```
-
-### 3.6 `karaoke_lines[]` — text seskupený do řádků
-
-Jeden záznam na řádek — hotový podklad pro karaoke displej, nemusíš nic dál
-odvozovat z plochých os.
-
-```jsonc
-{
-  "line": 4,
-  "start_s": 15.0,
-  "end_s": 19.5,
-  "chords": ["Am", "G"],
-  "text": "tam, kde nikdo neuvidí",
-  "words": [ { "time_s": 15.0, "duration_s": 4.5, "text": "tam, kde nikdo neuvidí",
-               "line": 4, "track_index": 1 } ],
-  "track_index": 1
-}
-```
-> `words[]` má **typicky jeden záznam pokrývající celý řádek** (`text` uvnitř
-> je shodný s `text` řádku) — text se neláme na jednotlivá slova s vlastním
-> časem. Schéma technicky připouští víc záznamů se stejným `line` (např. po
-> ruční editaci v timeline editoru), ale žádný producent to automaticky
-> negeneruje. Přehrávač proto **nemůže spoléhat na zvýrazňování slovo po
-> slově** — viz `ESP32_KARAOKE_IMPLEMENTATION.md` §5.
-- `line` je index řádku (0-based), shodný s `line` u slov v `lyrics_timeline`
-  a u akordů/bicích v `chords_timeline`/`drums_timeline`.
-- `chords` = akordy znějící v tomto řádku (bez duplicit, v pořadí výskytu).
-- **`section` (str, nepovinné)** — označení sloky/refrénu (`"Sloka 1"`,
-  `"Refrén"`…), odvozené z markerů `1.`/`R:` na začátku textu řádku.
-- **Web import**: řádek má **pevnou délku** `bars_per_line` taktů (výchozí 2,
-  nastavitelné v dialogu „Nová píseň") — žádný odhad z délky textu. Doplnění
-  akordů do dalších slok/refrénu (z první sloky) zůstává zachováno.
-  **GP viewer** (samostatné otevření GP, mimo hlavní workflow) řádky odvozuje
-  z beat-textů zpěvní stopy / pauz mezi nimi.
-- **`start_s`/`end_s` nemusí přesně sedět s mřížkovým rozsahem.** V editoru
-  časové osy jde přetáhnout okraj odpovídajícího klipu na master „Displej"
-  stopě (§3.7) — řádek pak zůstane na displeji déle/kratčeji. Užitečné u
-  rytmických skladeb. Parser to nemusí řešit — prostě vezme `start_s`/`end_s`
-  tak, jak jsou.
-
-### 3.7 `display_timeline[]` — režie karaoke displeje (Vegas program)
-
-**Nepovinná** sekce (chybí = parser si obsah skládá sám z `karaoke_lines` /
-`lyrics_timeline` / `chords_timeline`). Je to **střihová osa (EDL)** ve stylu
-Sony Vegas: seřazený seznam **klipů**, kde každý klip říká, že v okně
-`[start_s, end_s)` má displej ukázat obsah zdrojové stopy v daném režimu.
-Klipy se **nepřekrývají** (jsou seřazené dle `start_s`) — a **editor to při
-každém uložení vynucuje** (viz „Zaručený invariant" níže), takže parser se na
-to může spolehnout; mezera = displej nic neukazuje — proto existuje **výplň mezer** (`meta.display_fill_gaps`, viz
-níže), která je umí odstranit. Obsah (slova/akordy/tab noty) klip
-neduplikuje — jen na něj odkazuje přes `source_track` a čas.
-
-```jsonc
-{
-  "id": "clip-1",
-  "start_s": 0.0,
-  "end_s": 12.5,
-  "source_track": 1,          // odkaz na tracks[].index — CO se zobrazí
-  "mode": "lyrics_chords",    // JAK se to zobrazí (viz tabulka)
-  "label": "Sloka 1",         // volitelný popisek klipu (jen pro editor/UI)
-  "line": 0,                  // volitelné: index odpovídajícího karaoke_lines[] řádku
-  "auto_track": true          // volitelné, JEN pro editor — viz níže
-}
-```
-
-**`auto_track`** (nepovinné, výchozí `true`; **ESP32 firmware ho ignoruje**) —
-říká editoru časové osy, jestli si klip má svůj rozsah (`start_s`/`end_s`)
-a `label` **sám průběžně dopočítávat z obsahu** (slova + akordy patřící ke
-stejnému řádku), nebo jestli ho uživatel ručně doladil a má se nechat být:
-
-- `true` (výchozí) — klip **živě sleduje obsah**: přetáhneš slovo/akord,
-  přepíšeš čas v panelu vlastností nebo posuneš celý výběr, a klip se hned
-  přepočítá tak, aby přesně odpovídal tomu, co je na ose. Platí pro režimy
-  `lyrics_chords`/`lyrics` (párování přes `line`) a `chords` (párování přes
-  nejbližší souvislý shluk akordů).
-- `false` — uživatel klip **ručně posunul/roztáhl**, editor do něj už sám
-  nesahá. Obnovit auto-sledování jde pravým klikem na klip (položka
-  „🔄 Obnovit auto-sledování…“) nebo hromadně tlačítkem
-  „🔄 Zarovnat displej (celá píseň)“.
-
-Pozn.: „Zarovnat displej“ jen dolaďuje **existující** klipy — když se všechna
-slova řádku smažou, není z čeho počítat a klip zůstane viset. Na to je
-„🔄🗑 Znovu poskládat Displej stopu“, která celou sekci **zahodí a postaví
-znovu od nuly** z aktuálního obsahu (řádky se přitom počítají **globálně
-napříč všemi stopami** podle časového překryvu — stejně jako `karaoke_lines`
-v `to_json()`, takže akordy na jiné stopě než zpěv se správně spojí s textovým
-řádkem, místo aby vyrobily falešný samostatný akordový klip).
-
-**Výplň mezer (`meta.display_fill_gaps`, `unfilled_end_s`).** Mezi klipy
-vzniká přirozeně spousta mezer (pauzy mezi řádky, mezihry) a v každé z nich
-displej **nezobrazuje nic** — přesně to řešíme přepínačem „⇥ Vyplnit mezery
-na Displeji" v editoru. Když je zapnutý (`meta.display_fill_gaps: true`),
-editor natáhne `end_s` každého klipu až na `start_s` toho následujícího,
-takže poslední řádek zůstane na displeji, dokud ho nevystřídá další.
-Přirozený, z obsahu odvozený konec si klip přitom schová do
-**`unfilled_end_s`** (float, nepovinné) — jen aby šla výplň zase vypnout
-beze ztráty ručních/obsahových okrajů. **`unfilled_end_s` je čistě editorové
-pole; parser/firmware ho ignoruje** a řídí se jako vždy `start_s`/`end_s`.
-Poslední klip v souboru se nevyplňuje (nemá kam) a výplň nikdy nezkrátí klip
-pod jeho vlastní obsah.
-
-**Zaručený invariant: klipy se nepřekrývají.** Překryv je pro přehrávač
-zákeřný — hledá aktivní klip jako „první, kde `start_s <= t < end_s`", takže
-po dobu překryvu ten pozdější klip **vůbec nedostane slovo** a na displeji
-visí cizí řádek. V editoru přitom překryvy vznikají snadno (přetažené okraje,
-osiřelé klipy po přečíslování řádků). `to_json()` je proto při **každém
-uložení uklidí** — v editoru je navíc takový klip vidět s červeným
-čárkovaným rámečkem a ⚠ v popisku, a po uložení se vypíše, co se dělo:
-
-- **oba klipy mají obsah** (spárovaly se se skutečným řádkem / mají ve svém
-  okně akordy) → dřívějšímu se **zkrátí konec** na `start_s` toho pozdějšího
-  (pozdější klip má přednost — jeho obsah v tu chvíli opravdu zní),
-- **jen jeden má obsah** → ten prázdný se **zahodí** (typicky osiřelý klip
-  s `line`, které už v obsahu neexistuje — na displeji by stejně nevykreslil
-  nic), i kdyby byl na ose dřív,
-- **ani jeden** → zůstane ten dřívější.
-
-Prázdný klip, který se **s ničím nepřekrývá**, se nemaže — nikomu nevadí.
-Zkracování/mazání je vratné přes Zpět (Ctrl+Z).
-
-| `mode` | Význam pro displej |
-|--------|--------------------|
-| `lyrics_chords` | text zpěvu s akordy nad ním (výchozí) |
-| `lyrics` | jen text |
-| `chords` | jen akordy (intro/mezihra bez textu) |
-| `count_in` | odpočet před písní — viz níže |
-
-(Módy `tab`/`tab_chords` z dřívějška žádný producent do JSONu negeneruje —
-žádná stopa nenese tabulaturu, takže by pro ně nebyl žádný obsah k
-zobrazení. Editor je pro jistotu **stále nabízí v menu klipu** (`MODE_ORDER`
-v `timeline_editor.py`), takže ruční výběr uživatele je teoreticky může do
-`mode` dostat i dnes — parser je proto musí ošetřit stejně jako starší
-soubor: fallback na `lyrics_chords`.)
-
-**`mode: "count_in"`** — volitelný klip pro odpočet před písní (vkládá ho
-tlačítko „🥁⏱ Odpočet…" v editoru časové osy — viz
-`ESP32_KARAOKE_IMPLEMENTATION.md` §6c). Editor ho **při vložení** postaví na
-`[0, meta.count_in_s)`, ale je to obyčejný klip — jde přetáhnout/zkrátit
-jako kterýkoli jiný (v reálném exportu bývá i posunutý, např.
-`[1.846, 5.539)` při `count_in_s = 3.692`). **Parser vychází vždy z
-`clip.start_s`/`clip.end_s`, ne z `meta.count_in_s`** — to je jen výchozí
-hodnota při vložení a vstup do vzorce pro odpočítávací čísla (§6c), samotné
-umístění klipu na ose je na něm nezávislé. Klip má navíc dvě pole místo
-obvyklého `source_track`/textu ze stopy:
-
-```jsonc
-{ "id": "clip-count-in", "start_s": 0.0, "end_s": 4.0,
-  "source_track": 1, "mode": "count_in",
-  "artist": "Metallica", "title": "One", "label": "Metallica / One" }
-```
-
-`artist`/`title` se zobrazí na pozici akordy/text (stejný layout jako
-`lyrics_chords`); samotné odpočítávací číslo (4,3,2,1…) se NEUKLÁDÁ — displej
-si ho dopočítá z `meta.count_in_s`/`count_in_bars`/`tempo_bpm` (viz §6c).
-
-Parser vezme `mode` + `source_track`, dohledá odpovídající eventy v daném
-časovém okně a vykreslí je. Neznámý `mode` → fallback `lyrics_chords`.
-`clip.start_s`/`end_s` **jsou** to, co se má na displeji zobrazit (viz
-poznámka v §3.6 o ručním posunu konce řádku).
-
-**Klipy NEODPOVÍDAJÍ nutně 1:1 všem řádkům z `karaoke_lines`.** Klip pro
-daný řádek může chybět úplně (uživatel ho v editoru smazal a znovu
-nevygeneroval — „🔄🗑 Znovu poskládat Displej stopu"), takže v `display_timeline`
-může být mezera i tam, kde `karaoke_lines`/`lyrics_timeline` obsah MAJÍ.
-**`display_timeline`, je-li přítomná, je vůči obsahu autoritativní** — parser
-zobrazí přesně to, co říkají klipy, ne víc. `karaoke_lines` je fallback jen
-pro úplnou absenci `display_timeline`, nikoli výplň jejích mezer.
-
-**`clip.line` je spolehlivé jen u `lyrics_chords`/`lyrics` klipů.** U klipů
-`mode: "chords"` editor `line` k párování vůbec nepoužívá a nechá ho být, i
-když je zastaralý — v reálném exportu se tak objevují `chords` klipy s
-`line`, které vůbec neodpovídá jejich vlastnímu času. Parser proto `line` u
-`chords`-only klipů ignoruje a pracuje jen s časovým oknem klipu.
+Int, dnes vždy `0`. Rezervováno pro anacrusi (upbeat) — takt 1 by mohl mít
+míň dob, než říká `meterMap`. Zatím to editor negeneruje — firmware to může
+ignorovat, dokud nezačne být nenulové.
 
 ---
 
-## 4. Co číst pro který účel (návod pro ESP / aplikaci)
+## 3. `sections[]`
+
+Skladba rozdělená na pojmenované úseky (sloka/refrén/…). Sekce **nemají
+uložený konec** — trvá až do `startBar` následující (poslední do konce
+skladby).
+
+```jsonc
+{
+  "name": "Sloka 1",
+  "startBar": 5,
+  "source": "manual",
+  "lyrics": [ { ... } ],
+  "chords": [ { ... } ],
+  "drums":  [ { ... } ],
+  "bass":   [ { ... } ],
+  "tab":    []
+}
+```
+
+- `source` — `"manual"` (člověk označil marker/section), nebo `"generated"`
+  (konvertor odhadl z opakování textu / jediná sekce). Jen informační.
+- `tab` — **vždy prázdné pole.** Rezervováno, žádný producent do něj dnes nic
+  nezapisuje (formát nenese tabulaturu).
+- Všechny čtyři obsahové seznamy (`lyrics`/`chords`/`drums`/`bass`) jsou
+  seřazené podle pozice (`bar`,`beat`).
+
+### 3.1 Společný tvar položky
+
+Každá položka v `lyrics`/`chords`/`drums`/`bass` má základ:
+
+```jsonc
+{ "bar": 4, "beat": 4.5 }
+```
+
+a nepovinně navíc:
+
+- `tMsOverride` (int, ms) — přesný čas MÍSTO dopočtu z mřížky, viz §1.
+- `source` (str) — `"gp"` / `"manual"` / `"generated"` (odkud událost je,
+  viz §7.2). Firmware ignoruje, jen pro editor.
+
+K tomu specifická pole podle typu (níže).
+
+### 3.2 `lyrics[]` — text (PO ŘÁDCÍCH)
+
+**Jeden záznam = jeden celý řádek** (ne po slovech).
+
+```jsonc
+{ "bar": 13, "beat": 1.0, "text": "1. Skončili jsme, jasná zpráva," }
+```
+
+Řádek je aktivní od svého `bar`/`beat` **do začátku toho dalšího** — žádný
+uložený konec, viz §5.
+
+### 3.3 `chords[]` — akordy
+
+```jsonc
+{ "bar": 5, "beat": 1.0, "chord": "C" }
+```
+
+Akord zní od svého `bar`/`beat` do dalšího akordu (nebo do konce skladby,
+je-li poslední).
+
+### 3.4 `drums[]` — bicí
+
+```jsonc
+{ "bar": 4, "beat": 2.5, "sample": "snare" }
+```
+
+- `sample` — **basename souboru vzorku bez přípony** (`kick`, `snare`,
+  `hihat_closed`, `hihat_open`, `tom_low`, `tom_mid`, `tom_hi`, `crash`, …),
+  **už přeložené** z GM jména bubnu přes `drum_samples.json` (viz
+  `format_migrate.py::_load_drum_samples`). Firmware **nepotřebuje** žádnou
+  GM→sample mapu — dostane rovnou jméno vzorku, které má hledat na SD kartě.
+  Víc úderů na stejné `bar`/`beat` (kick+hi-hat současně) = víc záznamů.
+- Když `drum_samples.json` na desktopu nezná dané GM jméno bubnu, `sample`
+  obsahuje **původní GM jméno** (např. `"Bongo"`) místo basename — firmware
+  takový vzorek nenajde; ber to jako "bez zvuku", nespadni.
+
+### 3.5 `bass[]` — basová linka
+
+**Nově exportuje se vždy** (dřív jen po ručním "GP sloučení" ve starém
+formátu) — viz §7.3. Jeden záznam = jedna nota.
+
+```jsonc
+{ "bar": 4, "beat": 4.5, "note": "D", "midi": 38, "string": 2, "fret": 0,
+  "durationBeats": 0.5 }
+```
+
+| klíč | typ | pozn. |
+|------|-----|-------|
+| `note` | str | jméno noty BEZ oktávy (`"D"`, `"C#"`…) — **nejednoznačné samo o sobě**, jen pro zobrazení/log |
+| `midi` | int | **přesná výška** (0–127, General MIDI číslo) — tohle firmware potřebuje pro syntézu/přehrání, ne `note` |
+| `string` | int | 1 (nejtenčí) až 4 (nejtlustší) — nepovinné, jen editor (vizuální řádek) |
+| `fret` | int | pražec — nepovinné, jen editor |
+| `durationBeats` | float | délka noty v dobách (`60/bpm` na jednu dobu) — **skutečná hudební vlastnost**, ne hranice zobrazení. Chybí-li, firmware může použít rozumný default (~0.3 s) |
+
+**Firmware dnes basu vůbec nezná** (viz §7.3 a `TODO_FORMAT_V2.md` ve
+firmware repu) — tahle sekce popisuje **cílový stav**, ne to, co je
+implementované.
+
+---
+
+## 4. Co číst pro který účel
 
 | Účel | Potřebné sekce | Lze ignorovat |
 |------|----------------|---------------|
-| **Řízený karaoke displej** (co+kdy) | `meta`, `tempo_map`, `display_timeline` → dle `mode` sáhni do `lyrics_timeline`/`chords_timeline` | — |
-| **Karaoke text + akordy** (ESP) | `meta`, `tempo_map`, `karaoke_lines` **nebo** `lyrics_timeline`+`chords_timeline` | `display_timeline`, `drums_timeline` |
-| **Přehrávání bicích samplů** | `meta`, `tempo_map`, `drums_timeline` | vše ostatní |
-| **Sync více nástrojů** | timeline eventy + `track_index` → `tracks[].name/type` | — |
-| **`bass_timeline`** (jen editor/náhled) | — | ESP32 přehrávač ji vždy může ignorovat — je jen pro vizuální kontrolu linky v editoru, ne pro produkční playback |
-
-Celý soubor jsou jen tenké ploché osy — žádná velká binární/tabulaturní
-sekce ke stahování. Bicí `drums_timeline` bývá objemově největší (jeden
-záznam na úder), ale pořád jde jen o pár čísel na řádek.
+| **Karaoke displej** (co+kdy) | `meta`, `tempoMap`, `meterMap`, `sections[].lyrics`/`chords` → runtime odvození (§5) | `linearMap`, `pickupBeats` |
+| **Přehrávání bicích** | `meta`, `tempoMap`, `meterMap`, `sections[].drums` | vše ostatní |
+| **Přehrávání basy** (cílový stav, zatím neimplementováno) | `sections[].bass` | vše ostatní |
+| **Zpětné dohledání not v partituře** | `linearMap` | za běhu nepotřeba |
 
 ---
 
-## 5. Změny oproti verzi 1
+## 5. Jak firmware pozná, CO zobrazit — runtime pravidlo (nahrazuje `display_timeline`)
 
-- Přidán `meta.format_version` a `meta.track_count`.
-- Eventy v `lyrics_timeline` / `chords_timeline` / `karaoke_lines[].words`
-  mají **`track_index` (int)** místo dřívějšího opakovaného `"track": "<jméno>"`.
-- `tracks[]` dostal `has_tab` — **později (viz §6) zase odstraněno** spolu s
-  celou tabulaturou, takže v aktuálním schématu `has_tab` už není.
-- Web import nově exportuje i `tempo_map` a `tracks` (sjednocení schématu).
+Žádná uložená režie. Pro aktuální pozici (`bar`,`beat`, dopočtenou z hodin
+přehrávání přes `tempoMap`/`meterMap`) firmware **spočítá sám**:
 
-## 6. Doplňky `format_version: 2` (aditivní, zpětně kompatibilní)
+1. **Aktivní řádek** = poslední položka v `sections[*].lyrics` (napříč VŠEMI
+   sekcemi, brát jako jeden seřazený seznam), jejíž `bar`/`beat` je `<=`
+   aktuální pozici. Řádek je aktivní **od svého `bar`/`beat` do `bar`/`beat`
+   toho dalšího** (poslední řádek: do konce skladby, `meta.durationMs`).
+2. **Je-li aktivní řádek** → zobraz jeho `text` + všechny `chords` položky,
+   jejichž pozice padne do STEJNÉHO okna (od aktivního řádku po další) —
+   to je ekvivalent dřívějšího `mode: "lyrics_chords"`.
+3. **Není-li aktivní řádek** (pozice PŘED prvním řádkem, nebo PO posledním, nebo
+   V MEZEŘE, kterou žádný řádek nepokrývá — intro/mezihra/sólo) → zkus
+   **aktivní akord** stejnou logikou (poslední `chords` položka s `bar/beat
+   <=` pozice, platí do dalšího akordu). Je-li nějaký → zobraz JEN akord,
+   velkým fontem (ekvivalent `mode: "chords"`).
+4. **Není-li ani jedno** → prázdný/idle displej (nebo úvodní obrazovka
+   `meta.title`/`meta.artist`, náhled dalšího řádku apod. — volitelné, viz
+   starší `ESP32_KARAOKE_IMPLEMENTATION.md` §7/§12 pro nápady, i když jsou
+   psané pro starý formát).
 
-Verze zůstává **2** — jde o nepovinné klíče, které starší parser ignoruje.
+Tohle je **čistá funkce pozice** — žádný uložený stav, žádné klipy, žádné
+"aktivní ID". Seek/pauza/přetáčení jsou zadarmo (přepočítáš pro nové `t`).
 
-- **`display_timeline[]`** (§3.7) — režie karaoke displeje (klipy: co/kdy/jak).
-  Produkuje ji editor časové osy. Když chybí, parser si obsah skládá z
-  `karaoke_lines` / `lyrics_timeline` / `chords_timeline`. Klip nese i **`line`**
-  (index karaoke řádku, který reprezentuje) — díky tomu editor pozná, kam
-  patří, i po ručním posunu okrajů.
-- **`drums_timeline[]`** (§3.5b) — kdy a jaký buben/sample zní. Chybí, pokud
-  song nemá bicí stopu.
-- **`bass_timeline[]`** (§3.5c) — basová linka, vzniká jen sloučením s GP
-  (Ctrl+M, nebo otevřením GP AŽ PO textu/akordech — **text/akordy se tím
-  nepřepíšou**, GP jen přidá bicí/basu). Chybí, pokud song nemá basovou stopu
-  nebo žádné GP sloučení neproběhlo. Přehrávač ESP32 ji může ignorovat.
-- **`line` (int)** na `lyrics_timeline[]`, `chords_timeline[]`, `drums_timeline[]`,
-  `karaoke_lines[]` a `display_timeline[]` — **explicitní seskupení do řádků**:
-  eventy se stejným `line` patří do jednoho karaoke řádku. Parser tak nemusí
-  odvozovat řádky z pauz — přečte je přímo. Doprovází ho
-  **`meta.has_line_structure: true`** (u obou producentů vždy).
-- **Žádná tabulatura**: `tracks[]` už negeneruje `beats`/`tuning`/`has_tab` u
-  žádné stopy (ani u sóla) — export je jen text, akordy, bicí a (po GP
-  sloučení) basa. Klávesy a jiné doprovodné nástroje bez vlastního
-  textu/akordu se do `tracks[]` nedostanou vůbec.
-- **`karaoke_lines[].section` (str, nepovinné)** — označení sloky/refrénu
-  (`"Sloka 1"`, `"Refrén"`…), odvozené z markerů `1.`/`R:` v textu. Slouží
-  displeji k oddělovačům sekcí; klipy `display_timeline` ho mají i v `label`.
-- **`karaoke_lines[].start_s/end_s` může být ruční** (§3.6) — přetažené přes
-  klip na master „Displej" stopě, nezávisle na časování posledního slova.
-- **`meta.display_fill_gaps` (bool) + `display_timeline[].unfilled_end_s`
-  (float)** — výplň mezer na Displej stopě (§3.7): klipy jsou natažené až
-  k začátku toho následujícího, aby displej nezůstával prázdný.
-  `unfilled_end_s` je jen editorová záloha původního konce, firmware ho
-  ignoruje.
-- **`source` (str, nepovinné)** na událostech v `lyrics_timeline`,
-  `chords_timeline`, `drums_timeline` a `bass_timeline` — **odkud událost
-  pochází**:
+**Bicí a basa hrají nezávisle** na tomhle pravidle, pořád podle svého
+vlastního `bar`/`beat` — displej na ně nečeká a ony nečekají na displej.
 
-  | hodnota | znamená | kdo ji nastaví |
-  |---------|---------|----------------|
-  | `"gp"` | přišlo z Guitar Pro souboru | GP import (`_build_karaoke_json`, GP sloučení) |
-  | `"manual"` | napsal/naklikal člověk | web import (vložený text s akordy), ＋ Text, ＋ Akord, ruční úder bicích, ruční basová nota |
-  | `"generated"` | dopočítal program | klikací stopa odpočtu (`add_count_in`), do budoucna groove šablony a basová linka z akordů |
+---
 
-  Slouží editoru k tomu, aby odlišil, co přišlo automaticky (a mělo by se
-  zkontrolovat sluchem) od toho, co člověk potvrdil. Parser/firmware ho
-  **ignoruje**. Chybí u souborů uložených starší verzí — v tom případě se
-  původ prostě neví, neodvozuj ho. **Pozn.:** pozdější ruční úprava události
-  `source` zatím NEPŘEPÍŠE (přetažené GP slovo zůstane `"gp"`).
-- **`linear_map[]`** (jen GP import) — skutečné pořadí přehrávání. Jeden záznam
-  na takt: `{ "bar": 9, "source_measure": 5, "pass": 2 }`, kde `bar` je pozice
-  v PŘEHRÁVÁNÍ (1-based, souvislá řada), `source_measure` číslo taktu ve
-  ZDROJOVÉM GP souboru a `pass` kolikáté je to zaznění téhož taktu. Vzniká
-  rozbalením repetic, 1./2. zakončení a navigačních skoků (Segno, Coda, Fine,
-  D.C., D.S. — `expand_measure_plan()` v `guitar_pro_viewer.py`). Přehrávač ho
-  nepotřebuje (časy má spočítané), slouží ke zpětnému dohledání, ze kterého
-  místa partitury úsek pochází, a ke kontrole repetic proti notám.
-- **`meta.edited_in_timeline: true`** — příznak, že JSON prošel editorem časové
-  osy (přerovnané časy, ruční zalomení řádků, klipy Displeje).
-- Časy (`lyrics_timeline[].time_s/duration_s`, `chords_timeline[].time_s`)
-  mohou být **přerovnané** editorem (**⏱ Na mřížku** — přichycení na takt/beat)
-  — parser s nimi pracuje stejně, jsou to pořád sekundy od začátku. Časování
-  je vždy odvozené z tempa/taktu, nikdy z odhadu délky textu.
+## 6. Co přesně zaniklo oproti `format_version: 2` (a proč)
 
-> Implementaci přehrávače na ESP32 popisuje **`ESP32_KARAOKE_IMPLEMENTATION.md`**.
+| Zaniklo | Nahrazeno čím |
+|---------|---------------|
+| `display_timeline[]` (klipy CO/KDY/JAK) | runtime pravidlo, §5 — dřív dva nezávislé algoritmy (klipy vs. odvození z obsahu) dávaly na stejných datech různé výsledky |
+| `karaoke_lines[]` (odvozený, duplicitní obsah) | `sections[].lyrics`/`chords` přímo — obsah je v souboru JEDNOU |
+| Časy v sekundách (`time_s`/`duration_s`) | `bar`/`beat` + `tempoMap`/`meterMap`; `tMsOverride` pro volné nahrávky |
+| `count_in` klip s ručním `artist`/`title`/posunutými hranicemi | `meta.countInBars` — pevné pravidlo bez uloženého stavu, viz §5.4 (rozhodnutí uživatele: *"stačí pevné pravidlo ve fw, nepotřebuju to na píseň"*) |
+| Bicí jako `drum` (GM jméno) + `midi` | `sample` — basename vzorku, **už přeložený** na desktopu |
+| `bass_timeline` jen po ručním GP sloučení, ESP ji ignoroval | basa se exportuje **vždy** (viz §7.3) a je určená k reálnému přehrání — firmware ji jen ještě neumí (úkol) |
+
+---
+
+## 7. Nedávné opravy a otevřené nesrovnalosti (audit 2026-09)
+
+### 7.1 `meta.sampleSet` neodpovídá skutečné složce na SD kartě
+
+`format_migrate.py::DEFAULT_SAMPLE_SET = "kit_default_v1"`, ale skutečná
+sada vzorků, kterou appka i editor reálně používají, leží v
+`assets/drums/rock/*.wav` a `drum_samples.json` odkazuje na `/drums/rock/*`.
+**`sampleSet` v souboru tedy dnes lže** — firmware, který by z něj skládal
+cestu (`/drums/<sampleSet>/…`), by hledal neexistující složku `kit_default_v1`.
+Než na tom firmware začne stavět, je potřeba buď (a) přejmenovat
+`DEFAULT_SAMPLE_SET` na `"rock"`, nebo (b) přejmenovat SD složku/`assets/drums/`
+na `kit_default_v1`. Zatím to nikomu nevadilo, protože firmware `sampleSet`
+vůbec nečte (má vlastní pevnou cestu `/drums/rock/`) — jakmile se to
+zparametrizuje, je potřeba tohle sjednotit.
+
+### 7.2 `source` na basové notě
+
+Basa nese `source` stejně jako ostatní eventy (`"gp"`/`"manual"`/
+`"generated"`) — beze změny oproti staré specifikaci.
+
+### 7.3 Basová linka je nově VŽDY součástí exportu — a měla by se hrát
+
+Do 2026-09 se `bass_timeline` plnila jen ručním "GP sloučením" (Ctrl+M) a
+`JSON_FORMAT.md`/`ESP32_KARAOKE_IMPLEMENTATION.md` výslovně říkaly "ESP32
+přehrávač ji vždy může ignorovat — je jen pro vizuální kontrolu". To už
+**neplatí**:
+
+- `_build_karaoke_json()` (`guitar_pro_viewer.py`) basu extrahuje při KAŽDÉM
+  GP importu, ne jen při sloučení.
+- `midi`/`string`/`fret` se nově ukládají přesně (dřív se ztrácely při
+  uložení — jméno noty bez oktávy je nejednoznačné, viz commit "basa: přesný
+  round-trip midi/string/fret").
+- Editor umí basu i **slyšitelně přehrát** (syntetizátor, `_play_bass_note`/
+  `render_bass_mixdown` v `timeline_editor.py`) — basa přestala být čistě
+  vizuální.
+
+**Firmware basu vůbec neparsuje ani nehraje** (`Song.h`/`Song.cpp` — žádná
+struktura, žádné pole). To je teď hlavní otevřený úkol, viz
+`TODO_FORMAT_V2.md` ve firmware repu.

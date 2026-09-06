@@ -10,31 +10,37 @@ Bez GUI, bez závislosti na Qt. Dvě rozhraní:
 
 Co se mění a proč (podrobně v návrhu architektury):
 
-- **Konec se nikde nezapisuje.** Sekce, obrazovka i řádek končí tam, kde
-  začíná následující; jediná délka v souboru je `meta.durationMs`. Proto
-  mizí `end_s` u klipů a `duration_s` u textu/akordů/bicích. Délka basové
-  noty zůstává jako `durationBeats` — to není hranice, ale skutečná
-  hudební vlastnost.
+- **Konec se nikde nezapisuje.** Sekce končí tam, kde začíná následující;
+  jediná délka v souboru je `meta.durationMs`. Proto mizí `duration_s`
+  u textu/akordů/bicích. Délka basové noty zůstává jako `durationBeats`
+  — to není hranice, ale skutečná hudební vlastnost.
 - **Obsah je v souboru jednou.** `karaoke_lines` byla celá odvozená
-  (text tam byl podruhé, ve `words[]` potřetí a v `display_timeline[].label`
-  počtvrté) — ruší se.
+  (text tam byl podruhé, ve `words[]` potřetí) — ruší se.
+- **Žádná samostatná "displej" vrstva.** Starší verze formátu měla navíc
+  `display_timeline`/`screens[]` — explicitní seznam "co a kdy zobrazit",
+  budovaný jako zamrzlá kopie toho, co šlo stejně odvodit z
+  `lyrics_timeline`/`chords_timeline`. V praxi se to rozcházelo (dva různé
+  algoritmy skládání dávaly různé výsledky na týchž datech) a firmware to
+  přitom umí spočítat samo za běhu: je-li aktivní zpívaný řádek → text
+  (+akordy patřící k němu), není-li řádek, ale zní akord → jen akord,
+  jinak nic. Řádek zůstává aktivní od svého `bar`/`beat` do začátku
+  dalšího — čtenář tak dostává přirozený předstih zdarma, bez zvláštního
+  pole v souboru.
 - **Autorita je `bar` + `beat`**, ne sekundy. Čas v ms se dopočítá
   z `tempoMap`. Výjimka jsou nahrávky, které nehrají na klik: když se
-  událost po kvantizaci mine o víc než `MAX_GRID_DRIFT_MS`, dostane navíc
-  `tMsOverride` s přesným časem.
+  událost po kvantizaci mine o víc než `MAX_GRID_DRIFT_BEATS` dob,
+  dostane navíc `tMsOverride` s přesným časem.
 - **Count-in se odečítá.** Starý editor posouval celou časovou osu o
   `meta.count_in_s` dopředu; v novém modelu odpočet dopočítá firmware
   z `countInBars` a časy začínají na reálné nule.
 
 **Co se hádalo, je v souboru označené.** Starý formát spoustu věcí nenese
-(strukturu sekcí, režii displeje, tóninu), takže je konvertor odvozuje —
-a nesmí přitom předstírat jistotu. Proto:
+(strukturu sekcí, tóninu), takže je konvertor odvozuje — a nesmí přitom
+předstírat jistotu. Proto:
 
-- `sections[].source` a `screens[].source` — `"manual"` tam, kde to určil
-  člověk (marker `section`, marker `1.`/`R:` v textu, ručně posunutý klip
-  s `auto_track: False`), `"generated"` tam, kde to konvertor odhadl
-  (refrén z opakování textu, obrazovky dopočítané z karaoke řádků,
-  `blank` výplně děr, dělení v pauzách).
+- `sections[].source` — `"manual"` tam, kde to určil člověk (marker
+  `section`, marker `1.`/`R:` v textu), `"generated"` tam, kde to
+  konvertor odhadl (refrén z opakování textu, dělení v pauzách).
 - `meta.migrationNotes` — seznam všeho, co se při převodu odhadlo nebo
   nepřevedlo, uložený přímo v souboru. Konzole se zavře, tohle zůstane.
 
@@ -68,16 +74,6 @@ QUANTIZE = 4                   # dělení doby při kvantizaci (4 = šestnáctin
 MAX_GRID_DRIFT_BEATS = 0.05
 SECTION_GAP_BARS = 2.0         # pauza, která bez markerů ukončí sekci
 DEFAULT_SAMPLE_SET = "kit_default_v1"
-
-# Staré režimy klipů -> nové režimy obrazovek.
-SCREEN_MODES = {
-    "lyrics_chords": "lyrics+chords",
-    "lyrics": "lyrics",
-    "chords": "chords-only",
-    "count_in": "count-in",
-    "tab": "tab",
-    "tab_chords": "tab",
-}
 
 
 def _load_drum_samples(base_dir: str) -> dict[str, str]:
@@ -211,90 +207,6 @@ def _build_sections(klines: list[dict], grid: TimeGrid,
     return bounds
 
 
-def _snap_screen(grid: TimeGrid, seconds: float, lead_bars: int,
-                 not_before: float | None) -> float:
-    """Začátek obrazovky na taktové čáře, volitelně o `lead_bars` dřív.
-
-    Displej se má přepnout na taktu, ne uprostřed: zpěv často nastupuje až
-    po taktové čáře (v Jasné zprávě je na začátku verše osminová pauza,
-    takt 14 začíná 46,154 s a zpívá se od 46,615 s). Kdyby se displej řídil
-    nástupem zpěvu, přišel by pozdě — a text má běžet napřed.
-
-    Dělá se to tady, v JEDNOM setříděném průchodu, ne per-klip v editoru:
-    tam se to pralo se zahazováním překryvů a nebylo to idempotentní —
-    obrazovky při každém uložení ubývaly (24 → 23 → 21).
-
-    `not_before` hlídá, že se dva řádky ve stejném taktu nesloučí do jednoho
-    okamžiku; pak má přednost skutečný čas obsahu před mřížkou.
-    """
-    bar = max(1, grid.bar_of(max(0.0, seconds)))
-    start = grid.bar_start_seconds(bar)
-    if start > seconds + 1e-6:
-        bar = max(1, bar - 1)
-        start = grid.bar_start_seconds(bar)
-    if lead_bars > 0:
-        start = grid.bar_start_seconds(max(1, bar - lead_bars))
-    if not_before is not None and start <= not_before + 1e-6:
-        return max(seconds, not_before + 0.05)
-    return start
-
-
-def _screens(data: dict, klines: list[dict], grid: TimeGrid, shift: float,
-             warnings: list[str]) -> list[dict]:
-    """`display_timeline` -> `screens[]` bez konců. Mezera mezi klipy se
-    stane samostatnou obrazovkou `blank` — v novém modelu nejde díru
-    vyjádřit jinak než obsahem."""
-    clips = sorted(data.get("display_timeline") or [],
-                   key=lambda c: float(c.get("start_s", 0.0)))
-    out: list[dict] = []
-    if not clips:
-        warnings.append("Soubor nemá display_timeline — obrazovky vyrobené "
-                        "z karaoke řádků (%d)." % len(klines))
-        for l in sorted(klines, key=lambda l: float(l.get("start_s", 0.0))):
-            scr = _pos(grid, max(0.0, float(l.get("start_s", 0.0)) - shift))
-            scr["mode"] = "lyrics+chords" if (l.get("text") or "").strip() else "chords-only"
-            scr["source"] = "generated"   # režii displeje nikdo neurčil, odhadli jsme ji
-            out.append(scr)
-        return out
-
-    unknown: set[str] = set()
-    lead_bars = int((data.get("meta") or {}).get("display_lead_bars", 0) or 0)
-    last_start: float | None = None
-    prev_end: float | None = None
-    for c in clips:
-        start = max(0.0, float(c.get("start_s", 0.0)) - shift)
-        end = max(0.0, float(c.get("end_s", 0.0)) - shift)
-        mode_raw = c.get("mode", "lyrics_chords")
-        if mode_raw not in SCREEN_MODES:
-            unknown.add(str(mode_raw))
-        # POZOR: obrazovky se tu na taktovou čáru NEPŘICHYTÁVAJÍ. Zkoušel
-        # jsem to (a předstih displeje s tím) a nešlo to udělat idempotentně:
-        # posunutý začátek mění mezery, ty mění počet `blank` výplní a při
-        # opakovaném uložení počet obrazovek ujížděl (24 → 24 → 22 → 21).
-        # Správné místo je přestavba obrazovek z obsahu v jednom průchodu,
-        # ne záplata v ukládání. Do té doby zůstává čas takový, jaký je.
-        if prev_end is not None and (start - prev_end) > 0.01:
-            gap = _pos(grid, prev_end)
-            gap["mode"] = "blank"
-            gap["source"] = "generated"   # díru po starém formátu jsme dopočítali
-            out.append(gap)
-        scr = _pos(grid, start)
-        scr["mode"] = SCREEN_MODES.get(mode_raw, "lyrics+chords")
-        # `auto_track: False` ve starém formátu znamenalo, že uživatel klip
-        # ručně posunul nebo roztáhl — tedy že tuhle obrazovku vědomě určil.
-        scr["source"] = "generated" if c.get("auto_track", True) else "manual"
-        if mode_raw == "count_in":
-            for key in ("artist", "title"):
-                if c.get(key):
-                    scr[key] = c[key]
-        out.append(scr)
-        prev_end = max(end, start)
-    if unknown:
-        warnings.append("Neznámé režimy klipů (%s) převedené na lyrics+chords."
-                        % ", ".join(sorted(unknown)))
-    return out
-
-
 def migrate(data: dict) -> tuple[dict, list[str]]:
     """Vrátí (nový dokument, varování). Vstup nemění."""
     warnings: list[str] = []
@@ -422,6 +334,18 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
             continue
         item = pos(ev.get("time_s"))
         item["note"] = ev.get("note_name", "")
+        # `midi`/`string`/`fret` se ukládají PŘESNĚ (ne jen odvoditelně
+        # z `note`, které je bez oktávy nejednoznačné — "D" může být
+        # kterékoliv D) — jinak by se basová linka po uložení a znovu-
+        # načtení přehrála v NĚJAKÉ oktávě, ale ne nutně té správné (viz
+        # `_play_bass_note`/`render_bass_mixdown` v timeline_editor.py,
+        # obojí čte `midi` přímo).
+        if ev.get("midi") is not None:
+            item["midi"] = int(ev["midi"])
+        if ev.get("string") is not None:
+            item["string"] = int(ev["string"])
+        if ev.get("fret") is not None:
+            item["fret"] = int(ev["fret"])
         dur_s = float(ev.get("duration_s") or 0.0)
         if dur_s > 0:
             b0 = grid.beat(max(0.0, t(ev.get("time_s"))))
@@ -452,8 +376,6 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
     for key in ("lyrics_timeline", "chords_timeline", "drums_timeline", "bass_timeline"):
         for ev in data.get(key) or []:
             ends.append(t(ev.get("time_s")) + float(ev.get("duration_s") or 0.0))
-    for c in data.get("display_timeline") or []:
-        ends.append(t(c.get("end_s")))
     duration_ms = int(round(max(ends + [0.0]) * 1000))
 
     new_meta = {
@@ -489,12 +411,11 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
                      else [{"bar": 1, "num": num, "den": den}]),
         "pickupBeats": 0,
         "sections": sections,
-        "screens": _screens(data, klines, grid, shift, warnings),
     }
     # Co konvertor odhadl nebo nedokázal převést, musí zůstat vidět i po
     # zavření konzole — jinak se na to zapomene. Editor to ukáže jako
-    # seznam „zkontroluj ručně"; `source: "generated"` u sekcí a obrazovek
-    # říká, KTERÝCH konkrétních položek se to týká.
+    # seznam „zkontroluj ručně"; `source: "generated"` u sekcí říká,
+    # KTERÝCH konkrétních položek se to týká.
     out["meta"]["migrationNotes"] = list(warnings)
     if data.get("linear_map"):
         out["linearMap"] = [{"bar": e.get("bar"), "sourceMeasure": e.get("source_measure"),
@@ -514,13 +435,6 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
 # tam, kde začíná následující. Tím je pravidlo „žádný konec" vidět i uvnitř
 # editoru, ne až při ukládání.
 
-SCREEN_MODES_BACK = {
-    "lyrics+chords": "lyrics_chords",
-    "lyrics": "lyrics",
-    "chords-only": "chords",
-    "count-in": "count_in",
-    "tab": "tab",
-}
 VOCAL_TI, DRUMS_TI, BASS_TI = 1, 2, 3
 
 
@@ -542,6 +456,24 @@ def _derive_durations(events: list[dict], grid: TimeGrid, default_beats: float =
     for i, ev in enumerate(events):
         nxt = events[i + 1]["time_s"] if i + 1 < len(events) else ev["time_s"] + tail
         ev["duration_s"] = round(max(0.05, nxt - ev["time_s"]), 3)
+
+
+_NOTE_LETTERS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+
+def _guess_bass_midi(note_name: str) -> int:
+    """Odhad MIDI noty ze samotného jména BEZ oktávy (např. "D") — jen
+    záložní cesta pro starší soubory uložené PŘED tím, než `migrate()`
+    začal ukládat `midi` přímo (jméno bez oktávy je nejednoznačné, nejde
+    rekonstruovat přesně). Vybere oktávu nejblíž basovému rejstříku
+    (kolem E2/midi 40), aby přehrávání (`_play_bass_note`) alespoň znělo
+    ve správném rozsahu, i když ne nutně na přesné původní výšce."""
+    name = (note_name or "").strip().upper().replace("B#", "C")
+    try:
+        idx = _NOTE_LETTERS.index(name)
+    except ValueError:
+        return 40
+    return min((idx + 12 * o for o in range(6)), key=lambda m: abs(m - 40))
 
 
 def to_editor_model(doc: dict) -> dict:
@@ -600,6 +532,12 @@ def to_editor_model(doc: dict) -> dict:
         for ev in sec.get("bass") or []:
             item = {"time_s": round(_abs_seconds(grid, ev), 3),
                     "note_name": ev.get("note", ""), "track_index": BASS_TI}
+            midi = ev.get("midi")
+            item["midi"] = int(midi) if midi is not None else _guess_bass_midi(ev.get("note", ""))
+            if ev.get("string") is not None:
+                item["string"] = int(ev["string"])
+            if ev.get("fret") is not None:
+                item["fret"] = int(ev["fret"])
             if ev.get("durationBeats"):
                 item["duration_s"] = round(float(ev["durationBeats"]) * 60.0
                                            / grid.segments[0][1], 3)
@@ -622,30 +560,7 @@ def to_editor_model(doc: dict) -> dict:
         ev["line"] = next((l["line"] for l in lyrics
                            if l["time_s"] <= ev["time_s"] < l["time_s"] + l["duration_s"]), None)
 
-    # --- obrazovky -> klipy s DOPOČÍTANÝM koncem ---
     duration_s = float(meta.get("durationMs", 0) or 0) / 1000.0
-    screens = sorted(doc.get("screens") or [],
-                     key=lambda s: _abs_seconds(grid, s))
-    clips: list[dict] = []
-    for i, scr in enumerate(screens):
-        start = _abs_seconds(grid, scr)
-        end = _abs_seconds(grid, screens[i + 1]) if i + 1 < len(screens) else max(duration_s, start + 1.0)
-        mode = scr.get("mode", "lyrics+chords")
-        if mode == "blank":
-            continue          # prázdno = mezera mezi klipy, ve v2 se nekreslí
-        clip = {"id": "clip-%d" % (len(clips) + 1),
-                "start_s": round(start, 3), "end_s": round(end, 3),
-                "source_track": VOCAL_TI,
-                "mode": SCREEN_MODES_BACK.get(mode, "lyrics_chords"),
-                "auto_track": scr.get("source") != "manual"}
-        for key in ("artist", "title"):
-            if scr.get(key):
-                clip[key] = scr[key]
-        line = next((l["line"] for l in lyrics
-                     if abs(l["time_s"] - start) < 0.75), None)
-        if line is not None:
-            clip["line"] = line
-        clips.append(clip)
 
     # --- karaoke řádky (editor je čte při prvním rozložení) ---
     klines = []
@@ -691,7 +606,6 @@ def to_editor_model(doc: dict) -> dict:
         "chords_timeline": chords,
         "drums_timeline": drums,
         "karaoke_lines": klines,
-        "display_timeline": clips,
     }
     if bass:
         out["bass_timeline"] = bass
@@ -727,8 +641,8 @@ def main(argv=None) -> int:
         json.dump(new, f, indent=2, ensure_ascii=False)
 
     print("%s -> %s" % (args.input, out_path))
-    print("  sekcí: %d, obrazovek: %d, délka: %.1f s"
-          % (len(new["sections"]), len(new["screens"]), new["meta"]["durationMs"] / 1000))
+    print("  sekcí: %d, délka: %.1f s"
+          % (len(new["sections"]), new["meta"]["durationMs"] / 1000))
     for w in warnings:
         print("  ! %s" % w)
     return 0

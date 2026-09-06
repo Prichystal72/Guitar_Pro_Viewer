@@ -32,7 +32,7 @@ from PySide6.QtMultimedia import (
     QMediaPlayer, QAudioOutput, QMediaDevices, QSoundEffect,
 )
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox,
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox,
     QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem,
     QGraphicsSimpleTextItem, QGraphicsPixmapItem, QInputDialog, QCheckBox,
     QSplitter, QFormLayout, QLineEdit, QDoubleSpinBox, QSpinBox,
@@ -47,6 +47,12 @@ from icons import icon, std_icon
 
 # --- ikonky bicích (assets/drum_icons/*), klíč = _drum_icon_key() ---
 DRUM_ICON_DIR = os.path.join(os.path.dirname(__file__), "assets", "drum_icons")
+
+# --- reálné WAV vzorky bicích (stejné jako na SD kartě ESP32, viz
+# drum_samples.json) — pokud tu jsou, editor je hraje MÍSTO syntetického
+# cvaknutí (_DRUM_CLICK_PARAMS níže), ať už interaktivně (_play_drum_sound)
+# nebo v celkovém mixdownu (render_drums_mixdown).
+DRUM_SAMPLE_DIR = os.path.join(os.path.dirname(__file__), "assets", "drums", "rock")
 DRUM_ICON_FILES = {
     "kick": "kick.png",
     "snare": "snare.png",
@@ -86,9 +92,11 @@ DEFAULT_DRUM_ROWS = ["Closed Hi-Hat", "Acoustic Snare", "Bass Drum 1"]
 
 # Standardní ladění 4strunné basy — MIDI notu otevřené struny (string 1 =
 # nejtenčí/nejvyšší, string 4 = nejtlustší/nejnižší, viz `_draw_bass_lane`).
-# Jen pro ORIENTAČNÍ popisek nově přidané noty v editoru (skutečné ladění
-# konkrétní GP stopy se sem nepromítá — basa se stejně nikde nepřehrává,
-# je to čistě vizuální referenční stopa, viz `_draw_bass_lane` docstring).
+# Předpoklad standardního ladění (E-A-D-G) — skutečné ladění konkrétní GP
+# stopy (alternativní ladění, 5strunná basa…) se sem nepromítá. Používá se
+# jak pro popisek noty v editoru, tak jako VÝŠKA pro syntetizované
+# přehrávání (`_bass_tone_samples`/`_play_bass_note`) — u nestandardně
+# laděné basy tak může znít jinak, než jak skutečně hraje v GP souboru.
 BASS_STRING_OPEN_MIDI = {1: 43, 2: 38, 3: 33, 4: 28}   # G2 D2 A1 E1
 _NOTE_LETTERS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
@@ -100,8 +108,6 @@ DRUM_HIT_NAMES = list(DRUM_MIDI_NAMES.values())
 # --- rozměry rozvržení (px) ---
 HEADER_W = 150      # levý sloupec s názvy stop
 RULER_H = 30        # horní pravítko s časem
-DISPLAY_H = 44      # výška klipů master "Displej" stopy
-DISPLAY_ROW_H = DISPLAY_H + 14   # celá master stopa i s hlavičkou/mezerou
 LINE_H = 24         # výška pruhu karaoke ŘÁDKŮ
 CHORD_H = 26        # výška pruhu akordů v rámci stopy
 LYRIC_H = 30        # výška pruhu textu (slov) v rámci stopy
@@ -124,69 +130,11 @@ CHORD_COLOR = QColor("#1a5fb4")
 LYRIC_COLOR = QColor("#2d7d2d")
 SEL_COLOR = QColor("#e5a50a")
 
-# --- režimy zobrazení master "Displej" klipu (co karaoke displej vykreslí) ---
-MODE_LABELS = {
-    "lyrics_chords": "Text + akordy",
-    "lyrics": "Text",
-    "chords": "Akordy",
-    "tab": "Tabulatura",
-    "tab_chords": "Tab + akordy",
-    "count_in": "Odpočet (metronom)",
-}
-# Klíč → i18n klíč popisku — MODE_LABELS výše zůstává (jen pro kontrolu
-# platných klíčů přes `in`/`.data() in`, viz použití), skutečný ZOBRAZENÝ
-# text jde přes tuhle funkci, aby se přeložil znovu při každém překreslení
-# (canvas text/menu se staví nanovo, žádný register_tr netřeba).
-_MODE_LABEL_KEYS = {
-    "lyrics_chords": "mode.lyrics_chords",
-    "lyrics": "mode.lyrics",
-    "chords": "mode.chords",
-    "tab": "mode.tab",
-    "tab_chords": "mode.tab_chords",
-    "count_in": "mode.count_in",
-}
-
-
-def _mode_label(key: str) -> str:
-    return tr(_MODE_LABEL_KEYS.get(key, key))
-
-
 def _track_fallback_name(ti) -> str:
     return tr("track.fallback_name", n=ti)
 
 
-MODE_ORDER = ["lyrics_chords", "lyrics", "chords", "tab", "tab_chords", "count_in"]
-# Textové (karaoke-řádkové) režimy — jediné, které `to_json()` páruje s
-# `karaoke_lines` přes `line` (viz `to_json`, komentář u TEXT_MODES tam).
-TEXT_DISPLAY_MODES = ("lyrics_chords", "lyrics")
-# Režimy, pro které má klip na Displej stopě SMYSLUPLNÝ "přirozený obsah"
-# (rozsah + popisek) odvoditelný ze slov/akordů — jen ty se dají živě
-# auto-sledovat (viz TimelineEditor._sync_auto_display_clip). Na rozdíl od
-# TEXT_DISPLAY_MODES navíc zahrnuje čistě akordové ("chords") klipy —
-# ty se párují jinak (shluk akordů dle blízkosti, ne `line`, protože
-# bezeslovné instrumentální úseky žádný `line` tag nemají). `tab`/
-# `tab_chords`/`count_in` nemají (zatím) žádný takový zdroj pravdy,
-# zůstávají čistě ručně nastavitelné.
-AUTO_TRACK_MODES = ("lyrics_chords", "lyrics", "chords")
-
-# Vyplňování mezer na master "Displej" stopě (`meta.display_fill_gaps`):
-# klip se natáhne až k ZAČÁTKU následujícího klipu, takže displej nikdy
-# nezůstane prázdný — mezera mezi klipy jinak znamená "nezobrazuj nic"
-# (viz JSON_FORMAT.md §3.7). Původní, z obsahu odvozený konec si klip
-# schová do `unfilled_end_s`, aby šlo výplň zase vypnout beze ztráty.
-DISPLAY_FILL_EPS = 0.01     # tolerance v sekundách (co je pod ní, není mezera)
-DISPLAY_MIN_CLIP_S = 0.05   # kratší klip už nemá smysl (na displeji by problikl)
-MODE_COLORS = {
-    "lyrics_chords": QColor("#9141ac"),
-    "lyrics": QColor("#2d7d2d"),
-    "chords": QColor("#1a5fb4"),
-    "tab": QColor("#c64600"),
-    "tab_chords": QColor("#a51d2d"),
-    "count_in": QColor("#e08a00"),
-}
-
 PLAYHEAD_COLOR = QColor("#e01b24")   # červená = kurzor / playhead
-OVERLAP_COLOR = QColor("#e01b24")    # rámeček klipu, který se překrývá se sousedem
 
 import re as _re
 _SEC_NUM_RE = _re.compile(r'^\s*(\d+)\.')
@@ -232,6 +180,62 @@ def _beep_wav() -> str:
         wf.writeframes(struct.pack(f"<{n}h", *frames))
     _beep_wav_path = path
     return path
+
+
+_drum_sample_map: Optional[dict[str, str]] = None
+
+
+def _drum_sample_basename(drum_name: str) -> Optional[str]:
+    """GM jméno bicího (např. "Acoustic Snare") -> jméno reálného vzorku
+    bez přípony (např. "snare") podle drum_samples.json — stejné mapování,
+    jaké se ukládá do JSONu při exportu, viz format_migrate._load_drum_samples."""
+    global _drum_sample_map
+    if _drum_sample_map is None:
+        import format_migrate
+        _drum_sample_map = format_migrate._load_drum_samples(
+            os.path.dirname(os.path.abspath(__file__))
+        )
+    return _drum_sample_map.get(drum_name)
+
+
+def _real_drum_sample_path(drum_name: str) -> Optional[str]:
+    """Cesta k reálnému WAV vzorku daného bicího, pokud existuje na disku
+    (assets/drums/rock/*.wav) — jinak None (padá se zpátky na syntetické
+    cvaknutí, viz _play_drum_sound/render_drums_mixdown)."""
+    base = _drum_sample_basename(drum_name)
+    if not base:
+        return None
+    path = os.path.join(DRUM_SAMPLE_DIR, base + ".wav")
+    return path if os.path.isfile(path) else None
+
+
+_wav_sample_cache: dict[str, tuple[int, array.array]] = {}
+
+
+def _load_wav_samples(path: str) -> tuple[int, array.array]:
+    """Načte mono 16bit vzorky z WAV souboru (vícekanálové se smíchají na
+    mono průměrem). Výsledek se cachuje podle cesty — v jedné session se
+    stejný vzorek hraje/mixuje opakovaně."""
+    cached = _wav_sample_cache.get(path)
+    if cached is not None:
+        return cached
+    with wave.open(path, "rb") as wf:
+        rate = wf.getframerate()
+        ch = wf.getnchannels()
+        sw = wf.getsampwidth()
+        raw = wf.readframes(wf.getnframes())
+    if sw != 2:
+        raise ValueError(f"nepodporovaná hloubka vzorku ({sw*8} bit) v {path}")
+    samples = array.array("h")
+    samples.frombytes(raw)
+    if ch > 1:
+        n = len(samples) // ch
+        mono = array.array("h", bytes(2 * n))
+        for i in range(n):
+            mono[i] = sum(samples[i * ch:(i + 1) * ch]) // ch
+        samples = mono
+    _wav_sample_cache[path] = (rate, samples)
+    return rate, samples
 
 
 # --- syntetizované zvuky bicích pro sluchovou zpětnou vazbu při editaci
@@ -287,11 +291,13 @@ def _drum_click_wav(key: str) -> str:
     return path
 
 
-def render_drums_mixdown(data: dict, duration_s: float, rate: int = 22050) -> str:
+def render_drums_mixdown(data: dict, duration_s: float, rate: int = 44100) -> str:
     """Offline "mixdown" bicích z `drums_timeline` do jednoho WAV souboru —
-    stejná syntéza (tón+šum, exponenciální doznívání) jako sluchová
-    zpětná vazba při editaci (`_drum_click_wav`), jen teď se všechny
-    údery smíchají na jejich reálný `time_s`.
+    pro bicí, co mají reálný vzorek na disku (assets/drums/rock/*.wav,
+    viz _real_drum_sample_path), se namixuje SKUTEČNÉ audio; pro ostatní
+    (bonga/conga/... bez vzorku) syntéza (tón+šum, exponenciální
+    doznívání) jako sluchová zpětná vazba při editaci (`_drum_click_wav`).
+    Všechny údery se smíchají na jejich reálný `time_s`.
 
     Slouží k tomu, aby šlo ČLOVĚKU poslechem porovnat "co říká GP soubor"
     (tenhle mixdown) se skutečnou nahrávkou (druhý přehrávač vedle sebe,
@@ -300,9 +306,20 @@ def render_drums_mixdown(data: dict, duration_s: float, rate: int = 22050) -> st
     n_total = max(1, int(rate * (duration_s + 1.0)))
     buf = array.array("d", bytes(n_total * 8))   # zero-filled doubles
     for ev in data.get("drums_timeline", []) or []:
-        key = TimelineEditor._drum_icon_key(ev.get("drum", ""))
-        tone_hz, noise_amt, tau, dur, amp = _DRUM_CLICK_PARAMS.get(key, _DRUM_CLICK_PARAMS["perc"])
+        drum_name = ev.get("drum", "")
         start = int(float(ev.get("time_s", 0.0)) * rate)
+        real_path = _real_drum_sample_path(drum_name)
+        if real_path:
+            src_rate, samples = _load_wav_samples(real_path)
+            n = len(samples)
+            for i in range(n):
+                idx = start + (i if src_rate == rate else i * rate // src_rate)
+                if idx < 0 or idx >= n_total:
+                    continue
+                buf[idx] += samples[i] / 32768.0
+            continue
+        key = TimelineEditor._drum_icon_key(drum_name)
+        tone_hz, noise_amt, tau, dur, amp = _DRUM_CLICK_PARAMS.get(key, _DRUM_CLICK_PARAMS["perc"])
         n = int(rate * dur)
         for i in range(n):
             idx = start + i
@@ -319,6 +336,120 @@ def render_drums_mixdown(data: dict, duration_s: float, rate: int = 22050) -> st
     peak = max((abs(x) for x in buf), default=0.0)
     gain = (0.9 / peak) if peak > 0.9 else 1.0
     fd, path = tempfile.mkstemp(suffix="_gp_drums_mix.wav", prefix="timeline_editor_")
+    os.close(fd)
+    out = array.array("h", bytes(n_total * 2))
+    for i in range(n_total):
+        v = buf[i] * gain
+        if v > 1.0:
+            v = 1.0
+        elif v < -1.0:
+            v = -1.0
+        out[i] = int(v * 32767)
+    with wave.open(path, "w") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(rate)
+        wf.writeframes(out.tobytes())
+    return path
+
+
+# --- syntetizovaná basa (zatím jediná "reálná" možnost — na rozdíl od
+# bicích tu nejsou WAV vzorky, basa hraje libovolnou výšku podle
+# struny+pražce, takže samplovat by šlo jen s celou bankou not) ---
+
+def _bass_freq(midi: int) -> float:
+    return 440.0 * (2.0 ** ((midi - 69) / 12.0))
+
+
+def _bass_tone_samples(midi: int, render_s: float, rate: int = 44100) -> array.array:
+    """Syntetizovaný 'drnk' basové struny — základní tón + pár tišších
+    harmonických (přibližuje barvu struny, ne čistý sinus) s rychlým
+    náběhem a exponenciálním dozníváním. `render_s` je CELKOVÁ délka
+    vykresleného zvuku — nota doznívá i kus po `duration_s` z dat, jako
+    skutečná struna."""
+    freq = _bass_freq(midi)
+    n = max(1, int(rate * render_s))
+    out = array.array("d", bytes(n * 8))
+    harmonics = ((1.0, 1.0), (2.0, 0.5), (3.0, 0.22), (4.0, 0.1))
+    tau = max(0.2, render_s * 0.55)
+    attack = min(0.008, render_s * 0.15)
+    for i in range(n):
+        t = i / rate
+        env = (t / attack) if t < attack else math.exp(-(t - attack) / tau)
+        v = 0.0
+        for mult, amp in harmonics:
+            v += amp * math.sin(2 * math.pi * freq * mult * t)
+        out[i] = v * env
+    return out
+
+
+_bass_synth_cache: dict[tuple[int, float], array.array] = {}
+
+
+def _bass_tone_samples_cached(midi: int, render_s: float, rate: int = 44100) -> array.array:
+    """`_bass_tone_samples` cachovaný podle (nota, délka) — reálná basová
+    linka opakuje stejné noty/délky velmi často (viz `render_bass_mixdown`),
+    přepočítávat trigonometrii pro každý výskyt zvlášť by bylo zbytečné."""
+    key = (midi, round(render_s, 2))
+    cached = _bass_synth_cache.get(key)
+    if cached is not None:
+        return cached
+    samples = _bass_tone_samples(midi, render_s, rate)
+    _bass_synth_cache[key] = samples
+    return samples
+
+
+_bass_note_paths: dict[int, str] = {}
+
+
+def _bass_note_wav(midi: int, dur: float = 0.6) -> str:
+    """Krátký syntetizovaný 'drnk' jako dočasný WAV soubor pro sluchovou
+    zpětnou vazbu při editaci (přidání/přetažení/změna výšky) — cachováno
+    podle MIDI noty, viz `TimelineEditor._play_bass_note`."""
+    cached = _bass_note_paths.get(midi)
+    if cached and os.path.isfile(cached):
+        return cached
+    samples = _bass_tone_samples(midi, dur)
+    peak = max((abs(x) for x in samples), default=0.0)
+    gain = (0.85 / peak) if peak > 0 else 1.0
+    fd, path = tempfile.mkstemp(suffix=f"_bass_{midi}.wav", prefix="timeline_editor_")
+    os.close(fd)
+    n = len(samples)
+    out = array.array("h", bytes(n * 2))
+    for i in range(n):
+        v = max(-1.0, min(1.0, samples[i] * gain))
+        out[i] = int(v * 32767)
+    with wave.open(path, "w") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(44100)
+        wf.writeframes(out.tobytes())
+    _bass_note_paths[midi] = path
+    return path
+
+
+def render_bass_mixdown(data: dict, duration_s: float, rate: int = 44100) -> str:
+    """Offline mixdown BASY z `bass_timeline` do jednoho WAV souboru —
+    syntetizovaný 'drnk' (`_bass_tone_samples`) na reálném `time_s` každé
+    noty, doznívající o kus déle než `duration_s` (jako skutečná struna).
+    Slouží k poslechovému ověření basové linky z GP dat vedle skutečné
+    nahrávky (viz `TimelineEditor._load_bass_mix`) — čistě informativní
+    pomůcka, nic sama neopravuje."""
+    n_total = max(1, int(rate * (duration_s + 1.5)))
+    buf = array.array("d", bytes(n_total * 8))
+    for ev in data.get("bass_timeline", []) or []:
+        midi = int(ev.get("midi", 40))
+        render_s = max(0.15, float(ev.get("duration_s", 0.3)) + 0.3)   # trocha dozvuku navíc
+        start = int(float(ev.get("time_s", 0.0)) * rate)
+        samples = _bass_tone_samples_cached(midi, render_s, rate)
+        for i, v in enumerate(samples):
+            idx = start + i
+            if idx < 0 or idx >= n_total:
+                continue
+            buf[idx] += v
+    peak = max((abs(x) for x in buf), default=0.0)
+    gain = (0.9 / peak) if peak > 0.9 else 1.0
+    fd, path = tempfile.mkstemp(suffix="_gp_bass_mix.wav", prefix="timeline_editor_")
     os.close(fd)
     out = array.array("h", bytes(n_total * 2))
     for i in range(n_total):
@@ -389,259 +520,39 @@ class PlayheadItem(QGraphicsItem):
         return super().itemChange(change, value)
 
 
-class DisplayClipItem(QGraphicsRectItem):
-    """Klip master 'Displej' stopy (Vegas program).
+def _snap_bypassed() -> bool:
+    """True, když je při tažení podržený Alt — dočasně vypne přichytávání
+    na mřížku (konvence z DAW: Ableton/FL/Logic mají obdobu na Ctrl/Alt).
+    Čte se přímo aktuální stav klávesnice, ne z konkrétní QMouseEvent
+    (itemChange při tažení žádnou nedostává)."""
+    return bool(QApplication.keyboardModifiers() & Qt.AltModifier)
 
-    Definuje: v čase [start_s, end_s) ukaž obsah zdrojové stopy (source_track)
-    v režimu (mode). Lze posouvat po ose i táhnout OBA okraje (změna délky).
-    """
 
-    def __init__(self, editor: "TimelineEditor", clip: dict, lane_y: float, height: float):
-        super().__init__()
-        self.editor = editor
-        self.clip = clip
-        self.lane_y = lane_y
-        self.h = height
-        self._resizing = ""          # "" | "left" | "right"
-        self._undo_pushed = False    # jeden undo krok za celé tažení, ne za pixel
-        self._syncing = False        # True = setPos přichází Z DAT (viz _sync_from_clip),
-                                      # ne z tažení myší — itemChange pak nesmí přepsat
-                                      # clip["start_s"] přichycením na mřížku (rozbilo by
-                                      # to přesné/parametrické hodnoty ze zarovnání/panelu)
-        self.setAcceptHoverEvents(True)
-        self.setZValue(12)
-        self.setToolTip(tr("display_clip.tooltip"))
-        self._sync_from_clip()        # setPos PŘED ItemSendsGeometryChanges —
-        self.setFlags(                # jinak by vlastní inicializace vypadala
-            QGraphicsItem.ItemIsMovable          # jako tažení a zbytečně
-            | QGraphicsItem.ItemIsSelectable     # spustila undo/snap při
-            | QGraphicsItem.ItemSendsGeometryChanges   # KAŽDÉM _relayout()
-        )
-
-    def _sync_from_clip(self) -> None:
-        """Nastaví polohu/velikost PODLE `self.clip` (po parametrické editaci
-        — panel vlastností, zarovnání, `shift_selected`…). `self._syncing`
-        musí být True po dobu `setPos`, jinak `itemChange` níž přichytí
-        pozici na mřížku a PŘEPÍŠE přesnou hodnotu, kterou právě sem sync
-        dostal — tichý bug, který by rozbil každou "na číslo přesnou" editaci."""
-        self._syncing = True
-        try:
-            pps = self.editor.pps
-            t = float(self.clip.get("start_s", 0.0))
-            end = float(self.clip.get("end_s", t + 1.0))
-            w = max(BLOCK_MIN_W, (end - t) * pps)
-            self.setRect(0, 0, w, self.h)
-            self.setPos(HEADER_W + t * pps, self.lane_y)
-        finally:
-            self._syncing = False
-
-    def _mode(self) -> str:
-        m = self.clip.get("mode", "lyrics_chords")
-        return m if m in MODE_LABELS else "lyrics_chords"
-
-    def paint(self, p: QPainter, opt, widget=None):
-        base = MODE_COLORS.get(self._mode(), LINE_COLOR)
-        if self.isSelected():
-            base = SEL_COLOR
-        r = self.rect()
-        # Překryv se sousedním klipem = chyba pro firmware (viz
-        # TimelineEditor._mark_overlapping_clips) — přiznej ho červeným
-        # čárkovaným rámečkem, ne tiše.
-        overlapping = id(self.clip) in getattr(self.editor, "_overlapping_clips", ())
-        p.setBrush(QBrush(base.lighter(160)))
-        p.setPen(QPen(OVERLAP_COLOR, 2, Qt.DashLine) if overlapping else QPen(base, 2))
-        p.drawRoundedRect(r, 5, 5)
-        # svislé úchyty na okrajích
-        p.setPen(QPen(base.darker(130), 1))
-        p.drawLine(r.left() + 3, r.top() + 4, r.left() + 3, r.bottom() - 4)
-        p.drawLine(r.right() - 3, r.top() + 4, r.right() - 3, r.bottom() - 4)
-        # Natažená část (výplň mezery až k dalšímu klipu, viz
-        # TimelineEditor._apply_display_gap_fill) — světlejší pruh za
-        # čárkovanou čarou, ať je na první pohled poznat, kde končí
-        # SKUTEČNÝ obsah klipu a kde už jen "drží obraz" do dalšího.
-        natural_end = self.clip.get("unfilled_end_s")
-        if natural_end is not None:
-            x = (float(natural_end) - float(self.clip.get("start_s", 0.0))) * self.editor.pps
-            if 0 < x < r.width() - 1:
-                p.save()
-                p.setClipRect(r)
-                p.setPen(Qt.NoPen)
-                p.setBrush(QBrush(base.lighter(185)))
-                p.drawRect(QRectF(x, r.top() + 2, r.width() - x - 2, r.height() - 4))
-                p.setPen(QPen(base.darker(120), 1, Qt.DashLine))
-                p.drawLine(QPointF(x, r.top() + 3), QPointF(x, r.bottom() - 3))
-                p.restore()
-        # popisky
-        names = self.editor._track_names()
-        ti = self.clip.get("source_track", 1)
-        label = self.clip.get("label", "") or ""
-        if self._mode() == "count_in":
-            line1 = "🎵 " + (self.clip.get("artist", "") or "?")
-            line2 = (self.clip.get("title", "") or "") + "  ·  " + tr("display_clip.count_in_label")
-        else:
-            line1 = label if label else names.get(ti, _track_fallback_name(ti))
-            line2 = f"{_mode_label(self._mode())} · {names.get(ti, _track_fallback_name(ti))}"
-        if overlapping:
-            line2 = "⚠ " + line2
-        p.setPen(QPen(QColor("#1a1a1a")))
-        f = QFont("Segoe UI", 9, QFont.Bold)
-        p.setFont(f)
-        p.drawText(r.adjusted(8, 2, -4, -int(self.h / 2)),
-                   Qt.AlignVCenter | Qt.AlignLeft, line1)
-        f2 = QFont("Segoe UI", 8)
-        p.setFont(f2)
-        p.setPen(QPen(base.darker(140)))
-        p.drawText(r.adjusted(8, int(self.h / 2) - 2, -4, -2),
-                   Qt.AlignVCenter | Qt.AlignLeft, line2)
-
-    # --- interakce ---
-    def hoverMoveEvent(self, ev):
-        x = ev.pos().x()
-        near = x <= EDGE or x >= self.rect().width() - EDGE
-        self.setCursor(Qt.SizeHorCursor if near else Qt.OpenHandCursor)
-        super().hoverMoveEvent(ev)
-
-    def mousePressEvent(self, ev):
-        self._undo_pushed = False   # nové tažení = nová undo hranice
-        if ev.button() == Qt.LeftButton:
-            x = ev.pos().x()
-            if x <= EDGE:
-                self._resizing = "left"
-                ev.accept()
-                return
-            if x >= self.rect().width() - EDGE:
-                self._resizing = "right"
-                ev.accept()
-                return
-        super().mousePressEvent(ev)
-
-    def _mark_dirty(self) -> None:
-        if not self._undo_pushed:
-            self.editor._push_undo()
-            self._undo_pushed = True
-
-    def mouseMoveEvent(self, ev):
-        pps = self.editor.pps
-        if self._resizing == "right":
-            self._mark_dirty()
-            self.clip["auto_track"] = False   # ruční zásah -> odpojit od auto-sledování obsahu
-            start = float(self.clip.get("start_s", 0.0))
-            raw_w = max(BLOCK_MIN_W, ev.pos().x())
-            end = self.editor.snap_time(start + raw_w / pps)   # přichyť KONEC na mřížku
-            end = max(end, start + BLOCK_MIN_W / pps)
-            w = (end - start) * pps
-            self.prepareGeometryChange()
-            self.setRect(0, 0, w, self.h)
-            self.clip["end_s"] = round(end, 3)
-            self.clip.pop("unfilled_end_s", None)   # ruční konec = nový "přirozený"
-            ev.accept()
-            return
-        if self._resizing == "left":
-            self._mark_dirty()
-            self.clip["auto_track"] = False   # ruční zásah -> odpojit od auto-sledování obsahu
-            end_t = float(self.clip.get("end_s", 0.0))
-            old_left = self.pos().x()
-            right = old_left + self.rect().width()   # pevný pravý okraj (invariant napříč tažením)
-            raw_left = old_left + ev.pos().x()
-            t = self.editor.snap_time((raw_left - HEADER_W) / pps)   # přichyť ZAČÁTEK na mřížku
-            t = max(0.0, min(t, end_t - BLOCK_MIN_W / pps))
-            new_left = HEADER_W + t * pps
-            w = right - new_left
-            self.setPos(new_left, self.lane_y)
-            self.prepareGeometryChange()
-            self.setRect(0, 0, w, self.h)
-            self.clip["start_s"] = round(t, 3)
-            ev.accept()
-            return
-        super().mouseMoveEvent(ev)
-
-    def mouseReleaseEvent(self, ev):
-        if self._resizing:
-            self._resizing = ""
-            ev.accept()
-            return
-        super().mouseReleaseEvent(ev)
-
-    def mouseDoubleClickEvent(self, ev):
-        self.editor.edit_clip(self)
-        ev.accept()
-
-    def contextMenuEvent(self, ev):
-        from PySide6.QtWidgets import QMenu
-        self.editor._ensure_selected_for_context_menu(self)
-        menu = QMenu()
-        sub = menu.addMenu(tr("menu.display_mode_submenu"))
-        for key in MODE_ORDER:
-            act = sub.addAction(("● " if key == self._mode() else "   ") + _mode_label(key))
-            act.setData(key)
-        menu.addSeparator()
-        edit_act = menu.addAction(tr("menu.edit_clip"))
-        split_act = menu.addAction(tr("menu.split_at_playhead"))
-        menu.addSeparator()
-        # VŽDY přítomná položka (jen šedivá/needitovatelná, když nedává
-        # smysl) — uživatel explicitně nechce mizející/objevující se
-        # položky v menu, ať vidí, co existuje, i když se to zrovna nedá
-        # použít.
-        auto_restore_act = menu.addAction(tr("menu.restore_auto_track"))
-        auto_restore_act.setEnabled(
-            self._mode() in AUTO_TRACK_MODES and not self.clip.get("auto_track", True))
-        menu.addSeparator()
-        fwd_act = menu.addAction(tr("menu.select_forward"))
-        back_act = menu.addAction(tr("menu.select_backward"))
-        track_act = menu.addAction(tr("menu.select_track"))
-        menu.addSeparator()
-        copy_act = menu.addAction(tr("menu.copy"))
-        cut_act = menu.addAction(tr("menu.cut"))
-        del_act = menu.addAction(tr("menu.delete_clip"))
-        chosen = menu.exec(ev.screenPos())
-        if chosen is None:
-            ev.accept()
-            return
-        if chosen is del_act:
-            self.editor._push_undo()
-            self.editor.delete_clip(self)
-        elif chosen is edit_act:
-            self.editor.edit_clip(self)
-        elif chosen is split_act:
-            self.editor.split_at_playhead(self)
-        elif chosen is auto_restore_act:
-            self.editor._push_undo()
-            self.clip["auto_track"] = True
-            self.editor._sync_auto_display_clip(self)
-        elif chosen is fwd_act:
-            self.editor.select_ripple(self, "forward")
-        elif chosen is back_act:
-            self.editor.select_ripple(self, "backward")
-        elif chosen is track_act:
-            self.editor.select_track_content(self)
-        elif chosen is copy_act:
-            self.editor.copy_selected()
-        elif chosen is cut_act:
-            self.editor.cut_selected()
-        elif chosen.data() in MODE_LABELS:
-            self.editor._push_undo()
-            self.clip["mode"] = chosen.data()
-            self.update()
-        ev.accept()
-
-    def itemChange(self, change, value):
-        if change == QGraphicsItem.ItemPositionChange:
-            if self._syncing:
-                return value   # posun Z DAT (_sync_from_clip) — nic nepočítej/nepřepisuj
-            new: QPointF = value
-            if self._resizing:
-                return QPointF(new.x(), self.lane_y)   # při resize jen zamkni Y
-            self._mark_dirty()
-            self.clip["auto_track"] = False   # ruční přesun -> odpojit od auto-sledování obsahu
-            x = max(HEADER_W, new.x())
-            t = self.editor.snap_time((x - HEADER_W) / self.editor.pps)
-            dur = float(self.clip.get("end_s", 0.0)) - float(self.clip.get("start_s", 0.0))
-            dur = max(0.05, dur)
-            self.clip["start_s"] = round(t, 3)
-            self.clip["end_s"] = round(t + dur, 3)
-            self.clip.pop("unfilled_end_s", None)   # posunutý klip = nový "přirozený" konec
-            return QPointF(HEADER_W + t * self.editor.pps, self.lane_y)
-        return super().itemChange(change, value)
+def _apply_group_snap(item, editor: "TimelineEditor", new_pos: QPointF, lane_y: float) -> QPointF:
+    """Společná snap logika pro BlockItem/DrumHitItem/BassNoteItem při
+    tažení myší. Když je vybraných víc položek, Qt je posouvá VŠECHNY
+    stejným syrovým (nesnapovaným) posunem a volá itemChange pro každou
+    zvlášť — kdyby si každá nezávisle přichytávala svůj VLASTNÍ výsledný
+    čas na mřížku, položky s různou fází vůči mřížce by se posunuly různě
+    a jejich vzájemná vzdálenost by se rozjela. Proto se snapuje jen
+    `editor._drag_anchor` (položka fyzicky tažená pod myší) a ostatní
+    vybrané dostanou STEJNÝ (nesnapovaný/snapovaný stejně jako kotva)
+    delta-posun vůči svému vlastnímu výchozímu času, viz
+    `TimelineEditor._drag_group_begin`. Podržený Alt (`_snap_bypassed`)
+    snap úplně vypne — kotva i celá skupina se pak posune na pixel přesně."""
+    x = max(HEADER_W, new_pos.x())
+    if editor._drag_anchor is None or editor._drag_anchor is item:
+        raw_t = (x - HEADER_W) / editor.pps
+        t = raw_t if _snap_bypassed() else editor.snap_time(raw_t)
+        start = editor._drag_group_start.get(id(item))
+        if start is not None:
+            editor._drag_group_delta = t - start
+    else:
+        start = editor._drag_group_start.get(id(item), float(item.event.get("time_s", 0.0)))
+        t = max(0.0, start + editor._drag_group_delta)
+    x = HEADER_W + t * editor.pps
+    item.event["time_s"] = round(t, 3)
+    return QPointF(x, lane_y)
 
 
 class BlockItem(QGraphicsRectItem):
@@ -659,7 +570,7 @@ class BlockItem(QGraphicsRectItem):
         self._syncing = False       # True = setPos přichází Z DAT, viz _sync_from_event
         self.setAcceptHoverEvents(True)
         self.setZValue(10)
-        self._sync_from_event()     # setPos PŘED ItemSendsGeometryChanges (viz DisplayClipItem)
+        self._sync_from_event()     # setPos PŘED ItemSendsGeometryChanges
         self.setFlags(
             QGraphicsItem.ItemIsMovable
             | QGraphicsItem.ItemIsSelectable
@@ -686,7 +597,6 @@ class BlockItem(QGraphicsRectItem):
             self.setPos(HEADER_W + t * pps, self.lane_y)
         finally:
             self._syncing = False
-        self.editor._live_sync_display_clip_for_line(self.event.get("line"))
 
     def _label(self) -> str:
         return self.event.get("text", "") if self.kind == "lyric" else self.event.get("chord", "")
@@ -719,6 +629,7 @@ class BlockItem(QGraphicsRectItem):
             ev.accept()
             return
         super().mousePressEvent(ev)
+        self.editor._drag_group_begin(self)
 
     def _mark_dirty(self) -> None:
         if not self._undo_pushed:
@@ -731,13 +642,14 @@ class BlockItem(QGraphicsRectItem):
             pps = self.editor.pps
             start = float(self.event.get("time_s", 0.0))
             raw_w = max(BLOCK_MIN_W, ev.pos().x())
-            end = self.editor.snap_time(start + raw_w / pps)   # přichyť KONEC na mřížku
+            raw_end = start + raw_w / pps
+            # přichyť KONEC na mřížku — podržený Alt to dočasně vypne (viz _snap_bypassed)
+            end = raw_end if _snap_bypassed() else self.editor.snap_time(raw_end)
             end = max(end, start + BLOCK_MIN_W / pps)
             w = (end - start) * pps
             self.prepareGeometryChange()
             self.setRect(0, 0, w, self.h)
             self.event["duration_s"] = round(end - start, 3)
-            self.editor._live_sync_display_clip_for_line(self.event.get("line"))
             ev.accept()
             return
         super().mouseMoveEvent(ev)
@@ -748,6 +660,8 @@ class BlockItem(QGraphicsRectItem):
             ev.accept()
             return
         super().mouseReleaseEvent(ev)
+        self.editor._drag_group_finalize()
+        self.editor._drag_group_end()
 
     def mouseDoubleClickEvent(self, ev):
         self.editor.edit_block(self)
@@ -800,17 +714,11 @@ class BlockItem(QGraphicsRectItem):
         if change == QGraphicsItem.ItemPositionChange:
             if self._syncing:
                 return value   # posun Z DAT (_sync_from_event) — nic nepočítej/nepřepisuj
-            if not self._resizing:
+            # undo se pushuje jen za CELOU skupinu (jednou, z kotvy tažení)
+            # — viz TimelineEditor._drag_group_begin/_apply_group_snap
+            if not self._resizing and self.editor._drag_anchor in (None, self):
                 self._mark_dirty()
-            # zamkni Y na pruh, clampni a přichytni X
-            new: QPointF = value
-            x = max(HEADER_W, new.x())
-            t = (x - HEADER_W) / self.editor.pps
-            t = self.editor.snap_time(t)
-            x = HEADER_W + t * self.editor.pps
-            self.event["time_s"] = round(t, 3)
-            self.editor._live_sync_display_clip_for_line(self.event.get("line"))
-            return QPointF(x, self.lane_y)
+            return _apply_group_snap(self, self.editor, value, self.lane_y)
         return super().itemChange(change, value)
 
 
@@ -833,7 +741,7 @@ class DrumHitItem(QGraphicsPixmapItem):
         self.setZValue(15)
         self.setCursor(Qt.OpenHandCursor)
         self.setToolTip(tr("drum_hit.tooltip", drum=event.get('drum', '?')))
-        self._sync_from_event()     # setPos PŘED ItemSendsGeometryChanges (viz DisplayClipItem)
+        self._sync_from_event()     # setPos PŘED ItemSendsGeometryChanges
         self.setFlags(
             QGraphicsItem.ItemIsMovable
             | QGraphicsItem.ItemIsSelectable
@@ -855,9 +763,12 @@ class DrumHitItem(QGraphicsPixmapItem):
     def mousePressEvent(self, ev):
         self._undo_pushed = False   # nové tažení = nová undo hranice
         super().mousePressEvent(ev)
+        self.editor._drag_group_begin(self)
 
     def mouseReleaseEvent(self, ev):
         super().mouseReleaseEvent(ev)
+        self.editor._drag_group_finalize()
+        self.editor._drag_group_end()
         if self._undo_pushed:   # skutečně se táhlo (posunul se čas) — přehraj zvuk na novém místě
             self.editor._play_drum_sound(self.event.get("drum", "?"))
 
@@ -865,15 +776,12 @@ class DrumHitItem(QGraphicsPixmapItem):
         if change == QGraphicsItem.ItemPositionChange:
             if self._syncing:
                 return value   # posun Z DAT (_sync_from_event) — nic nepočítej/nepřepisuj
-            if not self._undo_pushed:
+            # undo se pushuje jen za CELOU skupinu (jednou, z kotvy tažení)
+            # — viz TimelineEditor._drag_group_begin/_apply_group_snap
+            if not self._undo_pushed and self.editor._drag_anchor in (None, self):
                 self.editor._push_undo()
                 self._undo_pushed = True
-            new: QPointF = value
-            x = max(HEADER_W, new.x())
-            t = self.editor.snap_time((x - HEADER_W) / self.editor.pps)
-            x = HEADER_W + t * self.editor.pps
-            self.event["time_s"] = round(t, 3)
-            return QPointF(x, self.row_y)
+            return _apply_group_snap(self, self.editor, value, self.row_y)
         return super().itemChange(change, value)
 
     def contextMenuEvent(self, ev):
@@ -922,8 +830,8 @@ class BassNoteItem(QGraphicsLineItem):
     """Jedna basová nota (event v bass_timeline), obdoba `DrumHitItem` —
     lze přetáhnout v čase (struna/Y je zamčená na vlastní řádek, mění se
     jen přes menu). Pravý klik = změna struny/pražce nebo smazání; Delete
-    smaže vybranou notu (viz `delete_selected`). Basa se nikde nepřehrává
-    (viz `_draw_bass_lane`) — jde o vizuální referenční stopu."""
+    smaže vybranou notu (viz `delete_selected`). Editace hraje syntetizovaný
+    'drnk' na správné výšce (viz `TimelineEditor._play_bass_note`)."""
 
     def __init__(self, editor: "TimelineEditor", event: dict, row_y: float, pps: float):
         super().__init__()
@@ -961,20 +869,25 @@ class BassNoteItem(QGraphicsLineItem):
     def mousePressEvent(self, ev):
         self._undo_pushed = False
         super().mousePressEvent(ev)
+        self.editor._drag_group_begin(self)
+
+    def mouseReleaseEvent(self, ev):
+        super().mouseReleaseEvent(ev)
+        self.editor._drag_group_finalize()
+        self.editor._drag_group_end()
+        if self._undo_pushed:   # skutečně se táhlo (posunul se čas) — přehraj notu na novém místě
+            self.editor._play_bass_note(self.event.get("midi", 40))
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange:
             if self._syncing:
                 return value
-            if not self._undo_pushed:
+            # undo se pushuje jen za CELOU skupinu (jednou, z kotvy tažení)
+            # — viz TimelineEditor._drag_group_begin/_apply_group_snap
+            if not self._undo_pushed and self.editor._drag_anchor in (None, self):
                 self.editor._push_undo()
                 self._undo_pushed = True
-            new: QPointF = value
-            x = max(HEADER_W, new.x())
-            t = self.editor.snap_time((x - HEADER_W) / self.editor.pps)
-            x = HEADER_W + t * self.editor.pps
-            self.event["time_s"] = round(t, 3)
-            return QPointF(x, self.row_y)
+            return _apply_group_snap(self, self.editor, value, self.row_y)
         return super().itemChange(change, value)
 
     def contextMenuEvent(self, ev):
@@ -1020,10 +933,12 @@ class BassNoteItem(QGraphicsLineItem):
                 self.editor._push_undo()
                 self.editor.set_bass_note_pitch(self.event, cur_s, fret)
                 self.editor._relayout_and_reselect(self.event)
+                self.editor._play_bass_note(self.event.get("midi", 40))
         elif chosen in string_acts:
             self.editor._push_undo()
             self.editor.set_bass_note_pitch(self.event, chosen.data(), int(self.event.get("fret", 0)))
             self.editor._relayout_and_reselect(self.event)
+            self.editor._play_bass_note(self.event.get("midi", 40))
         ev.accept()
 
 
@@ -1053,9 +968,10 @@ class BassLaneBackground(QGraphicsRectItem):
             fret, ok = QInputDialog.getInt(None, tr("dialog.fret_title"), tr("dialog.fret_label"),
                                            0, 0, 24)
             if ok:
-                self.editor.add_bass_note(self.ti, self.string, fret, t)
+                new_ev = self.editor.add_bass_note(self.ti, self.string, fret, t)
+                self.editor._play_bass_note(new_ev["midi"])
         elif chosen is paste_act:
-            self.editor.paste_at(t)
+            self.editor.paste_at(t, target_ti=self.ti)
         ev.accept()
 
 
@@ -1099,9 +1015,9 @@ class DrumShiftButton(QGraphicsRectItem):
 
 def _add_paste_action(menu: QMenu, editor: "TimelineEditor"):
     """Sdílená položka „Vložit sem“ pro kontextová menu pozadí stop
-    (`DrumRowBackground`/`BassLaneBackground`/`DisplayLaneBackground`) —
-    vrátí přidanou akci, nebo `None`, když je schránka prázdná (pak se do
-    menu vůbec nepřidá nic navíc, viz `copy_selected`/`cut_selected`)."""
+    (`DrumRowBackground`/`BassLaneBackground`) — vrátí přidanou akci, nebo
+    `None`, když je schránka prázdná (pak se do menu vůbec nepřidá nic
+    navíc, viz `copy_selected`/`cut_selected`)."""
     if not editor._clipboard:
         return None
     menu.addSeparator()
@@ -1133,38 +1049,7 @@ class DrumRowBackground(QGraphicsRectItem):
         if chosen is act:
             self.editor.add_drum_hit(self.ti, self.drum_name, t)
         elif chosen is paste_act:
-            self.editor.paste_at(t)
-        ev.accept()
-
-
-class DisplayLaneBackground(QGraphicsRectItem):
-    """Pozadí Displej stopy (pod klipy — viz `_draw_display_bg`/`_add_clip_item`,
-    klipy se kreslí AŽ POTOM, takže leží nad tímhle pozadím a dostanou klik
-    přednostně). Pravým kliknutím na PRÁZDNÉ místo (mimo existující klip)
-    vloží nový klip PŘESNĚ na místo kliknutí — bez nutnosti nejdřív tahat
-    kurzor (viz `add_clip(at_time=...)`)."""
-
-    def __init__(self, editor: "TimelineEditor", x: float, y: float, w: float, h: float):
-        super().__init__(0, 0, w, h)
-        self.editor = editor
-        self.setPos(x, y)
-        self.setBrush(QBrush(QColor("#f3e9fb")))
-        self.setPen(QPen(Qt.NoPen))
-        self.setToolTip(tr("display_lane_bg.tooltip"))
-
-    def _time_at(self, ev) -> float:
-        return self.editor.snap_time(ev.pos().x() / self.editor.pps)
-
-    def contextMenuEvent(self, ev):
-        t = self._time_at(ev)
-        menu = QMenu()
-        act = menu.addAction(tr("menu.add_display_clip_here"))
-        paste_act = _add_paste_action(menu, self.editor)
-        chosen = menu.exec(ev.screenPos())
-        if chosen is act:
-            self.editor.add_clip(at_time=t)
-        elif chosen is paste_act:
-            self.editor.paste_at(t)
+            self.editor.paste_at(t, target_ti=self.ti)
         ev.accept()
 
 
@@ -1399,7 +1284,7 @@ class PropertiesPanel(QWidget):
         self.target = item
         self._undo_pushed_for_target = False   # nový cíl = nová undo hranice
         self._clear_form()
-        known = isinstance(item, (BlockItem, DrumHitItem, DisplayClipItem))
+        known = isinstance(item, (BlockItem, DrumHitItem))
         self.form_host.setVisible(known)
         self.placeholder.setVisible(not known)
         if not known:
@@ -1408,8 +1293,6 @@ class PropertiesPanel(QWidget):
             self._build_block_form(item)
         elif isinstance(item, DrumHitItem):
             self._build_drum_form(item)
-        elif isinstance(item, DisplayClipItem):
-            self._build_clip_form(item)
 
     def _time_spin(self, value: float, on_change) -> QDoubleSpinBox:
         sb = QDoubleSpinBox()
@@ -1489,69 +1372,6 @@ class PropertiesPanel(QWidget):
         self.form.addRow(tr("properties_panel.drum_label"), combo)
         self.form.addRow(tr("properties_panel.time_label"), t_sb)
         self.form.addRow(tr("properties_panel.duration_label"), d_sb)
-
-    def _build_clip_form(self, item: "DisplayClipItem") -> None:
-        clip = item.clip
-        label = QLineEdit(clip.get("label", ""))
-
-        def on_label():
-            self._mark_dirty()
-            clip["label"] = label.text().strip()
-            item.update()
-        label.editingFinished.connect(on_label)
-
-        src = QComboBox()
-        order = self.editor._track_order()
-        names = self.editor._track_names()
-        for ti in order:
-            src.addItem(f"{ti}. {names.get(ti, _track_fallback_name(ti))}", ti)
-        cur_ti = clip.get("source_track", order[0] if order else 1)
-        src.blockSignals(True)
-        if cur_ti in order:
-            src.setCurrentIndex(order.index(cur_ti))
-        src.blockSignals(False)
-
-        def on_src(idx):
-            self._mark_dirty()
-            clip["source_track"] = src.itemData(idx)
-            item.update()
-        src.currentIndexChanged.connect(on_src)
-
-        mode = QComboBox()
-        for key in MODE_ORDER:
-            mode.addItem(_mode_label(key), key)
-        cur_mode = clip.get("mode", "lyrics_chords")
-        mode.blockSignals(True)
-        if cur_mode in MODE_ORDER:
-            mode.setCurrentIndex(MODE_ORDER.index(cur_mode))
-        mode.blockSignals(False)
-
-        def on_mode(idx):
-            self._mark_dirty()
-            clip["mode"] = mode.itemData(idx)
-            item.update()
-        mode.currentIndexChanged.connect(on_mode)
-
-        def on_start(v):
-            self._mark_dirty()
-            clip["start_s"] = round(v, 3)
-            item._sync_from_clip()
-
-        def on_end(v):
-            self._mark_dirty()
-            clip["end_s"] = round(v, 3)
-            clip.pop("unfilled_end_s", None)   # ručně zadaný konec = nový "přirozený"
-            item._sync_from_clip()
-
-        start_sb = self._time_spin(float(clip.get("start_s", 0.0)), on_start)
-        end_sb = self._time_spin(float(clip.get("end_s", 1.0)), on_end)
-
-        self.form.addRow(tr("properties_panel.label_label"), label)
-        self.form.addRow(tr("properties_panel.source_track_label"), src)
-        self.form.addRow(tr("properties_panel.mode_label"), mode)
-        self.form.addRow(tr("properties_panel.start_label"), start_sb)
-        self.form.addRow(tr("properties_panel.end_label"), end_sb)
-
 
 class TimelineView(QGraphicsView):
     def __init__(self, scene, editor):
@@ -1671,8 +1491,19 @@ class TrackMixPanel(QWidget):
         vol = self._vol_slider(ed._gp_volume, ed._on_gp_volume)
         self._add_row([name, mute, vol])
 
+        name = QLabel(tr("mix_panel.gp_bass_mix"))
+        mute = QCheckBox(tr("mix_panel.mute"))
+        mute.setChecked(ed._bass_muted)
+        mute.toggled.connect(ed._on_bass_mute)
+        vol = self._vol_slider(ed._bass_volume, ed._on_bass_volume)
+        self._add_row([name, mute, vol])
+
         name = QLabel(tr("mix_panel.drums_editing"))
         vol = self._vol_slider(ed._drum_click_volume, ed._on_drum_click_volume)
+        self._add_row([name, vol])
+
+        name = QLabel(tr("mix_panel.bass_editing"))
+        vol = self._vol_slider(ed._bass_click_volume, ed._on_bass_click_volume)
         self._add_row([name, vol])
 
         sep = QLabel(tr("mix_panel.tracks_separator"))
@@ -1727,26 +1558,27 @@ class TimelineEditor(QWidget):
         self.playhead_s: float = 0.0             # pozice kurzoru (s)
         self._playhead: Optional[PlayheadItem] = None
         self.blocks: list[BlockItem] = []
-        self.clips: list[DisplayClipItem] = []   # klipy master "Displej" stopy
         self.drum_hit_items: list[DrumHitItem] = []   # úhozy bicí stopy
         self.bass_note_items: list[BassNoteItem] = []   # noty basové stopy
         # POZOR: schránka je SDÍLENÁ napříč všemi kartami (modulová
         # `_SHARED_CLIPBOARD`, viz konec souboru) — NENÍ to instanční
         # atribut, schválně, aby "kopírovat v písni A, vložit v písni B"
         # fungovalo beze změny copy_selected/cut_selected/paste_at.
-        self._display_lane_y: float = RULER_H + 4
         self._track_lane: dict[int, dict] = {}   # track_index → {'chord_y','lyric_y'}
         self.export_callback = None              # nastaví hlavní okno: fn(dict, path, silent)
         # Co poslední `to_json()` musel na Displej stopě uklidit, aby JSON
         # splnil invariant formátu (nepřekrývající se klipy) — hlavní okno
         # to po uložení vypíše uživateli, ať se klipy nemažou potichu.
-        self.last_export_cleanup: dict[str, int] = {}
-        self._overlapping_clips: set[int] = set()   # viz _mark_overlapping_clips
         self._drum_icon_pixmaps: dict[tuple[str, int], QPixmap] = {}
         self.bpm: float = 120.0
         self.beats_per_measure: int = 4
         self._undo_stack: list[dict] = []
         self._redo_stack: list[dict] = []
+        # skupinové tažení myší (viz _drag_group_begin/_apply_group_snap)
+        self._drag_anchor = None
+        self._drag_group_items: list = []
+        self._drag_group_start: dict[int, float] = {}
+        self._drag_group_delta: float = 0.0
         # stopy dočasně skryté z rozvržení (session-only, ne v JSONu) —
         # nastaveno z TrackMixPanel v levém docku, viz _on_track_hide_toggle
         self._hidden_tracks: set[int] = set()
@@ -1784,6 +1616,21 @@ class TimelineEditor(QWidget):
         self.gp_player.setAudioOutput(self.gp_audio_output)
         self.gp_player.playbackStateChanged.connect(self._on_playback_state_changed)
         self.gp_player.errorOccurred.connect(self._on_gp_audio_error)
+
+        # --- třetí přehrávač: syntetizovaný mixdown BASY z GP dat
+        # (bass_timeline) — samostatné tlačítko/hlasitost/mute NEZÁVISLE
+        # na bicích (viz `_load_bass_mix`/`render_bass_mixdown`), ale sdílí
+        # stejný transport (play/pause/stop/seek/shuttle) se zbylými dvěma.
+        self.bass_audio_path: Optional[str] = None
+        self._bass_volume: float = 1.0
+        self._bass_muted: bool = False
+        self.bass_player = QMediaPlayer(self)
+        self.bass_audio_output = QAudioOutput(self)
+        self.bass_audio_output.setVolume(self._bass_volume)
+        self.bass_audio_output.setMuted(self._bass_muted)
+        self.bass_player.setAudioOutput(self.bass_audio_output)
+        self.bass_player.playbackStateChanged.connect(self._on_playback_state_changed)
+        self.bass_player.errorOccurred.connect(self._on_bass_audio_error)
 
         # Bluetooth/USB sluchátka se odpojují a připojují za běhu a Windows
         # jim přitom přidělí NOVÝ endpoint — držet si QAudioDevice z doby
@@ -1826,7 +1673,13 @@ class TimelineEditor(QWidget):
         # --- syntetizované zvuky bicích pro sluchovou zpětnou vazbu při
         # editaci (přidání/přesun/změna typu úderu) — viz _play_drum_sound ---
         self._drum_click_sounds: dict[str, QSoundEffect] = {}
+        self._drum_real_sounds: dict[str, QSoundEffect] = {}   # klíč = cesta k WAV, viz _real_drum_sample_path
         self._drum_click_volume: float = 0.7   # mix panel "🥁 Bicí (editace)"
+
+        # --- syntetizovaný zvuk basové noty pro sluchovou zpětnou vazbu při
+        # editaci (přidání/přetažení/změna výšky) — viz _play_bass_note ---
+        self._bass_note_sounds: dict[int, QSoundEffect] = {}   # klíč = MIDI nota
+        self._bass_click_volume: float = 0.7   # mix panel "🎸 Basa (editace)"
 
         self._setup_ui()
         self.scene.selectionChanged.connect(self._on_selection_changed)
@@ -1989,6 +1842,20 @@ class TimelineEditor(QWidget):
         self.gp_audio_label.setStyleSheet("color:#999999;")
         audio_bar.addWidget(self.gp_audio_label)
 
+        audio_bar.addSpacing(12)
+        bass_mix_btn = QPushButton()
+        tr_label(bass_mix_btn, "audio.bass_mix")
+        bass_mix_btn.setStyleSheet(btn_style)
+        bass_mix_btn.setIcon(icon("gp_drum_mix"))
+        register_tr(bass_mix_btn.setToolTip, "audio.bass_mix.tooltip")
+        bass_mix_btn.clicked.connect(self._load_bass_mix)
+        audio_bar.addWidget(bass_mix_btn)
+
+        self.bass_audio_label = QLabel()
+        tr_label(self.bass_audio_label, "audio.bass_mix_not_generated")
+        self.bass_audio_label.setStyleSheet("color:#999999;")
+        audio_bar.addWidget(self.bass_audio_label)
+
         audio_bar.addSpacing(8)
         audio_bar.addWidget(QLabel("🎵"))
         rec_vol = QSlider(Qt.Horizontal)
@@ -2007,6 +1874,15 @@ class TimelineEditor(QWidget):
         gp_vol.setToolTip(tr("audio.gp_volume.tooltip"))
         gp_vol.valueChanged.connect(self._on_gp_volume)
         audio_bar.addWidget(gp_vol)
+
+        audio_bar.addWidget(QLabel("🎸"))
+        bass_vol = QSlider(Qt.Horizontal)
+        bass_vol.setRange(0, 100)
+        bass_vol.setValue(100)
+        bass_vol.setMaximumWidth(70)
+        bass_vol.setToolTip(tr("audio.bass_volume.tooltip"))
+        bass_vol.valueChanged.connect(self._on_bass_volume)
+        audio_bar.addWidget(bass_vol)
 
         audio_bar.addStretch()
 
@@ -2072,6 +1948,12 @@ class TimelineEditor(QWidget):
         if hasattr(self, "gp_audio_label"):
             self.gp_audio_label.setText(tr("audio.gp_mix_not_generated"))
             self.gp_audio_label.setStyleSheet("color:#999999;")
+        self.bass_player.stop()
+        self.bass_player.setSource(QUrl())
+        self.bass_audio_path = None
+        if hasattr(self, "bass_audio_label"):
+            self.bass_audio_label.setText(tr("audio.bass_mix_not_generated"))
+            self.bass_audio_label.setStyleSheet("color:#999999;")
         # Vstupní hranice formátu: editor uvnitř pracuje s plochým sekundovým
         # tvarem, ale na disku je nový model (`schemaVersion: 1`). Starý
         # `format_version: 2` se cestou převede, takže se dřívější soubory
@@ -2097,7 +1979,6 @@ class TimelineEditor(QWidget):
                                 or WAVEFORM_DEFAULT_H)
         self._update_snap_s()
         self._seed_line_starts()
-        self._seed_display()
         self._relayout(full=True)
         # cesta k audiu se ukládá do meta.audio_file (viz load_audio) — pokud
         # z tohoto počítače existuje, rovnou ho napoj; jinak nech tiše
@@ -2143,53 +2024,6 @@ class TimelineEditor(QWidget):
             self._grid_key = key
         return self._grid_cache
 
-    def snap_down_to_bar(self, t: float, not_before: float | None = None) -> float:
-        """Nejbližší začátek taktu v čase `t` nebo PŘED ním.
-
-        Obrazovka displeje se má přepnout na taktové čáře, ne uprostřed
-        taktu. Zpěv často nastupuje až po ní (v notách bývá na začátku
-        verše osminová pauza — v Jasné zprávě začíná takt 14 na 46,154 s,
-        ale zpívá se od 46,615 s). Kdyby se displej řídil nástupem zpěvu,
-        přepnul by se o půl doby pozdě a text by se objevil až ve chvíli,
-        kdy ho má člověk zpívat. Text má běžet napřed."""
-        grid = self._music_grid()
-        bar = max(1, grid.bar_of(max(0.0, t)))
-        start = grid.bar_start_seconds(bar)
-        if start > t + 1e-6:
-            bar = max(1, bar - 1)
-            start = grid.bar_start_seconds(bar)
-        # Předstih displeje: kdo zpívá, potřebuje řádek vidět DŘÍV, než na
-        # něj dojde. Posouvá se výhradně displej — hudba (bicí, basa, audio)
-        # zůstává na svém, jinak by se rozešla s nahrávkou.
-        lead = int((self.data.get("meta") or {}).get("display_lead_bars", 0) or 0)
-        if lead > 0:
-            start = grid.bar_start_seconds(max(1, bar - lead))
-        # Dva řádky v jednom taktu se nesmí přichycením slít do jednoho
-        # okamžiku — druhý by měl nulovou délku a při ukládání by zmizel
-        # (chyceno testem stability: soubor se při každém načtení zmenšoval).
-        # V takovém případě má přednost skutečný čas obsahu před mřížkou.
-        if not_before is not None and start <= not_before + 1e-6:
-            return round(max(t, not_before + 0.05), 3)
-        return round(start, 3)
-
-    def set_display_lead(self, bars: int) -> None:
-        """O kolik taktů dřív se má obrazovka přepnout (0 = na svém taktu)."""
-        self._push_undo()
-        self.data.setdefault("meta", {})["display_lead_bars"] = max(0, int(bars))
-        # Předstih se promítne jedině přestavbou obrazovek — ty jsou po
-        # přestavbě označené jako ručně určené, takže je auto-sledování
-        # obsahu samo nepřesune.
-        self.data["display_timeline"] = self.build_screens_from_content()
-        self._relayout()
-
-    def display_lead_dialog(self) -> None:
-        from PySide6.QtWidgets import QInputDialog
-        cur = int((self.data.get("meta") or {}).get("display_lead_bars", 0) or 0)
-        bars, ok = QInputDialog.getInt(self, tr("timeline.display_lead"),
-                                       tr("timeline.display_lead.label"), cur, 0, 8)
-        if ok:
-            self.set_display_lead(bars)
-
     def _track_names(self) -> dict[int, str]:
         names = {t.get("index", i + 1): (t.get("name") or _track_fallback_name(i + 1))
                  for i, t in enumerate(self.tracks)}
@@ -2210,40 +2044,6 @@ class TimelineEditor(QWidget):
             for b in t.get("beats", []) or []:
                 max_t = max(max_t, float(b.get("time_s", 0)) + float(b.get("duration_s", 0)))
         return round(max_t, 3)
-
-    def _seed_display(self) -> None:
-        """Poprvé sestaví klipy master stopy. Když už display_timeline
-        existuje, nechá ho být.
-
-        Dřív měla vlastní, samostatnou logiku (klip 1:1 na `karaoke_lines`,
-        nebo fallback po pauzách) — NEZÁVISLOU na `build_screens_from_content()`,
-        se kterou později stavějí obrazovky `rebuild_display_track`,
-        `shift_lyrics_track` i `set_display_lead`. Ty dvě implementace se
-        rozcházely: na reálné písni s repetikovaným instrumentálním sólem
-        dala stará cesta 36 klipů začínajících až PRVNÍM zpívaným veršem
-        (50,5 s) — celé intro a sólo (0–50 s) nemělo na Displej stopě
-        VŮBEC NIC — zatímco `build_screens_from_content()` na TÝCHŽ datech
-        dá 60 klipů včetně instrumentálních úseků. Uživatel pak viděl, že
-        po libovolné akci, která obrazovky přestaví (posun textu, „Zarovnat
-        displej"…), se najednou objeví/zmizí desítky klipů — vypadalo to,
-        že se něco nehýbe nebo že klipy „zůstávají na místě", zatímco ve
-        skutečnosti šlo o přepnutí mezi dvěma neshodujícími se algoritmy.
-
-        Teď je JEDNA implementace pro úplně první sestavení i pro každou
-        pozdější přestavbu — žádná šance na rozchod."""
-        data = self.data
-        if data.get("display_timeline"):
-            return
-        clips = self.build_screens_from_content()
-        if not clips:
-            order = self._track_order()
-            clips = [{
-                "id": "clip-1", "start_s": 0.0, "end_s": self._song_end(),
-                "source_track": order[0] if order else 1,
-                "mode": "lyrics_chords", "label": "Displej",
-                "auto_track": False,
-            }]
-        data["display_timeline"] = clips
 
     # --- karaoke řádky: seskupení slov, hranice ---
 
@@ -2340,446 +2140,6 @@ class TimelineEditor(QWidget):
             lines.append(cur)
         return lines
 
-    # --- auto-sledování Displej klipu obsahem řádku (text+akordy) ---
-    # Klip má vlastní start_s/end_s/label (viz DisplayClipItem), ale DOKUD
-    # ho uživatel sám ručně nepřetáhl (clip["auto_track"] zůstává True, což
-    # je výchozí stav), má PŘESNĚ KOPÍROVAT to, co je skutečně na ose —
-    # čas i text/akordy — ne zůstávat "na svém", jak dřív hlásil uživatel
-    # ("chybí tam text, musíš to OBNOVIT, ne jen zarovnat"). Jakmile klip
-    # ručně upraví (DisplayClipItem.itemChange/mouseMoveEvent), přepne se
-    # na auto_track=False a zůstane nezávislý, dokud ho uživatel sám
-    # neobnoví (kontextové menu / "🔄 Zarovnat displej").
-
-    def _natural_line_content(self, line_idx: int) -> Optional[tuple[float, float, str]]:
-        """(start, end, popisek) řádku — z AKTUÁLNÍCH textových i akordových
-        eventů se stejným tagem `line` (přiřazuje `to_json()` při exportu;
-        existující/dřív exportované soubory ho tedy mají). Popisek = spojený
-        text řádku, a když řádek zrovna žádná slova nemá (jen akordy nad
-        instrumentálem se STEJNÝM `line` číslem — viz `to_json`), spojené
-        názvy akordů. `None`, když k danému `line` nic nepatří (např. byla
-        smazána poslední slova řádku)."""
-        lyr = sorted((e for e in self.data.get("lyrics_timeline", []) or []
-                      if e.get("line") == line_idx), key=lambda e: e["time_s"])
-        chd = sorted((e for e in self.data.get("chords_timeline", []) or []
-                      if e.get("line") == line_idx), key=lambda e: e["time_s"])
-        evs = lyr + chd
-        if not evs:
-            return None
-        t0 = min(float(e.get("time_s", 0.0)) for e in evs)
-        t1 = max(float(e.get("time_s", 0.0)) + float(e.get("duration_s", 0.5)) for e in evs)
-        label = " ".join(e.get("text", "") for e in lyr).strip()
-        if not label:
-            seen: list[str] = []
-            for e in chd:
-                c = e.get("chord", "")
-                if c and c not in seen:
-                    seen.append(c)
-            label = " ".join(seen)
-        return t0, max(t1, t0 + 0.05), label[:24]
-
-    def _natural_chord_cluster(self, ti: int, near_t: float,
-                               gap: float = 1.5) -> Optional[tuple[float, float, str]]:
-        """Pro čistě akordový (bezeslovný) klip: instrumentální úseky NEMAJÍ
-        `line` tag (ten existuje jen pro karaoke řádky se slovy — viz
-        `to_json`), takže se nedají dohledat přes `line`. Místo toho najde
-        SOUVISLÝ shluk akordů na stopě `ti` v okolí `near_t` (aktuální
-        pozice klipu) — mezera mezi sousedními akordy větší než `gap`
-        shluk ukončí — a vrátí jeho rozsah + spojené názvy akordů."""
-        chords = sorted((e for e in self.data.get("chords_timeline", []) or []
-                         if e.get("track_index", 1) == ti), key=lambda e: e["time_s"])
-        if not chords:
-            return None
-        idx = min(range(len(chords)), key=lambda i: abs(chords[i]["time_s"] - near_t))
-        lo = hi = idx
-        while lo > 0 and (chords[lo]["time_s"]
-                          - (chords[lo - 1]["time_s"] + chords[lo - 1].get("duration_s", 0.5))) <= gap:
-            lo -= 1
-        while hi < len(chords) - 1 and (chords[hi + 1]["time_s"]
-                                        - (chords[hi]["time_s"] + chords[hi].get("duration_s", 0.5))) <= gap:
-            hi += 1
-        cluster = chords[lo:hi + 1]
-        t0 = cluster[0]["time_s"]
-        t1 = max(c["time_s"] + c.get("duration_s", 0.5) for c in cluster)
-        seen: list[str] = []
-        for c in cluster:
-            name = c.get("chord", "")
-            if name and name not in seen:
-                seen.append(name)
-        return t0, max(t1, t0 + 0.05), " ".join(seen)[:24]
-
-    def _sync_auto_display_clip(self, clip_item: "DisplayClipItem") -> bool:
-        """Když je klip v auto-sledovacím módu (`auto_track` není výslovně
-        False), přepočte start_s/end_s/label z aktuálního obsahu (textový
-        režim → dle `line`; čistě akordový → dle shluku akordů poblíž
-        aktuální pozice) a vizuálně ho přesune. Vrací True, když se něco
-        změnilo (volající podle toho může/nemusí překreslit)."""
-        clip = clip_item.clip
-        mode = clip.get("mode", "lyrics_chords")
-        if mode not in AUTO_TRACK_MODES:
-            return False
-        if not clip.get("auto_track", True):
-            return False
-        if mode == "chords":
-            ti = clip.get("source_track", 1)
-            near_t = float(clip.get("start_s", 0.0))
-            content = self._natural_chord_cluster(ti, near_t)
-        else:
-            line_idx = clip.get("line")
-            if not isinstance(line_idx, int):
-                return False
-            content = self._natural_line_content(line_idx)
-        if content is None:
-            return False
-        t0, t1, label = round(content[0], 3), round(content[1], 3), content[2]
-        # `end_s` může být natažené výplní mezer — porovnávej proti
-        # PŘIROZENÉMU konci schovanému v `unfilled_end_s`, jinak by klip
-        # vypadal "změněně" při každé kontrole a výplň by se donekonečna
-        # bourala a stavěla znovu.
-        cur_end = float(clip.get("unfilled_end_s", clip.get("end_s", 0.0)))
-        if clip.get("start_s") == t0 and cur_end == t1 and clip.get("label") == label:
-            return False
-        clip["start_s"] = t0
-        clip["end_s"] = t1
-        clip.pop("unfilled_end_s", None)   # konec je znovu z obsahu -> stará výplň neplatí
-        clip["label"] = label
-        clip_item._sync_from_clip()
-        clip_item.update()
-        self._refresh_display_fill()       # obsah se pohnul -> mezery vyplň znovu
-        return True
-
-    def align_all_clips_to_content(self) -> None:
-        """Tlačítko „🔄 Zarovnat displej (celá píseň)" — u VŠECH textových
-        klipů zapne auto_track a přepočte start_s/end_s z aktuálního
-        obsahu, najednou pro celou píseň (ne po jednom přes kontextové
-        menu). Klipy bez textového režimu (tab/count_in…) nechá být.
-
-        DŮLEŽITÉ omezení: dolaďuje jen EXISTUJÍCÍ klipy — když se všechna
-        slova/akordy nějakého řádku SMAŽOU, nemá se z čeho dopočítat nový
-        rozsah, takže klip zůstane viset se STARÝM obsahem (nic ho
-        nesmaže). Na tenhle případ je `rebuild_display_track()` — kompletní
-        znovu-poskládání od nuly."""
-        from PySide6.QtWidgets import QMessageBox
-        n = 0
-        self._push_undo()
-        for c in self.clips:
-            if c.clip.get("mode", "lyrics_chords") not in AUTO_TRACK_MODES:
-                continue
-            was_manual = not c.clip.get("auto_track", True)
-            c.clip["auto_track"] = True
-            if self._sync_auto_display_clip(c) or was_manual:
-                n += 1
-        if n == 0:
-            self._undo_stack.pop()   # nic se nezměnilo, nekaz historii prázdným krokem
-        QMessageBox.information(self, tr("timeline.align_song.result_title"),
-            tr("timeline.align_song.result_body_n", n=n) if n else
-            tr("timeline.align_song.result_body_none"))
-
-    # --- automatická výplň mezer na Displej stopě ---
-    # Mezera mezi klipy = displej NEUKAZUJE NIC (display_timeline je vůči
-    # obsahu autoritativní, viz JSON_FORMAT.md §3.7). U reálné písně jsou
-    # mezery všude, kde zrovna nikdo nezpívá — mezi řádky, ve slokách,
-    # v mezihře — takže displej většinu času blikal naprázdno. Když je
-    # `meta.display_fill_gaps` zapnuté, každý klip se natáhne až
-    # k ZAČÁTKU toho následujícího: poslední řádek zůstane vidět, dokud
-    # ho nevystřídá další.
-    #
-    # Výplň je NEDESTRUKTIVNÍ — přirozený (z obsahu odvozený) konec se
-    # klipu schová do `unfilled_end_s`, takže vypnutí přepínače vrátí
-    # všechny okraje přesně tam, kde byly. Proto taky každý, kdo `end_s`
-    # přepíše ručně (tažení okraje, panel vlastností, auto-sledování
-    # obsahu), musí `unfilled_end_s` zahodit — jinak by se toggle vracel
-    # ke starému, už neplatnému konci.
-
-    def display_fill_gaps_enabled(self) -> bool:
-        return bool((self.data.get("meta") or {}).get("display_fill_gaps"))
-
-    def _apply_display_gap_fill(self) -> int:
-        """Natáhne konce klipů k začátku následujícího klipu (a naopak
-        zkrátí dřív vyplněný klip, když se ten následující posunul dopředu
-        — výplň nikdy nesmí klipy překrýt). Nikdy nezkracuje pod
-        `unfilled_end_s`, tedy pod skutečný obsah klipu. Idempotentní:
-        opakované volání už nic nemění. Vrací počet upravených klipů."""
-        if not self.display_fill_gaps_enabled():
-            return 0
-        clips = sorted(self.data.get("display_timeline", []) or [],
-                       key=lambda c: float(c.get("start_s", 0.0)))
-        n = 0
-        for cur, nxt in zip(clips, clips[1:]):
-            end = float(cur.get("end_s", 0.0))
-            natural = float(cur.get("unfilled_end_s", end))
-            target = max(float(nxt.get("start_s", 0.0)), natural)
-            if abs(target - end) <= DISPLAY_FILL_EPS:
-                continue
-            if target > natural + DISPLAY_FILL_EPS:
-                cur["unfilled_end_s"] = round(natural, 3)
-            else:
-                cur.pop("unfilled_end_s", None)   # zpátky na vlastní obsah
-            cur["end_s"] = round(target, 3)
-            n += 1
-        if clips and "unfilled_end_s" in clips[-1]:
-            # poslední klip nemá kam vyplňovat (za ním už nic není)
-            clips[-1]["end_s"] = round(float(clips[-1].pop("unfilled_end_s")), 3)
-            n += 1
-        return n
-
-    def _unfill_display_gaps(self) -> int:
-        """Vrátí všem klipům jejich přirozený konec (vypnutí přepínače)."""
-        n = 0
-        for c in self.data.get("display_timeline", []) or []:
-            if "unfilled_end_s" in c:
-                start = float(c.get("start_s", 0.0))
-                c["end_s"] = round(max(float(c.pop("unfilled_end_s")), start + 0.05), 3)
-                n += 1
-        return n
-
-    def _mark_overlapping_clips(self) -> None:
-        """Zapíše do `self._overlapping_clips` id klipů, které se
-        překrývají se sousedem. Překryv je pro firmware chyba (pozdější
-        klip se po dobu překryvu vůbec nezobrazí, viz
-        `_sanitize_display_overlaps`) — v editoru ho proto klip přizná
-        červeným rámečkem, ať to uživatel vidí DŘÍV, než ho při ukládání
-        uklidí export."""
-        clips = sorted(self.data.get("display_timeline", []) or [],
-                       key=lambda c: float(c.get("start_s", 0.0)))
-        bad: set[int] = set()
-        for a, b in zip(clips, clips[1:]):
-            if float(b.get("start_s", 0.0)) < float(a.get("end_s", 0.0)) - DISPLAY_FILL_EPS:
-                bad.add(id(a))
-                bad.add(id(b))
-        self._overlapping_clips = bad
-
-    def _refresh_display_fill(self) -> int:
-        """Přepočítá výplň a hned ji promítne do UŽ vykreslených klipů —
-        levná varianta pro živou editaci (tažení slova, auto-sledování),
-        kde by plný `_relayout()` byl zbytečně drahý."""
-        n = self._apply_display_gap_fill()
-        if n:
-            for it in self.clips:
-                it._sync_from_clip()
-                it.update()
-        return n
-
-    # --- vynucení invariantu "klipy se nepřekrývají" (kvůli firmwaru) ---
-    # ESP32 přehrávač hledá aktivní klip jako "první, kde start_s <= t <
-    # end_s" (ESP32_KARAOKE_IMPLEMENTATION.md §6) — jakmile se dva klipy
-    # překryjí, ten pozdější se po dobu překryvu VŮBEC nedostane ke slovu
-    # a displej ukazuje cizí řádek. Formát proto překryv zakazuje
-    # (JSON_FORMAT.md §3.7) a `to_json()` to při každém uložení vynutí.
-    #
-    # Kdo z překrývající se dvojice ustoupí, NEROZHODUJE pořadí, ale
-    # OBSAH: klip, který se při přepočtu spároval se skutečným řádkem
-    # (`bound_ids`), má co zobrazit; nespárovaný textový klip je osiřelý
-    # zbytek po přečíslování řádků (typicky po smazání/přeskládání textu —
-    # přesně ten případ, který „🔄 Zarovnat displej" neumí uklidit) a na
-    # displeji by stejně nevykreslil nic. Proto:
-    #   oba s obsahem  → dřívějšímu se zkrátí konec na start pozdějšího
-    #   jen jeden      → ten prázdný jde pryč (i kdyby byl dřív)
-    #   ani jeden      → zůstane ten dřívější
-    # Prázdný klip, který se s NIČÍM nepřekrývá, se nemaže — nikomu
-    # nevadí a uživatel si ho tam mohl nechat schválně.
-
-    def _sanitize_display_overlaps(self, bound_ids: set[int]) -> tuple[int, int]:
-        """Vrátí (kolik klipů se zkrátilo, kolik se zahodilo)."""
-        clips = sorted(self.data.get("display_timeline", []) or [],
-                       key=lambda c: (float(c.get("start_s", 0.0)), float(c.get("end_s", 0.0))))
-        kept: list[dict] = []
-        shortened = dropped = 0
-        for c in clips:
-            c_bound = id(c) in bound_ids
-            drop_c = False
-            while kept and not drop_c:
-                prev = kept[-1]
-                if float(c.get("start_s", 0.0)) >= float(prev.get("end_s", 0.0)) - DISPLAY_FILL_EPS:
-                    break                     # bez překryvu, dvojice je v pořádku
-                if c_bound and id(prev) in bound_ids:
-                    new_end = round(float(c.get("start_s", 0.0)), 3)
-                    if new_end - float(prev.get("start_s", 0.0)) < DISPLAY_MIN_CLIP_S:
-                        kept.pop()            # z předchozího by nezbylo nic
-                        dropped += 1
-                        continue              # porovnej `c` s tím ještě dřívějším
-                    prev["end_s"] = new_end
-                    prev.pop("unfilled_end_s", None)
-                    shortened += 1
-                    break
-                if id(prev) in bound_ids:
-                    drop_c = True             # `c` nemá co zobrazit
-                elif c_bound:
-                    kept.pop()                # `prev` nemá co zobrazit
-                    dropped += 1
-                else:
-                    drop_c = True             # ani jeden; nech ten dřívější
-            if drop_c:
-                dropped += 1
-            else:
-                kept.append(c)
-        self.data["display_timeline"] = kept
-        return shortened, dropped
-
-    def set_display_fill_gaps(self, on: bool) -> None:
-        """Přepínač „⇥ Vyplnit mezery na Displeji" (menu Časová osa).
-        Uloží se do `meta.display_fill_gaps`, takže zůstane s písní i po
-        uložení/načtení a nová výplň se sama dopočítá po každé editaci."""
-        if not self.data:
-            return
-        if self.display_fill_gaps_enabled() == bool(on):
-            return
-        self._push_undo()
-        self.data.setdefault("meta", {})["display_fill_gaps"] = bool(on)
-        if on:
-            self._apply_display_gap_fill()
-        else:
-            self._unfill_display_gaps()
-        self._relayout()
-
-    @staticmethod
-    def _cluster_events_by_gap(events: list[dict], gap: float) -> list[tuple[float, float, list[dict]]]:
-        """Rozdělí (časově seřazené) eventy do shluků — mezera mezi koncem
-        jednoho a začátkem dalšího větší než `gap` shluk ukončí. Obecná
-        pomůcka, žádná znalost "co to je" (akord/slovo)."""
-        clusters: list[list[dict]] = []
-        cur: list[dict] = []
-        prev_end = None
-        for e in events:
-            t0 = float(e.get("time_s", 0.0))
-            end = t0 + float(e.get("duration_s", 0.5))
-            if cur and prev_end is not None and (t0 - prev_end) > gap:
-                clusters.append(cur)
-                cur = []
-            cur.append(e)
-            prev_end = end
-        if cur:
-            clusters.append(cur)
-        return [(c[0]["time_s"], max(e["time_s"] + e.get("duration_s", 0.5) for e in c), c)
-                for c in clusters]
-
-    def build_screens_from_content(self) -> list[dict]:
-        """Poskládá obrazovky displeje z obsahu v JEDNOM setříděném průchodu.
-
-        Klíčové je, že se skládají **hranice, ne rozsahy**. Obrazovka nemá
-        konec — běží, dokud nezačne další — takže se překryv ani mezera
-        nedají vyrobit ani omylem. Dřívější verze počítala pro každý řádek
-        `start_s` i `end_s` zvlášť a k tomu akordové shluky nezávisle, takže
-        se navzájem překrývaly a musela to po nich uklízet sanitizace.
-
-        Hranice se přichytí na **taktovou čáru** a volitelně posunou o
-        `meta.display_lead_bars` taktů dřív, aby text běžel napřed. Když
-        dvě hranice spadnou na stejný takt, druhá si nechá svůj skutečný
-        čas — jinak by splynuly v jeden okamžik a jedna obrazovka by
-        zmizela.
-
-        Je to čistá funkce obsahu, mřížky a předstihu: dvakrát za sebou dá
-        totéž. Na tom stojí klepání, které bude obrazovky přestavovat po
-        každé změně.
-        """
-        grid = self._music_grid()
-        lead = int((self.data.get("meta") or {}).get("display_lead_bars", 0) or 0)
-
-        # --- hranice z obsahu: textové řádky + instrumentální shluky akordů ---
-        grouped: list[tuple[int, list[dict]]] = []
-        for ti in self._track_order():
-            for line in self._group_lines(ti):
-                if line:
-                    grouped.append((ti, line))
-        grouped.sort(key=lambda g: g[1][0]["time_s"])
-        line_ranges = [(min(e["time_s"] for e in line),
-                        max(e["time_s"] + e.get("duration_s", 0.5) for e in line))
-                       for _ti, line in grouped]
-
-        bounds: list[tuple[float, int, str, str, int | None]] = []
-        for li, (ti, line) in enumerate(grouped):
-            label = " ".join(e.get("text", "") for e in line).strip()
-            bounds.append((line_ranges[li][0], ti, "lyrics_chords", label[:24], li))
-
-        def inside_line(t: float) -> bool:
-            return any(s0 <= t < e0 for s0, e0 in line_ranges)
-
-        # Akordy se shlukují GLOBÁLNĚ, ne po stopách. Nový model má jeden
-        # seznam akordů na sekci, takže per-stopa vznikaly skoro duplicitní
-        # obrazovky pár desetin od sebe (53 místo 33) a při ukládání se
-        # zase zahazovaly, protože k nim nebyl obsah.
-        chords_all = sorted(self.data.get("chords_timeline", []) or [],
-                            key=lambda e: e["time_s"])
-        free = [c for c in chords_all if not inside_line(c["time_s"])]
-        from collections import Counter
-        for t0, _t1, cluster in self._cluster_events_by_gap(free, gap=1.5):
-            seen: list[str] = []
-            for c in cluster:
-                nm = c.get("chord", "")
-                if nm and nm not in seen:
-                    seen.append(nm)
-            # Stopa obrazovky musí být ta, které akordy SKUTEČNĚ patří.
-            # Napevno stopa 1 vypadá neškodně, ale kontrola obsahu při
-            # ukládání hledá akordy na stopě klipu — a když tam žádné
-            # nejsou, obrazovku zahodí jako prázdnou (ztratilo se takhle
-            # 17 z 50).
-            ti_common = Counter(c.get("track_index", 1) for c in cluster).most_common(1)
-            bounds.append((t0, ti_common[0][0] if ti_common else 1,
-                           "chords", " ".join(seen)[:24], None))
-
-        bounds.sort(key=lambda b: b[0])
-
-        # --- přichycení na takt + předstih, hranice musí zůstat rostoucí ---
-        clips: list[dict] = []
-        prev: float | None = None
-        for t, ti, mode, label, li in bounds:
-            # Bez nouzové větve `not_before`: v přestavbě chceme obrazovky
-            # VŽDY na taktové čáře. Když dvě hranice spadnou do stejného
-            # taktu, druhá se zahodí — obrazovka nemá konec, takže ten
-            # obsah stejně poběží dál pod tou první.
-            start = self.snap_down_to_bar(t)
-            if prev is not None and start <= prev + 1e-6:
-                continue
-            prev = start
-            # `auto_track: False` = tohle rozvržení je VÝSLEDEK přestavby,
-            # ne průběžný odhad. Kdyby se obrazovky po každém načtení znovu
-            # dopočítávaly z obsahu, ztratily by přichycení na takt i
-            # předstih, srazily by se a část by se zahodila (17 z 50).
-            # Znovu se přepočítají, až o to člověk požádá.
-            clip = {"id": "clip-%d" % (len(clips) + 1), "start_s": round(start, 3),
-                    "source_track": ti, "mode": mode, "label": label,
-                    "auto_track": False}
-            if li is not None:
-                clip["line"] = li
-            clips.append(clip)
-
-        # Konce jsou ODVOZENÉ: obrazovka běží do začátku další, poslední do
-        # konce písně. V datech se neukládají, editor je potřebuje jen
-        # k vykreslení šířky obdélníku.
-        song_end = max(self._song_end(), clips[-1]["start_s"] + 1.0) if clips else 1.0
-        for i, c in enumerate(clips):
-            c["end_s"] = round(clips[i + 1]["start_s"] if i + 1 < len(clips) else song_end, 3)
-        return clips
-
-    def rebuild_display_track(self) -> None:
-        """RADIKÁLNÍ oprava (na uživatelovo přání): DEFINITIVNĚ zahodí
-        VŠECHNY klipy na Displej stopě (i ručně upravené) a poskládá je
-        znovu od nuly z AKTUÁLNÍHO obsahu — na rozdíl od
-        `align_all_clips_to_content()`, který jen dolaďuje EXISTUJÍCÍ klipy
-        a neporadí si se smazanými řádky.
-
-        Řádky (a která stopa/akordy k nim patří) se počítají STEJNĚ jako
-        `to_json()` — GLOBÁLNĚ napříč VŠEMI stopami podle skutečného
-        přesahu v čase, ne jen v rámci jedné stopy. Dřív se to počítalo
-        odděleně po jedné stopě, což u písní s akordy na JINÉ stopě než
-        text (typický případ: zpěv track 1, kytara s akordy track 2)
-        vyrábělo navíc falešné samostatné "akordové" klipy místo toho, aby
-        se akordy spojily se skutečným textovým řádkem — přesně nahlášený
-        bug ("neodpovídá přesně spodním stopám")."""
-        from PySide6.QtWidgets import QMessageBox
-        reply = QMessageBox.question(
-            self, tr("timeline.rebuild_display.confirm_title"),
-            tr("timeline.rebuild_display.confirm_body"),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply != QMessageBox.Yes:
-            return
-        self._push_undo()
-
-        clips = self.build_screens_from_content()
-        self.data["display_timeline"] = clips
-        self._relayout()
-        QMessageBox.information(self, tr("timeline.rebuild_display.done_title"),
-                               tr("timeline.rebuild_display.done_body", n=len(clips)))
-
     @staticmethod
     def _build_chord_line_for_words(words_with_times: list[tuple[str, float]],
                                      chords: list[dict]) -> tuple[str, str]:
@@ -2816,14 +2176,13 @@ class TimelineEditor(QWidget):
         formát dialogu "Nová píseň — text z webu/vlastní") z AKTUÁLNÍHO
         obsahu lyrics_timeline/chords_timeline. Základ pro
         "✎ Upravit text a akordy…": načíst → opravit → poskládat zpátky,
-        aniž by se sáhlo na bicí/basu/audio/Displej.
+        aniž by se sáhlo na bicí/basu/audio.
 
         Přiřazení akordů k řádkům je GLOBÁLNÍ napříč stopami a osamocené
-        (žádnému řádku nepřiřaditelné) akordy se shlukují po mezerách —
-        STEJNĚ jako `rebuild_display_track()`/`to_json()` (viz jejich
-        komentáře k důvodu). Díky tomu se do textu dostanou i čistě
-        akordové takty mezi řádky (typicky přesně ten případ, který vedl
-        k vytvoření téhle funkce — chybějící instrumentální takt)."""
+        (žádnému řádku nepřiřaditelné) akordy se shlukují po mezerách.
+        Díky tomu se do textu dostanou i čistě akordové takty mezi řádky
+        (typicky přesně ten případ, který vedl k vytvoření téhle funkce —
+        chybějící instrumentální takt)."""
         grouped: list[tuple[int, list[dict]]] = []
         for ti in self._track_order():
             for line in self._group_lines(ti):
@@ -2890,12 +2249,9 @@ class TimelineEditor(QWidget):
     def replace_text_and_chords(self, new_data: dict) -> list[int]:
         """Nahradí JEN text a akordy (lyrics_timeline/chords_timeline/
         karaoke_lines) opraveným obsahem z "✎ Upravit text a akordy…" —
-        bicí, basa, napojení na audio i Displej stopa zůstávají BEZE ZMĚNY
-        (na výslovné přání uživatele: "bicí, basa zůstane").
+        bicí, basa i napojení na audio zůstávají BEZE ZMĚNY (na výslovné
+        přání uživatele: "bicí, basa zůstane").
 
-        Staré `line` indexy na Displej klipech po tomhle nutně zastarají
-        (řádky se mohly přeskupit/přibýt/ubýt) — volající by měl po tomhle
-        nabídnout přeskládání Displej stopy (`rebuild_display_track`).
         Vrací seznam track_index, které v PŮVODNÍCH datech nesly text/akordy
         (pro volitelné varování volajícího, když jich bylo víc než jedna —
         nová data jsou vždy jen na stopě 1, viz `build_karaoke_json`)."""
@@ -2915,32 +2271,15 @@ class TimelineEditor(QWidget):
         self._relayout()
         return sorted(old_ti)
 
-    def _live_sync_display_clip_for_line(self, line_idx) -> None:
-        """Lehký "nudge" volaný přímo z BlockItem (tažení/resize/Panel
-        vlastností) — najde klip odpovídající danému řádku a hned ho
-        posune, BEZ drahého plného `_relayout()`, ať je vidět živě během
-        editace, ne až po nějaké další akci.
-
-        Vynechá klip, který je PRÁVĚ VYBRANÝ (`isSelected()`) — to
-        znamená, že je součástí stejného nativního skupinového tažení myší
-        jako právě tažené slovo (viz `_on_selection_changed`/ripple-select,
-        oboje ho přibírá do výběru spolu se slovy). Qt v tom případě klip
-        ZÁROVEŇ posouvá přímo (`moveBy` na každý vybraný prvek), takže by
-        se tenhle "nudge" přepočtem z obsahu přetahoval o závod s tím
-        nativním tažením a klip by se posunul o víc, než má (dvojitý
-        posun v rámci JEDNÉ gesty) — ověřeno testem. Když klip vybraný
-        NENÍ (běžné tažení jednoho slova bez jeho klipu), žádná kolize
-        nehrozí a nudge proběhne normálně."""
-        if not isinstance(line_idx, int):
-            return
-        for c in self.clips:
-            if c.clip.get("line") == line_idx and not c.isSelected():
-                self._sync_auto_display_clip(c)
-
     def _track_order(self) -> list[int]:
         idxs = [t.get("index", i + 1) for i, t in enumerate(self.tracks)]
-        # doplň i indexy vyskytující se jen v eventech
-        for ev in self.data.get("lyrics_timeline", []) + self.data.get("chords_timeline", []):
+        # doplň i indexy vyskytující se jen v eventech — VČETNĚ bicích/basy
+        # (dřív scházely: track_index vložený z jiného souboru přes
+        # Kopírovat/Vložit napříč kartami, který v TÉHLE stopě neexistoval,
+        # tak neměl žádný řádek → úder se přidal do dat, ale nikdy se
+        # nevykreslil, viz oprava „vložit bicí z jiného souboru")
+        for ev in (self.data.get("lyrics_timeline", []) + self.data.get("chords_timeline", [])
+                   + self.data.get("drums_timeline", []) + self.data.get("bass_timeline", [])):
             ti = ev.get("track_index", 1)
             if ti not in idxs:
                 idxs.append(ti)
@@ -2949,7 +2288,6 @@ class TimelineEditor(QWidget):
     def _relayout(self, full: bool = False) -> None:
         self.scene.clear()
         self.blocks.clear()
-        self.clips.clear()
         self.drum_hit_items.clear()
         self.bass_note_items.clear()
         self.waveform_item = None
@@ -2963,8 +2301,6 @@ class TimelineEditor(QWidget):
         max_t = 1.0
         for ev in self.data.get("lyrics_timeline", []) + self.data.get("chords_timeline", []):
             max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 1)))
-        for c in self.data.get("display_timeline", []):
-            max_t = max(max_t, float(c.get("end_s", 0)))
         for ev in self.data.get("drums_timeline", []):
             max_t = max(max_t, float(ev.get("time_s", 0)))
         for ev in self.data.get("bass_timeline", []):
@@ -2986,29 +2322,19 @@ class TimelineEditor(QWidget):
             else:
                 lane_h[ti] = PER_TRACK
 
-        total_h = RULER_H + DISPLAY_ROW_H + self.waveform_h + sum(lane_h.values()) + 20
+        total_h = RULER_H + self.waveform_h + sum(lane_h.values()) + 20
         total_w = HEADER_W + max_t * self.pps + 200
         self.scene.setSceneRect(0, 0, total_w, total_h)
 
         # pozadí pruhů + names + pravítko
         self._draw_ruler(max_t, total_h)
 
-        # master "Displej" stopa navrchu — mezery mezi klipy se (je-li to
-        # zapnuté) vyplní TĚSNĚ PŘED vykreslením, aby se výplň dopočítala
-        # po každé editaci sama, ať do dat sáhl kdokoliv
-        self._apply_display_gap_fill()
-        self._mark_overlapping_clips()
-        self._display_lane_y = RULER_H + 4
-        self._draw_display_bg(total_w)
-        for clip in self.data.get("display_timeline", []):
-            self._add_clip_item(clip)
-
         # vlnovka nahrávky — NAD všemi zdrojovými stopami (tedy i nad bicími),
         # aby šlo očima porovnat nástup bicích/zpěvu proti mřížce tempa
-        self._draw_waveform_lane(RULER_H + DISPLAY_ROW_H, total_w)
+        self._draw_waveform_lane(RULER_H, total_w)
 
-        # zdrojové stopy (posunuté pod master + vlnovku, proměnná výška řádku)
-        top = RULER_H + DISPLAY_ROW_H + self.waveform_h
+        # zdrojové stopy (posunuté pod vlnovku, proměnná výška řádku)
+        top = RULER_H + self.waveform_h
         for ti in order:
             h_slot = lane_h[ti]
             if ti in self._hidden_tracks:
@@ -3042,36 +2368,9 @@ class TimelineEditor(QWidget):
             self.mix_panel.refresh()
 
     def _on_selection_changed(self) -> None:
-        """Kromě panelu vlastností řeší i to, aby SKUPINOVÝ výběr textu/
-        akordů (ne jen `select_ripple` přes ]/[, ale i běžné tažení
-        obdélníku myší — `TimelineView` má `RubberBandDrag`) automaticky
-        přibral i odpovídající klip(y) na master "Displej" stopě. Bez
-        tohohle by klip v selekci vůbec nebyl (rubber-band vybírá jen podle
-        překryvu na obrazovce, ne podle "patří k sobě"), takže by ho
-        nativní Qt skupinový tah (ItemIsMovable + vybrané) nehnul — přesně
-        ten hlášený bug ("posouvám text, displej line se nehne").
-
-        Jen při výběru VÍC než jednoho bloku — jinak by se jedno prosté
-        kliknutí na slovo vždy vléklo i klip a rozbilo by to zobrazení
-        jednoho vybraného prvku v panelu vlastností."""
-        if getattr(self, "_syncing_selection", False):
-            return
-        sel = self.scene.selectedItems()
-        block_sel = [b for b in sel if isinstance(b, BlockItem)]
-        if len(block_sel) > 1:
-            lines = {b.event.get("line") for b in block_sel
-                     if isinstance(b.event.get("line"), int)}
-            to_add = [c for c in self.clips if c.clip.get("line") in lines and c not in sel]
-            if to_add:
-                self._syncing_selection = True
-                try:
-                    for c in to_add:
-                        c.setSelected(True)
-                finally:
-                    self._syncing_selection = False
-                sel = self.scene.selectedItems()
         if not hasattr(self, "props_panel"):
             return
+        sel = self.scene.selectedItems()
         self.props_panel.set_target(sel[0] if len(sel) == 1 else None)
 
     def _relayout_and_reselect(self, event_or_clip: dict) -> None:
@@ -3088,10 +2387,6 @@ class TimelineEditor(QWidget):
             if it.event is event_or_clip:
                 it.setSelected(True)
                 return
-        for it in self.clips:
-            if it.clip is event_or_clip:
-                it.setSelected(True)
-                return
         for it in self.blocks:
             if it.event is event_or_clip:
                 it.setSelected(True)
@@ -3104,6 +2399,43 @@ class TimelineEditor(QWidget):
     # budoucí akce, stačí dodržet stejnou konvenci (push před mutací, jen
     # jednou za "jednu uživatelskou akci", ne za každý pixel tažení).
     # ------------------------------------------------------------------
+
+    # ------------------------------------------------------------------
+    # Skupinové tažení myší (BlockItem/DrumHitItem/BassNoteItem) — udrží
+    # vzájemné rozestupy víc vybraných položek při společném tažení, viz
+    # `_apply_group_snap`. `_drag_anchor` je položka, na kterou uživatel
+    # skutečně klikl (tu jedinou Qt informuje mousePress/Move/Release —
+    # ostatní vybrané dostávají jen itemChange přes Qt vnitřní moveBy).
+    # ------------------------------------------------------------------
+
+    def _drag_group_begin(self, anchor) -> None:
+        self._drag_anchor = anchor
+        sel = [it for it in self.scene.selectedItems()
+               if isinstance(it, (BlockItem, DrumHitItem, BassNoteItem))]
+        self._drag_group_items = [it for it in sel if it is not anchor]
+        self._drag_group_start = {id(it): float(it.event.get("time_s", 0.0)) for it in sel}
+        self._drag_group_delta = 0.0
+
+    def _drag_group_finalize(self) -> None:
+        """Po skončení tažení dorovná VŠECHNY 'cestující' položky přesně
+        na (jejich vlastní výchozí čas + finální posun kotvy) — pořadí,
+        ve kterém Qt volá itemChange jednotlivých položek v POSLEDNÍM
+        kroku tažení, není zaručené, takže bez týhle dorovnávky by mohla
+        zůstat nepatrná odchylka o zlomek kroku."""
+        if self._drag_anchor is None:
+            return
+        for it in self._drag_group_items:
+            start = self._drag_group_start.get(id(it))
+            if start is None:
+                continue
+            it.event["time_s"] = round(max(0.0, start + self._drag_group_delta), 3)
+            it._sync_from_event()
+
+    def _drag_group_end(self) -> None:
+        self._drag_anchor = None
+        self._drag_group_items = []
+        self._drag_group_start = {}
+        self._drag_group_delta = 0.0
 
     def _push_undo(self) -> None:
         self._undo_stack.append(copy.deepcopy(self.data))
@@ -3275,6 +2607,20 @@ class TimelineEditor(QWidget):
             self.gp_player.setPosition(gp_pos)
             self.gp_player.play()
 
+        bass_pos = self.bass_player.position()
+        bass_was_playing = self.bass_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+        old_bass = self.bass_audio_output
+        self.bass_audio_output = QAudioOutput(self)
+        self.bass_audio_output.setDevice(dev)
+        self.bass_audio_output.setVolume(self._bass_volume)
+        self.bass_audio_output.setMuted(self._bass_muted)
+        self.bass_player.setAudioOutput(self.bass_audio_output)
+        if old_bass is not None:
+            old_bass.deleteLater()
+        if bass_was_playing:
+            self.bass_player.setPosition(bass_pos)
+            self.bass_player.play()
+
         # QSoundEffect přepojení zvládá bez znovuvytvoření, ale zdroj je
         # potřeba nastavit znovu, aby se načetl do nového zařízení
         self._test_sound.setAudioDevice(dev)
@@ -3282,12 +2628,31 @@ class TimelineEditor(QWidget):
         for key, snd in self._drum_click_sounds.items():
             snd.setAudioDevice(dev)
             snd.setSource(QUrl.fromLocalFile(_drum_click_wav(key)))
+        for real_path, snd in self._drum_real_sounds.items():
+            snd.setAudioDevice(dev)
+            snd.setSource(QUrl.fromLocalFile(real_path))
+        for midi, snd in self._bass_note_sounds.items():
+            snd.setAudioDevice(dev)
+            snd.setSource(QUrl.fromLocalFile(_bass_note_wav(midi)))
 
     def _play_drum_sound(self, drum_name: str) -> None:
-        """Krátké 'cvaknutí' při editaci úderu (přidání/přesun/změna typu) —
-        sluchová zpětná vazba, viz `_DRUM_CLICK_PARAMS`. Nezávislé na
+        """Zvuková zpětná vazba při editaci úderu (přidání/přesun/změna
+        typu) — reálný vzorek (assets/drums/rock/*.wav), pokud existuje,
+        jinak syntetické 'cvaknutí' (`_DRUM_CLICK_PARAMS`). Nezávislé na
         QMediaPlayer (jako testovací tón), takže nepřeruší případné
         přehrávání písně."""
+        real_path = _real_drum_sample_path(drum_name)
+        if real_path:
+            snd = self._drum_real_sounds.get(real_path)
+            if snd is None:
+                snd = QSoundEffect(self)
+                snd.setAudioDevice(self.audio_output.device())
+                snd.setSource(QUrl.fromLocalFile(real_path))
+                snd.setVolume(self._drum_click_volume)
+                self._drum_real_sounds[real_path] = snd
+            snd.stop()
+            snd.play()
+            return
         key = self._drum_icon_key(drum_name)
         snd = self._drum_click_sounds.get(key)
         if snd is None:
@@ -3296,6 +2661,21 @@ class TimelineEditor(QWidget):
             snd.setSource(QUrl.fromLocalFile(_drum_click_wav(key)))
             snd.setVolume(self._drum_click_volume)
             self._drum_click_sounds[key] = snd
+        snd.stop()
+        snd.play()
+
+    def _play_bass_note(self, midi: int) -> None:
+        """Zvuková zpětná vazba při editaci basové noty (přidání/přetažení/
+        změna výšky) — syntetizovaný 'drnk' na dané MIDI notě (zatím jediná
+        možnost, basa nemá reálné vzorky, viz `_bass_tone_samples`).
+        Nezávislé na QMediaPlayer, takže nepřeruší přehrávání písně."""
+        snd = self._bass_note_sounds.get(midi)
+        if snd is None:
+            snd = QSoundEffect(self)
+            snd.setAudioDevice(self.audio_output.device())
+            snd.setSource(QUrl.fromLocalFile(_bass_note_wav(midi)))
+            snd.setVolume(self._bass_click_volume)
+            self._bass_note_sounds[midi] = snd
         snd.stop()
         snd.play()
 
@@ -3346,7 +2726,6 @@ class TimelineEditor(QWidget):
             QMessageBox.information(self, tr("dialog.gp_drum_mix_title"),
                                    tr("dialog.gp_drum_mix_no_data"))
             return
-        from PySide6.QtWidgets import QApplication
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             duration = self._song_end()
@@ -3359,6 +2738,28 @@ class TimelineEditor(QWidget):
         self.gp_audio_label.setStyleSheet("color:#2d7d2d;")
         self._seek_audio(self.playhead_s)
 
+    def _load_bass_mix(self) -> None:
+        """Vygeneruje syntetizovaný mixdown BASY z aktuálních GP dat
+        (`bass_timeline`) a nahraje ho do `bass_player` — samostatný
+        přehrávač vedle nahrávky i GP bicí mixu (viz `render_bass_mixdown`).
+        Na vyžádání (tlačítko „🎸 GP basa mix“), NIKDY automaticky."""
+        if not self.data.get("bass_timeline"):
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.information(self, tr("dialog.gp_bass_mix_title"),
+                                   tr("dialog.gp_bass_mix_no_data"))
+            return
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            duration = self._song_end()
+            path = render_bass_mixdown(self.data, duration)
+        finally:
+            QApplication.restoreOverrideCursor()
+        self.bass_audio_path = path
+        self.bass_player.setSource(QUrl.fromLocalFile(path))
+        self.bass_audio_label.setText(tr("audio.bass_mix_generated", dur=f"{duration:.1f}", bpm=f"{self.bpm:g}"))
+        self.bass_audio_label.setStyleSheet("color:#2d7d2d;")
+        self._seek_audio(self.playhead_s)
+
     def _on_rec_volume(self, val: int) -> None:
         self._rec_volume = val / 100.0
         self.audio_output.setVolume(self._rec_volume)
@@ -3366,6 +2767,10 @@ class TimelineEditor(QWidget):
     def _on_gp_volume(self, val: int) -> None:
         self._gp_volume = val / 100.0
         self.gp_audio_output.setVolume(self._gp_volume)
+
+    def _on_bass_volume(self, val: int) -> None:
+        self._bass_volume = val / 100.0
+        self.bass_audio_output.setVolume(self._bass_volume)
 
     def _on_rec_mute(self, checked: bool) -> None:
         self._rec_muted = checked
@@ -3375,10 +2780,19 @@ class TimelineEditor(QWidget):
         self._gp_muted = checked
         self.gp_audio_output.setMuted(checked)
 
+    def _on_bass_mute(self, checked: bool) -> None:
+        self._bass_muted = checked
+        self.bass_audio_output.setMuted(checked)
+
     def _on_drum_click_volume(self, val: int) -> None:
         self._drum_click_volume = val / 100.0
         for snd in self._drum_click_sounds.values():
             snd.setVolume(self._drum_click_volume)
+
+    def _on_bass_click_volume(self, val: int) -> None:
+        self._bass_click_volume = val / 100.0
+        for snd in self._bass_note_sounds.values():
+            snd.setVolume(self._bass_click_volume)
 
     def _on_track_hide_toggle(self, ti: int, checked: bool) -> None:
         if checked:
@@ -3392,6 +2806,12 @@ class TimelineEditor(QWidget):
             return
         self.gp_audio_label.setText(tr("audio.gp_mix_error", error=error_string))
         self.gp_audio_label.setStyleSheet("color:#c01c28;")
+
+    def _on_bass_audio_error(self, error, error_string: str) -> None:
+        if error == QMediaPlayer.Error.NoError:
+            return
+        self.bass_audio_label.setText(tr("audio.bass_mix_error", error=error_string))
+        self.bass_audio_label.setStyleSheet("color:#c01c28;")
 
     def _on_waveform_ready(self, data: WaveformData) -> None:
         self.waveform = data
@@ -3440,12 +2860,14 @@ class TimelineEditor(QWidget):
         self.audio_label.setStyleSheet("color:#c01c28;")
 
     def _on_playback_state_changed(self, _state=None) -> None:
-        """Napojeno na OBA přehrávače (nahrávka + GP mix) — přehrává se,
-        pokud hraje ASPOŇ JEDEN z nich (ne podle argumentu signálu, ten by
-        u druhého přehrávače přepsal stav prvního); viz `toggle_play_pause`
-        pro stejný princip "ověř skutečný stav, ne co si widget pamatuje")."""
+        """Napojeno na VŠECHNY přehrávače (nahrávka + GP bicí + GP basa) —
+        přehrává se, pokud hraje ASPOŇ JEDEN z nich (ne podle argumentu
+        signálu, ten by u jiného přehrávače přepsal stav prvního); viz
+        `toggle_play_pause` pro stejný princip "ověř skutečný stav, ne co
+        si widget pamatuje")."""
         playing = (self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
-                   or self.gp_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState)
+                   or self.gp_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+                   or self.bass_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState)
         self.jog.set_playing(playing)
         # UI (playhead + scroll) se řídí VLASTNÍM tikajícím časovačem
         # (`_sync_ui_from_player`), ne signálem `positionChanged` — ten umí
@@ -3683,6 +3105,8 @@ class TimelineEditor(QWidget):
             self.player.setPosition(int(round(audio_t * 1000)))
         if self.gp_player.source().isValid():
             self.gp_player.setPosition(max(0, int(round(t * 1000))))
+        if self.bass_player.source().isValid():
+            self.bass_player.setPosition(max(0, int(round(t * 1000))))
 
     def _ensure_device_alive(self) -> None:
         """Zkontroluje, že zařízení, na které hrajeme, v systému pořád je —
@@ -3692,45 +3116,53 @@ class TimelineEditor(QWidget):
             self._on_audio_devices_changed()
 
     def play_audio(self) -> None:
-        """Spustí OBA přehrávače (nahrávka + GP mix), pokud mají zdroj —
-        sdílejí transport, aby šlo obojí poslouchat souběžně/A-B (viz
-        hlasitostní slidery „Nahrávka“/„GP bicí“)."""
-        if not self.player.source().isValid() and not self.gp_player.source().isValid():
+        """Spustí VŠECHNY přehrávače (nahrávka + GP bicí mix + GP basa mix),
+        pokud mají zdroj — sdílejí transport, aby šlo poslouchat souběžně/
+        A-B (viz hlasitostní slidery „Nahrávka“/„GP bicí“/„GP basa“)."""
+        if (not self.player.source().isValid() and not self.gp_player.source().isValid()
+                and not self.bass_player.source().isValid()):
             return
         self._ensure_device_alive()
         self._stop_shuttle_timer()
         self.player.setPlaybackRate(1.0 / (self.audio_stretch or 1.0))
-        self.gp_player.setPlaybackRate(1.0)   # GP mix je bez roztažení, vždy 1×
+        self.gp_player.setPlaybackRate(1.0)     # GP mix je bez roztažení, vždy 1×
+        self.bass_player.setPlaybackRate(1.0)   # stejně tak basa
         self._seek_audio(self.playhead_s)
         if self.player.source().isValid():
             self.player.play()
         if self.gp_player.source().isValid():
             self.gp_player.play()
+        if self.bass_player.source().isValid():
+            self.bass_player.play()
 
     def pause_audio(self) -> None:
         self._stop_shuttle_timer()
         self.player.pause()
         self.gp_player.pause()
+        self.bass_player.pause()
 
     def toggle_play_pause(self) -> None:
         """Spojené tlačítko ▶/⏸ na ovladači — rozhoduje se podle SKUTEČNÉHO
         stavu PŘEHRÁVAČŮ (ne podle toho, co si pamatuje widget), aby se stav
-        tlačítka nemohl rozejít s realitou. Hraje-li ASPOŇ JEDEN z dvojice
-        (nahrávka/GP mix), tlačítko pauzíruje oba; jinak oba spustí."""
+        tlačítka nemohl rozejít s realitou. Hraje-li ASPOŇ JEDEN z trojice
+        (nahrávka/GP bicí/GP basa), tlačítko pauzíruje všechny; jinak
+        všechny spustí."""
         playing = (self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
-                   or self.gp_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState)
+                   or self.gp_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+                   or self.bass_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState)
         if playing:
             self.pause_audio()
         else:
             self.play_audio()
 
     def stop_audio(self) -> None:
-        """Zastaví přehrávání (oba přehrávače). Qt `stop()` interně vrací
-        pozici na 0 — editor to hned poté vrátí zpět na `playhead_s`, aby
-        "Stop" v editačním nástroji nepřekvapil skokem na začátek skladby."""
+        """Zastaví přehrávání (všechny přehrávače). Qt `stop()` interně
+        vrací pozici na 0 — editor to hned poté vrátí zpět na `playhead_s`,
+        aby "Stop" v editačním nástroji nepřekvapil skokem na začátek."""
         self._stop_shuttle_timer()
         self.player.stop()
         self.gp_player.stop()
+        self.bass_player.stop()
         self._seek_audio(self.playhead_s)
 
     # --- shuttle (mezikruží ovladače) ---
@@ -3747,6 +3179,8 @@ class TimelineEditor(QWidget):
             self.player.setPlaybackRate(1.0)
             self.gp_player.pause()
             self.gp_player.setPlaybackRate(1.0)
+            self.bass_player.pause()
+            self.bass_player.setPlaybackRate(1.0)
             return
         if value > 0:
             self._stop_shuttle_timer()
@@ -3759,12 +3193,18 @@ class TimelineEditor(QWidget):
                     and self.gp_player.source().isValid():
                 self._seek_audio(self.playhead_s)
                 self.gp_player.play()
+            if self.bass_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState \
+                    and self.bass_player.source().isValid():
+                self._seek_audio(self.playhead_s)
+                self.bass_player.play()
             base_rate = 1.0 / (self.audio_stretch or 1.0)
             self.player.setPlaybackRate(base_rate * mult)
             self.gp_player.setPlaybackRate(mult)
+            self.bass_player.setPlaybackRate(mult)
         else:
             self.player.pause()
             self.gp_player.pause()
+            self.bass_player.pause()
             self._start_shuttle_timer(value * 8.0)           # tichý posun, až 8×
 
     def _start_shuttle_timer(self, rate: float) -> None:
@@ -3790,13 +3230,15 @@ class TimelineEditor(QWidget):
         která může způsobit zvukové zádrhele/cukání).
 
         Hodiny (co udává aktuální čas) jsou přednostně skutečná nahrávka
-        (`self.player`, respektuje offset/stretch) — pokud není načtená
-        (jen GP mix bez skutečné nahrávky), řídí se GP mixem, který je
-        1:1 s časovou osou (bez převodu)."""
+        (`self.player`, respektuje offset/stretch) — pokud není načtená,
+        řídí se GP bicí mixem, a pokud není ani ten, GP basa mixem; oba
+        jsou 1:1 s časovou osou (bez převodu)."""
         if self.player.source().isValid():
             t = self._audio_to_timeline_t(self.player.position() / 1000.0)
         elif self.gp_player.source().isValid():
             t = self.gp_player.position() / 1000.0
+        elif self.bass_player.source().isValid():
+            t = self.bass_player.position() / 1000.0
         else:
             return
         self.set_playhead(t, seek_audio=False)
@@ -3821,34 +3263,6 @@ class TimelineEditor(QWidget):
         margin = 40
         if x > cur + vp - margin or x < cur + HEADER_W:
             sb.setValue(max(0, int(x - HEADER_W - vp * 0.25)))
-
-    def _draw_display_bg(self, total_w: float) -> None:
-        y = self._display_lane_y
-        w = total_w - HEADER_W
-        # pruh master stopy — interaktivní (pravý klik = klip přesně sem,
-        # viz DisplayLaneBackground); klipy se kreslí AŽ POTOM, takže leží
-        # nad tímhle pozadím a dostanou klik přednostně.
-        self.scene.addItem(DisplayLaneBackground(self, HEADER_W, y, w, DISPLAY_H))
-        # hlavička master stopy (přimrazená vlevo — viz _pin_headers)
-        self._register_header_item(
-            self.scene.addRect(0, y - 4, HEADER_W, DISPLAY_ROW_H - 6,
-                               QPen(QColor("#c9a3e0")), QBrush(QColor("#ece0f6"))))
-        nm = self.scene.addSimpleText(tr("lane.display"))
-        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        nm.setPos(8, y + 2)
-        nm.setBrush(QBrush(QColor("#7a2a9a")))
-        self._register_header_item(nm, 8)
-        sub = self.scene.addSimpleText(tr("lane.display_sub"))
-        sub.setFont(QFont("Segoe UI", 7))
-        sub.setPos(8, y + 20)
-        sub.setBrush(QBrush(QColor("#9a6cb5")))
-        self._register_header_item(sub, 8)
-
-    def _add_clip_item(self, clip: dict) -> None:
-        item = DisplayClipItem(self, clip, self._display_lane_y, DISPLAY_H)
-        self.scene.addItem(item)
-        self.clips.append(item)
-        self._sync_auto_display_clip(item)   # ať je hned na aktuálním obsahu, ne na starém
 
     def _draw_waveform_lane(self, top: float, total_w: float) -> None:
         """„Chlupatá čára" nahrávky nad zdrojovými stopami — viz `WaveformItem`.
@@ -3996,7 +3410,13 @@ class TimelineEditor(QWidget):
         for t in self.tracks:
             if t.get("index") == ti:
                 return bool(t.get("is_drums") or t.get("type") == "drums")
-        return False
+        # stopa vůbec není deklarovaná v self.tracks — typicky úder vložený
+        # NAPŘÍČ SOUBORY (Kopírovat/Vložit z jiné karty, viz paste_at), jehož
+        # track_index v tomhle souboru nikdy nepatřil žádné GP stopě. Pozná
+        # se podle toho, že v drums_timeline s tímhle track_index něco je —
+        # jinak by se vykreslila jako obyčejná (ne-bicí) stopa a úder by
+        # nikdy nedostal DrumHitItem, tedy zůstal neviditelný.
+        return any(ev.get("track_index") == ti for ev in self.data.get("drums_timeline", []))
 
     def _drum_names_for(self, ti: int) -> list[str]:
         """Distinct jména bubnů použitá touto stopou, seřazená pro zobrazení
@@ -4200,11 +3620,7 @@ class TimelineEditor(QWidget):
         """Posune ČASY textu i akordů dané stopy společně o delta_s — obdoba
         `shift_drum_track`, jen pro `lyrics_timeline`/`chords_timeline`.
         Stejná ochrana proti záporným časům: posun se ořízne jako celek,
-        ne po jednotlivých událostech (viz `shift_drum_track`).
-
-        Displej stopa (obrazovky) se po posunu PŘESTAVÍ z obsahu
-        (`build_screens_from_content`) — jinak by text/akordy odjely, ale
-        obrazovky by zůstaly viset na starých časech."""
+        ne po jednotlivých událostech (viz `shift_drum_track`)."""
         evs = [ev for key in ("lyrics_timeline", "chords_timeline")
                for ev in self.data.get(key, []) if ev.get("track_index") == ti]
         if not evs or not delta_s:
@@ -4217,7 +3633,6 @@ class TimelineEditor(QWidget):
         self._push_undo()
         for ev in evs:
             ev["time_s"] = round(float(ev.get("time_s", 0.0)) + delta_s, 3)
-        self.data["display_timeline"] = self.build_screens_from_content()
         self._relayout()
 
     def _shift_lyrics_track_dialog(self, ti: int) -> None:
@@ -4253,9 +3668,10 @@ class TimelineEditor(QWidget):
         if item in self.drum_hit_items:
             self.drum_hit_items.remove(item)
 
-    def add_bass_note(self, ti: int, string: int, fret: int, time_s: float) -> None:
+    def add_bass_note(self, ti: int, string: int, fret: int, time_s: float) -> dict:
         """Přidá novou basovou notu na dané struně v daném čase — volá se z
-        kontextového menu prázdného místa v řádku (`BassLaneBackground`)."""
+        kontextového menu prázdného místa v řádku (`BassLaneBackground`).
+        Vrací vytvořený event (`midi` se hodí volajícímu pro `_play_bass_note`)."""
         self._push_undo()
         string = max(1, min(4, int(string)))
         midi = BASS_STRING_OPEN_MIDI.get(string, 40) + max(0, int(fret))
@@ -4271,6 +3687,7 @@ class TimelineEditor(QWidget):
         }
         self.data.setdefault("bass_timeline", []).append(ev)
         self._relayout()
+        return ev
 
     def remove_bass_note(self, item: "BassNoteItem") -> None:
         try:
@@ -4295,16 +3712,18 @@ class TimelineEditor(QWidget):
         for t in self.tracks:
             if t.get("index") == ti:
                 return t.get("type") == "bass"
-        return False
+        # viz komentář u _track_is_drums — stopa nedeklarovaná v self.tracks
+        # (typicky vloženo napříč soubory), pozná se podle bass_timeline
+        return any(ev.get("track_index") == ti for ev in self.data.get("bass_timeline", []))
 
     def _draw_bass_lane(self, ti: int, top: float, name: str, total_w: float,
                         h_slot: float | None = None) -> None:
         """Vykreslí basovou stopu: noty jako úsečky (délka = duration_s) ve
         4 řadách podle struny (1 = nejtenčí nahoře … 4 = nejtlustší dole).
         Editovatelná stejně jako bicí (přidat/přesunout/smazat/změnit
-        strunu+pražec přes `BassNoteItem`/`BassLaneBackground`) — jen se
-        NIKDE nepřehrává (žádný syntezátor basy), je to čistě vizuální
-        referenční stopa pro zarovnání s bicími/textem."""
+        strunu+pražec přes `BassNoteItem`/`BassLaneBackground`); editace
+        hraje syntetizovaný 'drnk' (`_play_bass_note`), celá linka jde
+        namíchat a přehrát tlačítkem „🎸 GP basa mix“ (`_load_bass_mix`)."""
         h = (h_slot if h_slot is not None else PER_TRACK) - TRACK_GAP
         y = top + 2
         w = total_w - HEADER_W
@@ -4399,155 +3818,6 @@ class TimelineEditor(QWidget):
                   "measure": 1, "track_index": ti, "source": "manual"}
             self.data.setdefault("lyrics_timeline", []).append(ev)
         self._add_block_item(ev, kind)
-
-    # --- klipy master "Displej" stopy ---
-
-    def _find_chord_cluster_near(self, t: float):
-        """Napříč VŠEMI stopami najde souvislý shluk akordů, který obsahuje
-        (nebo je nejblíž) čas `t` — použito v `add_clip()`, aby šlo klip
-        přesně "trefit" na chybějící instrumentální takt (typicky: jeden
-        osamocený akord bez klipu na Displej stopě). Vrátí
-        `(source_track, start_s, end_s, label)`, nebo `None`, když nic
-        rozumně blízko není (mimo `bar_s` od `t`)."""
-        best = None
-        best_dist = None
-        for ti in self._track_order():
-            cluster = self._natural_chord_cluster(ti, t)
-            if cluster is None:
-                continue
-            t0, t1, label = cluster
-            dist = 0.0 if t0 <= t <= t1 else min(abs(t - t0), abs(t - t1))
-            if best_dist is None or dist < best_dist:
-                best = (ti, t0, t1, label)
-                best_dist = dist
-        if best is None:
-            return None
-        margin = max(1.0, self.bar_s)
-        if best_dist is not None and best_dist > margin:
-            return None
-        return best
-
-    def add_clip(self, at_time: float | None = None) -> None:
-        """Přidá klip na Displej stopu na čas `at_time` (v sekundách) —
-        `None` = aktuální pozice kurzoru (menu/zkratka). Pravý klik na
-        prázdné místo Displej stopy (`DisplayLaneBackground`) volá s
-        PŘESNÝM časem kliknutí. Pokud je cílový čas na/blízko souvislého
-        shluku akordů bez vlastního klipu (typický případ: chybějící
-        instrumentální takt), klip se přesně "trefí" na něj (režim akordy,
-        auto-sledování). Jinak se vloží prázdný klip PŘESNĚ NA TEN ČAS
-        (dřív vždy skákal na úplný konec písně, bez ohledu na to, kde
-        uživatel zrovna je — nešlo tak rozumně vložit klip doprostřed
-        rozdělané písně)."""
-        t = self.playhead_s if at_time is None else at_time
-        self._push_undo()
-        clips = self.data.setdefault("display_timeline", [])
-        found = self._find_chord_cluster_near(t)
-        if found is not None:
-            ti, t0, t1, label = found
-            clip = {
-                "id": f"clip-{len(clips) + 1}",
-                "start_s": round(t0, 3),
-                "end_s": round(t1, 3),
-                "source_track": ti,
-                "mode": "chords",
-                "label": label,
-                "auto_track": True,
-            }
-        else:
-            order = self._track_order()
-            ti = order[0] if order else 1
-            start = self.snap_time(t)
-            clip = {
-                "id": f"clip-{len(clips) + 1}",
-                "start_s": round(start, 3),
-                "end_s": round(start + 3.0, 3),
-                "source_track": ti,
-                "mode": "lyrics_chords",
-                "label": "Nový klip",
-            }
-        clips.append(clip)
-        clips.sort(key=lambda c: float(c.get("start_s", 0.0)))
-        self._add_clip_item(clip)
-
-    def edit_clip(self, item: DisplayClipItem) -> None:
-        from PySide6.QtWidgets import (
-            QDialog, QFormLayout, QDialogButtonBox, QComboBox, QLineEdit,
-        )
-        clip = item.clip
-        order = self._track_order()
-        names = self._track_names()
-
-        dlg = QDialog(self)
-        dlg.setWindowTitle(tr("dialog.edit_clip_title"))
-        form = QFormLayout(dlg)
-
-        src = QComboBox()
-        for ti in order:
-            src.addItem(f"{ti}. {names.get(ti, _track_fallback_name(ti))}", ti)
-        cur_ti = clip.get("source_track", order[0] if order else 1)
-        src.setCurrentIndex(order.index(cur_ti) if cur_ti in order else 0)
-
-        mode = QComboBox()
-        for key in MODE_ORDER:
-            mode.addItem(_mode_label(key), key)
-        cur_mode = clip.get("mode", "lyrics_chords")
-        mode.setCurrentIndex(MODE_ORDER.index(cur_mode) if cur_mode in MODE_ORDER else 0)
-
-        label = QLineEdit(clip.get("label", ""))
-
-        form.addRow(tr("dialog.edit_clip_source_track"), src)
-        form.addRow(tr("dialog.edit_clip_mode"), mode)
-        form.addRow(tr("dialog.edit_clip_label"), label)
-        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.accepted.connect(dlg.accept)
-        bb.rejected.connect(dlg.reject)
-        form.addRow(bb)
-
-        if dlg.exec():
-            self._push_undo()
-            clip["source_track"] = src.currentData()
-            clip["mode"] = mode.currentData()
-            clip["label"] = label.text().strip()
-            item.update()
-
-    def delete_clip(self, item: DisplayClipItem) -> None:
-        try:
-            self.data.get("display_timeline", []).remove(item.clip)
-        except ValueError:
-            pass
-        self.scene.removeItem(item)
-        if item in self.clips:
-            self.clips.remove(item)
-
-    def split_at_playhead(self, item: Optional[DisplayClipItem] = None) -> None:
-        """Žiletka: rozdělí klip na dva v pozici kurzoru (playhead)."""
-        t = self.playhead_s
-        target = item
-        if target is None:                      # vybraný klip, jinak klip pod kurzorem
-            for it in self.scene.selectedItems():
-                if isinstance(it, DisplayClipItem):
-                    target = it
-                    break
-        if target is None:
-            for it in self.clips:
-                if float(it.clip["start_s"]) < t < float(it.clip["end_s"]):
-                    target = it
-                    break
-        if target is None:
-            return
-        c = target.clip
-        if not (float(c["start_s"]) < t < float(c["end_s"])):
-            return   # kurzor musí být uvnitř klipu
-        self._push_undo()
-        clips = self.data.setdefault("display_timeline", [])
-        right = dict(c)
-        right["id"] = f"clip-{len(clips) + 1}"
-        right["start_s"] = round(t, 3)
-        right.pop("unfilled_end_s", None)
-        c["end_s"] = round(t, 3)
-        c.pop("unfilled_end_s", None)
-        clips.append(right)
-        self._relayout()
 
     # --- přichycení na mřížku (jediný correctní způsob časování — dle tempa,
     #     žádné odhady z délky textu/slabik) ---
@@ -4647,11 +3917,6 @@ class TimelineEditor(QWidget):
                     w["time_s"] = round(float(w.get("time_s", 0.0)) * ratio, 3)
                     if "duration_s" in w:
                         w["duration_s"] = round(float(w["duration_s"]) * ratio, 3)
-            for c in self.data.get("display_timeline", []):
-                c["start_s"] = round(float(c.get("start_s", 0.0)) * ratio, 3)
-                c["end_s"] = round(float(c.get("end_s", 0.0)) * ratio, 3)
-                if "unfilled_end_s" in c:
-                    c["unfilled_end_s"] = round(float(c["unfilled_end_s"]) * ratio, 3)
 
         self.bpm = new_bpm
         meta = self.data.setdefault("meta", {})
@@ -4703,9 +3968,10 @@ class TimelineEditor(QWidget):
             self.set_count_in(bars_sb.value(), artist_edit.text(), title_edit.text())
 
     def set_count_in(self, bars: int, artist: str, title: str) -> None:
-        """Vloží/upraví odpočet před písní — klik-track (zavřená hajtka) +
-        klip displeje s interpretem/názvem (odpočet čísel dopočítá displej
-        z `meta.count_in_s`/`count_in_bars`/tempa, žádná další data netřeba).
+        """Vloží/upraví odpočet před písní — klik-track (zavřená hajtka).
+        Zobrazení odpočtu (číslo, interpret, název) si displej dopočítá
+        za běhu z `meta.count_in_s`/`count_in_bars`/`artist`/`title` —
+        žádná další data netřeba.
 
         Idempotentní: lze zavolat znovu se změněným počtem taktů/textem —
         posune se jen ROZDÍL oproti předchozímu odpočtu, ne celá píseň znovu
@@ -4736,13 +4002,6 @@ class TimelineEditor(QWidget):
                 kl["end_s"] = round(max(0.0, float(kl.get("end_s", 0.0)) + delta), 3)
                 for w in kl.get("words", []):
                     w["time_s"] = round(max(0.0, float(w.get("time_s", 0.0)) + delta), 3)
-            for c in self.data.get("display_timeline", []):
-                if c.get("mode") == "count_in":
-                    continue   # tenhle klip přestavíme níž od nuly
-                c["start_s"] = round(max(0.0, float(c.get("start_s", 0.0)) + delta), 3)
-                c["end_s"] = round(max(0.0, float(c.get("end_s", 0.0)) + delta), 3)
-                if "unfilled_end_s" in c:
-                    c["unfilled_end_s"] = round(max(0.0, float(c["unfilled_end_s"]) + delta), 3)
             # NAHRÁVKA se posouvá taky — je ukotvená přes `audio_offset_s`
             # (kolikátou sekundou časové osy začíná t=0 souboru), takže bez
             # tohohle by odpočet posunul VŠECHNO ostatní, ale nahrávka by
@@ -4762,24 +4021,8 @@ class TimelineEditor(QWidget):
                 })
             clicks.sort(key=lambda e: e["time_s"])
 
-        # klip displeje pro odpočet (nahradí případný starý)
-        clips = self.data.setdefault("display_timeline", [])
-        clips[:] = [c for c in clips if c.get("mode") != "count_in"]
         artist = (artist or "").strip()
         title = (title or "").strip()
-        if bars > 0:
-            clips.insert(0, {
-                "id": "clip-count-in",
-                "start_s": 0.0,
-                "end_s": new_s,
-                "source_track": order[0] if order else 1,
-                "mode": "count_in",
-                "artist": artist,
-                "title": title,
-                "label": " / ".join(x for x in (artist, title) if x),
-            })
-        clips.sort(key=lambda c: float(c.get("start_s", 0.0)))
-
         meta["count_in_bars"] = bars
         meta["count_in_s"] = new_s
         if artist:
@@ -4796,9 +4039,6 @@ class TimelineEditor(QWidget):
             return
         self._push_undo()   # jeden krok za celé smazání, i když jde o víc prvků
         for it in sel:
-            if isinstance(it, DisplayClipItem):
-                self.delete_clip(it)
-                continue
             if isinstance(it, DrumHitItem):
                 self.remove_drum_hit(it)
                 continue
@@ -4817,10 +4057,9 @@ class TimelineEditor(QWidget):
                 self.blocks.remove(it)
 
     # --- kopírovat / vyjmout / vložit — funguje na LIBOVOLNĚ smíšený výběr
-    # (text+akordy+bicí+basa+Displej klipy najednou), zachová relativní
-    # časové rozestupy mezi zkopírovanými prvky (vlož = posuň VŠECHNY
-    # najednou o stejnou dobu), vkládá se vždy na PŮVODNÍ stopu/pražec/
-    # strunu/mód každého prvku ---
+    # (text+akordy+bicí+basa najednou), zachová relativní časové rozestupy
+    # mezi zkopírovanými prvky (vlož = posuň VŠECHNY najednou o stejnou
+    # dobu), vkládá se vždy na PŮVODNÍ stopu/pražec/strunu/mód každého prvku ---
 
     def copy_selected(self) -> None:
         """Zkopíruje aktuální výběr do vnitřní schránky. Uloží se čas
@@ -4837,8 +4076,6 @@ class TimelineEditor(QWidget):
                 entries.append(("drum", dict(it.event), self._item_time(it)))
             elif isinstance(it, BassNoteItem):
                 entries.append(("bass", dict(it.event), self._item_time(it)))
-            elif isinstance(it, DisplayClipItem):
-                entries.append(("clip", dict(it.clip), self._item_time(it)))
         if not entries:
             return
         anchor = min(t for _k, _d, t in entries)
@@ -4853,17 +4090,26 @@ class TimelineEditor(QWidget):
     def _select_by_identity(self, targets: list[dict]) -> None:
         self.scene.clearSelection()
         by_id = {id(d) for d in targets}
-        for it in (self.blocks + self.drum_hit_items + self.bass_note_items + self.clips):
-            ev = getattr(it, "event", None) or getattr(it, "clip", None)
+        for it in (self.blocks + self.drum_hit_items + self.bass_note_items):
+            ev = getattr(it, "event", None)
             if ev is not None and id(ev) in by_id:
                 it.setSelected(True)
 
-    def paste_at(self, t: float) -> None:
+    def paste_at(self, t: float, target_ti: Optional[int] = None) -> None:
         """Vloží aktuální schránku tak, aby nejdřívější zkopírovaný prvek
         přistál PŘESNĚ na `t` (přichyceno na mřížku) — ostatní prvky výběru
         se posunou o STEJNOU dobu, takže si zachovají svoje vzájemné
         rozestupy (ne mřížkové zaokrouhlení KAŽDÉHO zvlášť, to by mohlo
-        rytmicky "rozjet" zkopírovanou pasáž)."""
+        rytmicky "rozjet" zkopírovanou pasáž).
+
+        `target_ti`: když je zadané (vloženo přes kontextové menu
+        KONKRÉTNÍHO řádku bicích/basy, viz `DrumRowBackground`/
+        `BassLaneBackground`), bicí/basové údery se přemapují na TUHLE
+        stopu. Bez toho by si každý nesl svůj PŮVODNÍ `track_index` ze
+        zdrojové karty — při vkládání NAPŘÍČ SOUBORY (jiná karta s jinou
+        skladbou) v cílovém souboru typicky neodpovídá žádné existující
+        stopě, takže se úder přidal do dat, ale nikdy se nevykreslil —
+        viz `_track_order`."""
         if not self._clipboard:
             return
         self._push_undo()
@@ -4883,21 +4129,14 @@ class TimelineEditor(QWidget):
                 self.data.setdefault("chords_timeline", []).append(d)
             elif kind == "drum":
                 d["time_s"] = new_t
+                if target_ti is not None:
+                    d["track_index"] = target_ti
                 self.data.setdefault("drums_timeline", []).append(d)
             elif kind == "bass":
                 d["time_s"] = new_t
+                if target_ti is not None:
+                    d["track_index"] = target_ti
                 self.data.setdefault("bass_timeline", []).append(d)
-            elif kind == "clip":
-                dur = max(0.05, float(entry["data"].get("end_s", 0.0)) - float(entry["data"].get("start_s", 0.0)))
-                d.pop("line", None)
-                d["auto_track"] = False   # kopie nemá vazbu na konkrétní řádek, viz replace_text_and_chords
-                d["start_s"] = new_t
-                d["end_s"] = round(new_t + dur, 3)
-                d.pop("unfilled_end_s", None)
-                clips = self.data.setdefault("display_timeline", [])
-                d["id"] = f"clip-{len(clips) + 1}-paste"
-                clips.append(d)
-                clips.sort(key=lambda c: float(c.get("start_s", 0.0)))
             new_dicts.append(d)
         self._relayout()
         self._select_by_identity(new_dicts)
@@ -4909,8 +4148,6 @@ class TimelineEditor(QWidget):
 
     @staticmethod
     def _item_time(item) -> float:
-        if isinstance(item, DisplayClipItem):
-            return float(item.clip.get("start_s", 0.0))
         return float(item.event.get("time_s", 0.0))
 
     def _ripple_candidates(self, item) -> list:
@@ -4919,23 +4156,13 @@ class TimelineEditor(QWidget):
             # patří k sobě (řádek + akordy nad ním) a musí jít vybrat a
             # posouvat SPOLEČNĚ jedním výběrem, ne zvlášť pro každý druh.
             ti = item.event.get("track_index", 1)
-            cands: list = [b for b in self.blocks if b.event.get("track_index", 1) == ti]
-            # + odpovídající klipy na master "Displej" stopě (přes event["line"]
-            # == clip["line"]) — jinak by šel posunout OBSAH řádku, ale to, co
-            # se skutečně ukáže na karaoke displeji, by zůstalo na starém místě
-            # (klip má vlastní start_s/end_s, nezávislé na slovech — viz to_json).
-            lines = {b.event.get("line") for b in cands if isinstance(b.event.get("line"), int)}
-            if lines:
-                cands += [c for c in self.clips if c.clip.get("line") in lines]
-            return cands
+            return [b for b in self.blocks if b.event.get("track_index", 1) == ti]
         if isinstance(item, DrumHitItem):
             ti = item.event.get("track_index", 1)
             return [d for d in self.drum_hit_items if d.event.get("track_index", 1) == ti]
         if isinstance(item, BassNoteItem):
             ti = item.event.get("track_index", 1)
             return [b for b in self.bass_note_items if b.event.get("track_index", 1) == ti]
-        if isinstance(item, DisplayClipItem):
-            return list(self.clips)
         return []
 
     def select_ripple(self, item, direction: str) -> None:
@@ -4970,11 +4197,11 @@ class TimelineEditor(QWidget):
 
     def select_all(self) -> None:
         """`Ctrl+A` — vybere VŠECHNY editovatelné prvky napříč VŠEMI
-        stopami (text, akordy, bicí, basa, Displej klipy) najednou. Vlnovka
-        nahrávky se nezahrnuje (není "kus obsahu" k výběru/kopírování, jde
-        jen celá táhnout/roztahovat — viz `WaveformItem`)."""
+        stopami (text, akordy, bicí, basa) najednou. Vlnovka nahrávky se
+        nezahrnuje (není "kus obsahu" k výběru/kopírování, jde jen celá
+        táhnout/roztahovat — viz `WaveformItem`)."""
         self.scene.clearSelection()
-        for it in (self.blocks + self.drum_hit_items + self.bass_note_items + self.clips):
+        for it in (self.blocks + self.drum_hit_items + self.bass_note_items):
             it.setSelected(True)
 
     def _ensure_selected_for_context_menu(self, item) -> None:
@@ -4988,47 +4215,17 @@ class TimelineEditor(QWidget):
             item.setSelected(True)
 
     def shift_selected(self, delta_s: float) -> None:
-        """Posune VŠECHNY aktuálně vybrané prvky (text/akord/buben/klip) o
+        """Posune VŠECHNY aktuálně vybrané prvky (text/akord/buben) o
         `delta_s` (+ později, − dřív) — přesný, parametrický ekvivalent
-        tažení myší, funguje na libovolně velký výběr (viz `select_ripple`).
-
-        Bloky se posouvají VŽDY nejdřív — `_sync_from_event()` u nich sama
-        "nudge"-ne odpovídající auto-sledovaný Displej klip (viz
-        `_live_sync_display_clip_for_line`). Klip patřící k řádku, jehož
-        slova jsou SOUČÁSTÍ TOHOTO SAMÉHO výběru, se proto už NESMÍ posunout
-        znovu o `delta_s` — jinak by se posun sečetl dvakrát (přesně tenhle
-        bug odhalil test). Klip vybraný SÁM (bez svých slov) se naopak
-        posune ručně a odpojí od auto-sledování (`auto_track=False`) —
-        sémanticky stejné jako přímé tažení jen klipu myší."""
+        tažení myší, funguje na libovolně velký výběr (viz `select_ripple`)."""
         sel = self.scene.selectedItems()
         if not delta_s or not sel:
             return
         self._push_undo()   # jeden krok za celý hromadný posun
         blocks = [it for it in sel if isinstance(it, (BlockItem, DrumHitItem, BassNoteItem))]
-        clip_items = [it for it in sel if isinstance(it, DisplayClipItem)]
-        lines_moved = {b.event.get("line") for b in blocks
-                       if isinstance(b, BlockItem) and isinstance(b.event.get("line"), int)}
         for it in blocks:
             it.event["time_s"] = round(max(0.0, float(it.event.get("time_s", 0.0)) + delta_s), 3)
             it._sync_from_event()
-        for it in clip_items:
-            line_idx = it.clip.get("line")
-            if (isinstance(line_idx, int) and line_idx in lines_moved
-                    and it.clip.get("auto_track", True)):
-                # slova už posunuta výš — `_live_sync_display_clip_for_line`
-                # (volané ze `_sync_from_event()`) tenhle klip PŘESKOČILO,
-                # protože je součástí stejného výběru (viz jeho docstring —
-                # ochrana proti závodu s nativním tažením myší), takže ho
-                # tu musíme dopočítat sami, přímo z aktuálního obsahu.
-                self._sync_auto_display_clip(it)
-                continue
-            it.clip["auto_track"] = False   # samostatný posun klipu = ruční zásah
-            dur = max(0.05, float(it.clip.get("end_s", 0.0)) - float(it.clip.get("start_s", 0.0)))
-            start = round(max(0.0, float(it.clip.get("start_s", 0.0)) + delta_s), 3)
-            it.clip["start_s"] = start
-            it.clip["end_s"] = round(start + dur, 3)
-            it.clip.pop("unfilled_end_s", None)
-            it._sync_from_clip()
 
     def shift_selected_dialog(self) -> None:
         sel = self.scene.selectedItems()
@@ -5050,6 +4247,30 @@ class TimelineEditor(QWidget):
         if dlg.exec():
             self.shift_selected(spin.value())
 
+    def paste_at_dialog(self) -> None:
+        """'Vložit na přesný čas…' — jako `paste_at()`, ale cíl se zadá
+        číslem místo odhadu myší přes přehrávací hlavu. Hlavně pro
+        vkládání NAPŘÍČ KARTAMI (zkopírováno v jiném souboru): playhead
+        cílové karty nemusí být tam, kde uživatel čeká, takže by mu
+        Ctrl+V tiše přistálo jinde, než chtěl."""
+        if not self._clipboard:
+            return
+        dlg = QDialog(self)
+        dlg.setWindowTitle(tr("dialog.paste_at_title", n=len(self._clipboard)))
+        form = QFormLayout(dlg)
+        spin = QDoubleSpinBox()
+        spin.setRange(0.0, 99999.0)
+        spin.setDecimals(3)
+        spin.setSuffix(" s")
+        spin.setValue(self.playhead_s)
+        form.addRow(tr("dialog.paste_at_label", n=len(self._clipboard)), spin)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        form.addRow(bb)
+        if dlg.exec():
+            self.paste_at(spin.value())
+
     # ------------------------------------------------------------------
     # Výstup
     # ------------------------------------------------------------------
@@ -5057,13 +4278,11 @@ class TimelineEditor(QWidget):
     def to_json(self) -> dict:
         """Vrátí upravený JSON slovník (setříděné osy + přepočtené karaoke_lines).
 
-        Zobrazovaný rozsah řádku (`karaoke_lines[].start_s/end_s`) může
-        uživatel přetáhnout přes odpovídající klip na master "Displej" stopě
-        — nezávisle na hudební mřížce (`bars_per_line`). To je potřeba u
-        rytmických skladeb, kde má řádek zůstat na displeji déle/kratčeji,
-        než odpovídá mřížkovému rozsahu. Klip se s řádkem páruje přes `line`
-        (viz `_seed_display`); starší klipy bez tohoto tagu se dohledají
-        podle stopy + blízkého startu a tag jim dopíšeme."""
+        `karaoke_lines[].start_s/end_s` je vždy PŘIROZENÝ rozsah odvozený ze
+        slov řádku — žádná samostatná "displej" vrstva to dál neupravuje
+        (klipy/obrazovky byly zrušené: firmware si za běhu samo odvodí, co
+        zobrazit — aktivní zpívaný řádek → text+akordy, jinak aktivní akord
+        → jen akord, jinak nic)."""
         data = self.data
         lyr = sorted(data.get("lyrics_timeline", []), key=lambda e: e["time_s"])
         chords = sorted(data.get("chords_timeline", []), key=lambda e: e["time_s"])
@@ -5077,9 +4296,9 @@ class TimelineEditor(QWidget):
                     grouped.append((ti, line))
         grouped.sort(key=lambda g: g[1][0]["time_s"])
 
-        # Pass 1: přiřaď GLOBÁLNÍ index řádku `line` slovům a spočítej
-        # přirozený (ze slov odvozený) rozsah — používá se pro přiřazení
-        # akordů k řádku (nemění se přetažením zobrazovaného konce).
+        # Přiřaď GLOBÁLNÍ index řádku `line` slovům a spočítej přirozený
+        # (ze slov odvozený) rozsah — používá se pro přiřazení akordů
+        # k řádku i pro zobrazovaný rozsah v `karaoke_lines`.
         line_words: list[list[dict]] = []
         line_ranges: list[tuple[float, float]] = []
         for line_idx, (ti, line) in enumerate(grouped):
@@ -5096,67 +4315,10 @@ class TimelineEditor(QWidget):
             t = float(c.get("time_s", 0.0))
             c["line"] = next((li for li, (s, e) in enumerate(line_ranges) if s <= t < e), None)
 
-        # Klipy master "Displej" stopy — spáruj s řádky přes `line`, starší
-        # klipy bez tagu dohledej podle stopy a blízkého startu. Klipy s
-        # mode="chords" (bezeslovné intro/mezihra) se sem NIKDY nepočítají —
-        # `karaoke_lines` z to_json() jsou vždy textové, takže čistě akordový
-        # klip nemůže korektně odpovídat žádnému z nich (i kdyby náhodou měl
-        # `.line` shodné se STARÝM číslem nějakého textového řádku a byl mu
-        # časově blízko — přesně tenhle případ dřív procházel kolem
-        # MAX_LINE_CLIP_DRIFT_S kontroly a řádku podstrčil cizí čas).
-        display_clips = data.get("display_timeline", []) or []
-        TEXT_MODES = TEXT_DISPLAY_MODES
-        clip_by_line: dict[int, dict] = {
-            c["line"]: c for c in display_clips
-            if isinstance(c.get("line"), int) and c.get("mode") in TEXT_MODES
-        }
-        unlinked = [c for c in display_clips
-                    if not isinstance(c.get("line"), int) and c.get("mode") in TEXT_MODES]
-
-        def _match_unlinked(ti: int, start: float):
-            for c in unlinked:
-                if c.get("source_track") == ti and abs(float(c.get("start_s", -999)) - start) < 0.75:
-                    return c
-            return None
-
-        # Kolik smí být klip vzdálený od přirozeného startu řádku, aby se
-        # ještě bral jako "tenhle řádek, uživatel jen posunul okraj" — nad
-        # tím jde o STARÝ/cizí tag ze zcela jiného čísla řádku (viz níže).
-        MAX_LINE_CLIP_DRIFT_S = 6.0
-
         karaoke: list[dict] = []
-        # Klipy, které se spárovaly se skutečným řádkem — vstup pro
-        # `_sanitize_display_overlaps()` (kdo z překrývající se dvojice
-        # ustoupí) a pro dosrovnání `karaoke_lines` po sanitizaci/výplni.
-        bound_ids: set[int] = set()
-        clip_of_line: dict[int, dict] = {}
         for line_idx, (ti, _line) in enumerate(grouped):
             words = line_words[line_idx]
             start, end = line_ranges[line_idx]
-
-            clip = clip_by_line.get(line_idx)
-            if clip is not None and abs(float(clip.get("start_s", start)) - start) > MAX_LINE_CLIP_DRIFT_S:
-                # `line_idx` číslování je čerstvě přepočítané z `lyrics_timeline`
-                # (řádky beze slov — např. jen akordy — se do něj vůbec
-                # nepočítají). Klip svůj `line` tag dostal DŘÍV, v jiném
-                # číslování (mohlo zahrnovat i bezeslovné řádky) — pro jiný
-                # počet takových řádků PŘED touto pozicí se čísla rozejdou a
-                # `clip_by_line[line_idx]` pak omylem trefí klip NĚJAKÉHO
-                # jiného řádku (o desítky sekund jinde). Zahodit, dohledat
-                # znovu podle stopy + skutečného času (self-healing níže).
-                clip = None
-            if clip is None:
-                clip = _match_unlinked(ti, start)
-                if clip is not None:
-                    clip["line"] = line_idx
-                    unlinked.remove(clip)
-
-            disp_start, disp_end = start, end
-            if clip is not None:
-                bound_ids.add(id(clip))
-                clip_of_line[line_idx] = clip
-                disp_start = float(clip.get("start_s", start))
-                disp_end = max(float(clip.get("end_s", end)), disp_start + 0.05)
 
             line_chords: list[str] = []
             for c in chords:
@@ -5166,8 +4328,8 @@ class TimelineEditor(QWidget):
             text = " ".join(w["text"] for w in words)
             kl = {
                 "line": line_idx,
-                "start_s": round(disp_start, 3),
-                "end_s": round(disp_end, 3),
+                "start_s": round(start, 3),
+                "end_s": round(end, 3),
                 "chords": line_chords,
                 "text": text,
                 "words": words,
@@ -5179,46 +4341,6 @@ class TimelineEditor(QWidget):
             karaoke.append(kl)
         data["karaoke_lines"] = karaoke
 
-        # Netextové klipy: `chords` má obsah, když v jeho okně vůbec nějaký
-        # akord na jeho stopě zní; `count_in` (a případný ruční `tab*`)
-        # si obsah nese sám / nastavil ho uživatel — ty bereme vždy jako
-        # plnohodnotné, sanitizace je nikdy neobětuje.
-        for c in display_clips:
-            mode = c.get("mode", "lyrics_chords")
-            if mode in TEXT_MODES:
-                continue
-            if mode != "chords":
-                bound_ids.add(id(c))
-                continue
-            c0, c1, cti = (float(c.get("start_s", 0.0)), float(c.get("end_s", 0.0)),
-                           c.get("source_track", 1))
-            if any(c0 - DISPLAY_FILL_EPS <= float(e.get("time_s", 0.0)) < c1
-                   and e.get("track_index", 1) == cti for e in chords):
-                bound_ids.add(id(c))
-
-        # Klipy se NESMÍ překrývat (firmware jinak pozdější klip vůbec
-        # nezobrazí — viz `_sanitize_display_overlaps`), a teprve na
-        # uklizené ose má smysl vyplňovat mezery.
-        n_short, n_dropped = self._sanitize_display_overlaps(bound_ids)
-        n_filled = self._apply_display_gap_fill()
-        self.last_export_cleanup = {"shortened": n_short, "dropped": n_dropped,
-                                    "filled": n_filled}
-        display_clips = self.data["display_timeline"]
-
-        # `karaoke_lines` se počítaly z klipů PŘED úklidem — dosrovnej
-        # zobrazovaný rozsah podle toho, co z klipů skutečně zbylo (řádek
-        # bez klipu si nechá svůj přirozený rozsah ze slov).
-        alive = {id(c) for c in display_clips}
-        for kl in karaoke:
-            clip = clip_of_line.get(kl["line"])
-            if clip is None or id(clip) not in alive:
-                continue
-            cs = round(float(clip.get("start_s", kl["start_s"])), 3)
-            kl["start_s"] = cs
-            kl["end_s"] = round(max(float(clip.get("end_s", kl["end_s"])), cs + 0.05), 3)
-
-        # master "Displej" stopa (co a kdy uvidí karaoke) — setříděné dle času
-        data["display_timeline"] = sorted(display_clips, key=lambda c: float(c.get("start_s", 0.0)))
         meta = data.setdefault("meta", {})
         meta["edited_in_timeline"] = True
         meta["has_line_structure"] = True   # slova nesou index řádku `line`

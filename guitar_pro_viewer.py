@@ -1,3 +1,4 @@
+
 """
 Guitar Pro Viewer & Karaoke Exporter
 PySide6 aplikace pro procházení .gp3/.gp4/.gp5 souborů a export do JSON pro karaoke systémy.
@@ -836,6 +837,7 @@ class GuitarProViewer(QMainWindow):
             return
         ed.player.stop()
         ed.gp_player.stop()
+        ed.bass_player.stop()
         self.doc_tabs.removeTab(index)
         ed.deleteLater()
         if self.doc_tabs.count() == 0:
@@ -851,6 +853,7 @@ class GuitarProViewer(QMainWindow):
             if ed is not None and i != index:
                 ed.player.pause()
                 ed.gp_player.pause()
+                ed.bass_player.pause()
 
         active = self.timeline
         if active is None:
@@ -1083,8 +1086,12 @@ class GuitarProViewer(QMainWindow):
         # --- Soubor / File ---
         file_menu = menubar.addMenu("")
         register_tr(file_menu.setTitle, "menu.file")
+        act_new = tr_action(self, "file.new", tooltip_key="file.new.tooltip",
+                             shortcut="Ctrl+N", slot=self._new_blank_file,
+                             icon=std_icon(self, QStyle.StandardPixmap.SP_FileIcon))
+        file_menu.addAction(act_new)
         act_web = tr_action(self, "file.new_from_web", tooltip_key="file.new_from_web.tooltip",
-                             shortcut="Ctrl+N", slot=self._open_web_import, icon=icon("new_song"))
+                             shortcut="Ctrl+Shift+N", slot=self._open_web_import, icon=icon("new_song"))
         file_menu.addAction(act_web)
         act_merge = tr_action(self, "file.merge_web", tooltip_key="file.merge_web.tooltip",
                                shortcut="Ctrl+M", slot=self.merge_with_web, icon=icon("merge"))
@@ -1112,6 +1119,11 @@ class GuitarProViewer(QMainWindow):
                                  shortcut="Ctrl+Shift+S", slot=self.save_json_as,
                                  icon=icon("save_as"))
         file_menu.addAction(act_save_as)
+        file_menu.addSeparator()
+        act_close_tab = tr_action(self, "file.close", tooltip_key="file.close.tooltip",
+                                   shortcut="Ctrl+W", slot=self._close_current_tab,
+                                   icon=std_icon(self, QStyle.StandardPixmap.SP_DialogCloseButton))
+        file_menu.addAction(act_close_tab)
         file_menu.addSeparator()
         act_quit = tr_action(self, "file.quit", shortcut="Ctrl+Q", slot=self.close,
                               icon=std_icon(self, QStyle.StandardPixmap.SP_TitleBarCloseButton))
@@ -1148,11 +1160,12 @@ class GuitarProViewer(QMainWindow):
                                slot=lambda: self.timeline.paste_at(self.timeline.playhead_s),
                                icon=icon("paste"))
         edit_menu.addAction(act_paste)
+        act_paste_at = tr_action(self, "edit.paste_at", tooltip_key="edit.paste_at.tooltip",
+                                  shortcut="Ctrl+Shift+V",
+                                  slot=lambda: self.timeline.paste_at_dialog(),
+                                  icon=icon("paste"))
+        edit_menu.addAction(act_paste_at)
         edit_menu.addSeparator()
-        act_split = tr_action(self, "edit.split", tooltip_key="edit.split.tooltip",
-                               shortcut="S", slot=lambda: self.timeline.split_at_playhead(),
-                               icon=icon("split"))
-        edit_menu.addAction(act_split)
         act_delete = tr_action(self, "edit.delete", shortcut="Del",
                                 slot=lambda: self.timeline.delete_selected(),
                                 icon=std_icon(self, QStyle.StandardPixmap.SP_TrashIcon))
@@ -1169,35 +1182,6 @@ class GuitarProViewer(QMainWindow):
         # --- Časová osa / Timeline ---
         timeline_menu = menubar.addMenu("")
         register_tr(timeline_menu.setTitle, "menu.timeline")
-        act_add_clip = tr_action(self, "timeline.add_clip", tooltip_key="timeline.add_clip.tooltip",
-                                  shortcut="Ctrl+D", slot=lambda: self.timeline.add_clip(),
-                                  icon=icon("add_display_clip"))
-        timeline_menu.addAction(act_add_clip)
-        act_align_song = tr_action(self, "timeline.align_song", tooltip_key="timeline.align_song.tooltip",
-                                    slot=lambda: self.timeline.align_all_clips_to_content(),
-                                    icon=icon("align_display"))
-        timeline_menu.addAction(act_align_song)
-        act_rebuild_display = tr_action(self, "timeline.rebuild_display",
-                                         tooltip_key="timeline.rebuild_display.tooltip",
-                                         slot=lambda: self.timeline.rebuild_display_track(),
-                                         icon=std_icon(self, QStyle.StandardPixmap.SP_BrowserReload))
-        timeline_menu.addAction(act_rebuild_display)
-        act_lead = tr_action(self, "timeline.display_lead",
-                              tooltip_key="timeline.display_lead.tooltip",
-                              slot=lambda: self.timeline.display_lead_dialog())
-        timeline_menu.addAction(act_lead)
-        act_fill_gaps = tr_action(self, "timeline.fill_gaps",
-                                   tooltip_key="timeline.fill_gaps.tooltip",
-                                   checkable=True, icon=icon("fill_gaps"),
-                                   slot=lambda checked: self.timeline.set_display_fill_gaps(checked))
-        timeline_menu.addAction(act_fill_gaps)
-        self._act_fill_gaps = act_fill_gaps
-        # Přepínač patří PÍSNI (`meta.display_fill_gaps`), ne oknu — stav
-        # zaškrtnutí proto načti až při otevření menu/toolbaru, ať sedí
-        # s AKTIVNÍ kartou i po přepnutí karty nebo načtení jiného souboru
-        # (jinak by zůstal viset stav té předchozí).
-        timeline_menu.aboutToShow.connect(self._sync_fill_gaps_action)
-        timeline_menu.addSeparator()
         act_add_lyric = tr_action(self, "timeline.add_lyric",
                                    slot=lambda: self.timeline.add_block("lyric"),
                                    icon=icon("add_lyric"))
@@ -1335,11 +1319,8 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addAction(act_copy)
         tb_timeline.addAction(act_cut)
         tb_timeline.addAction(act_paste)
+        tb_timeline.addAction(act_paste_at)
         tb_timeline.addSeparator()
-        tb_timeline.addAction(act_add_clip)
-        tb_timeline.addAction(act_align_song)
-        tb_timeline.addAction(act_fill_gaps)
-        tb_timeline.addAction(act_split)
         tb_timeline.addAction(act_autotime)
         tb_timeline.addAction(act_tempo)
         tb_timeline.addAction(act_count_in)
@@ -1349,15 +1330,6 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addAction(act_shift_sel)
         tb_timeline.addSeparator()
         tb_timeline.addAction(act_rewrite_text)
-
-    def _sync_fill_gaps_action(self) -> None:
-        """Zaškrtnutí „Vyplnit mezery na Displeji" podle AKTIVNÍ karty —
-        volá se při otevření menu Časová osa i po přepnutí karty."""
-        act = getattr(self, "_act_fill_gaps", None)
-        if act is None:
-            return
-        ed = self.timeline
-        act.setChecked(ed is not None and ed.display_fill_gaps_enabled())
 
     def _swap_toolbar_widgets(self, active: TimelineEditor) -> None:
         """Vymění snap_combo/time_lbl v toolbaru „Časová osa“ za widgety
@@ -1375,11 +1347,23 @@ class GuitarProViewer(QMainWindow):
         active.snap_combo.currentIndexChanged.connect(self._sync_snap_radio)
         self._connected_snap_combo = active.snap_combo
         self._sync_snap_radio(active.snap_combo.currentIndex())
-        self._sync_fill_gaps_action()
 
     # ------------------------------------------------------------------
     # Načítání souboru
     # ------------------------------------------------------------------
+
+    def _new_blank_file(self) -> None:
+        """'Nový soubor' — prázdná karta bez jakéhokoli dialogu, na rozdíl
+        od 'Nová píseň — z webu' (`_open_web_import`), která rovnou otevírá
+        dialog pro import textu. Obsah se pak přidá Otevřením JSONu,
+        Importem z GP nebo Novou píseň z webu."""
+        self._tab_for_new_document()
+
+    def _close_current_tab(self) -> None:
+        """'Zavřít soubor' — zavře aktuálně aktivní kartu (nabídne Uložit/
+        Zahodit/Zrušit, pokud má neuložené změny; viz `_close_tab`).
+        Stejné jako kliknutí na ✕ na kartě, jen dostupné i z menu/klávesou."""
+        self._close_tab(self.doc_tabs.currentIndex())
 
     def _open_web_import(self) -> None:
         """Kompletní postup pro novou píseň: web/vlastní text → úprava v dialogu
@@ -1396,9 +1380,9 @@ class GuitarProViewer(QMainWindow):
         načtené písně: znovu se otevře stejný dialog, předvyplněný
         rekonstruovaným textem z `self.timeline.export_chord_chart_text()`,
         oprava se pak vrátí přes `replace_text_and_chords()`, která nahradí
-        JEN lyrics_timeline/chords_timeline/karaoke_lines — bicí, basa,
-        napojení na audio i Displej stopa zůstanou beze změny (na výslovné
-        přání uživatele: 'bicí, basa zůstane')."""
+        JEN lyrics_timeline/chords_timeline/karaoke_lines — bicí, basa a
+        napojení na audio zůstanou beze změny (na výslovné přání uživatele:
+        'bicí, basa zůstane')."""
         if not self.timeline.data or not self.timeline.data.get("lyrics_timeline"):
             QMessageBox.warning(self, tr("edit_text.none_title"), tr("edit_text.none_body"))
             return
@@ -1410,11 +1394,6 @@ class GuitarProViewer(QMainWindow):
         old_tracks = self.timeline.replace_text_and_chords(dlg.result_json)
         if len(old_tracks) > 1:
             QMessageBox.warning(self, tr("edit_text.multi_track_title"), tr("edit_text.multi_track_body"))
-        reply = QMessageBox.question(
-            self, tr("edit_text.resync_title"), tr("edit_text.resync_body"),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            self.timeline.rebuild_display_track()
 
     def _tab_for_new_document(self) -> TimelineEditor:
         """Vrátí kartu pro novou/importovanou/otevřenou píseň — POUŽIJE
@@ -2068,8 +2047,10 @@ class GuitarProViewer(QMainWindow):
           "let ring") z ostatních stop. Celé řádky na jednom úderu se
           rozsekají na slova a rozprostřou v čase (word-level karaoke).
         - **Akordy** se berou z jakékoli stopy s akordovými značkami.
-        - **Bicí** se exportují vždy (do `drums_timeline`).
-        - Do `tracks[]` jde jen zpěv, bicí a stopy nesoucí akordy.
+        - **Bicí** i **basa** (4strunná, ne bicí) se exportují vždy (do
+          `drums_timeline`/`bass_timeline`) — basa nese výšku (`midi`/
+          `note_name`/`string`/`fret`), stejně jako v `_gp_bass_for_merge`.
+        - Do `tracks[]` jde jen zpěv, bicí, basa a stopy nesoucí akordy.
         """
         song = self.song
         if not song:
@@ -2115,11 +2096,13 @@ class GuitarProViewer(QMainWindow):
             "lyrics_timeline": [],
             "chords_timeline": [],
             "drums_timeline": [],
+            "bass_timeline": [],
             "karaoke_lines": [],
         }
 
         all_chord_events: list[dict] = []
         all_drum_events: list[dict] = []
+        all_bass_events: list[dict] = []
         vocal_beats: list[dict] = []   # {time_s, duration_s, text} ze zpěvní stopy
         contributes: dict[int, bool] = {}
 
@@ -2139,7 +2122,7 @@ class GuitarProViewer(QMainWindow):
                 "is_drums": track.isPercussionTrack,
                 "instrument_midi": track.channel.instrument if track.channel else 0,
             }
-            contributes[ti] = track.isPercussionTrack or (ti == vocal_ti)
+            contributes[ti] = track.isPercussionTrack or (ti == vocal_ti) or track_type == "bass"
 
             # walk_track_beats = repetice rozbalené (viz jeho docstring) —
             # naivní `for m in track.measures` dělalo časovou osu kratší
@@ -2158,6 +2141,17 @@ class GuitarProViewer(QMainWindow):
                             # linka z akordů). Editor podle toho pozná, co má
                             # uživatel ještě zkontrolovat sluchem.
                             "source": "gp",
+                        })
+                    continue
+
+                if track_type == "bass":
+                    for n in b.notes:
+                        midi = note_to_midi(n, track)
+                        all_bass_events.append({
+                            "time_s": time_s, "duration_s": duration_s,
+                            "note_name": midi_to_name(midi), "midi": midi,
+                            "string": n.string, "fret": n.value,
+                            "track_index": ti, "source": "gp",
                         })
                     continue
 
@@ -2210,9 +2204,12 @@ class GuitarProViewer(QMainWindow):
         for ev in all_drum_events:
             ev["line"] = line_for(ev["time_s"])
 
+        all_bass_events.sort(key=lambda e: e["time_s"])
+
         result["lyrics_timeline"] = all_lyrics_events
         result["chords_timeline"] = all_chord_events
         result["drums_timeline"] = all_drum_events
+        result["bass_timeline"] = all_bass_events
 
         # karaoke_lines — jeden záznam na řádek
         karaoke_lines: list[dict] = []
@@ -2451,18 +2448,8 @@ class GuitarProViewer(QMainWindow):
             self.current_json_file = path
             self.timeline._dirty = False
             self._refresh_tab_label(self.timeline)
-            # Co musel export na Displej stopě uklidit, aby JSON splnil
-            # invariant formátu (nepřekrývající se klipy — firmware jinak
-            # pozdější klip vůbec nezobrazí). Klipy se tím můžou i zahodit,
-            # takže se to uživateli VŽDY řekne, ne jen tiše provede.
-            fix = getattr(self.timeline, "last_export_cleanup", {}) or {}
-            cleanup = ""
-            if fix.get("shortened") or fix.get("dropped"):
-                cleanup = tr("export.cleanup_note", n_short=fix.get("shortened", 0),
-                             n_dropped=fix.get("dropped", 0))
             if silent:
-                self.status.showMessage(
-                    tr("export.status_done", path=path) + (("  " + cleanup) if cleanup else ""))
+                self.status.showMessage(tr("export.status_done", path=path))
             else:
                 n_tracks = len(data.get("tracks", []))
                 n_lyrics = len(data.get("lyrics_timeline", []))
@@ -2471,8 +2458,6 @@ class GuitarProViewer(QMainWindow):
                 n_lines = len(data.get("karaoke_lines", []))
                 body = tr("export.done_body", path=path, n_tracks=n_tracks,
                           n_lyrics=n_lyrics, n_chords=n_chords, n_drums=n_drums, n_lines=n_lines)
-                if cleanup:
-                    body += "\n\n" + cleanup
                 QMessageBox.information(self, tr("export.done_title"), body)
                 self.status.showMessage(tr("export.status_done", path=path))
         except Exception as ex:

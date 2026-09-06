@@ -1,0 +1,34 @@
+{
+  "Acoustic Bass Drum": "/drums/rock/kick.wav",
+  "Bass Drum 1": "/drums/rock/kick.wav",
+
+  "Acoustic Snare": "/drums/rock/snare.wav",
+  "Electric Snare": "/drums/rock/snare.wav",
+  "Side Stick": "/drums/rock/snare.wav",
+  "Hand Clap": "/drums/rock/snare.wav",
+
+  "Closed Hi-Hat": "/drums/rock/hihat_closed.wav",
+  "Pedal Hi-Hat": "/drums/rock/hihat_closed.wav",
+  "Open Hi-Hat": "/drums/rock/hihat_open.wav",
+
+  "Low Floor Tom": "/drums/rock/tom_low.wav",
+  "High Floor Tom": "/drums/rock/tom_low.wav",
+  "Low Tom": "/drums/rock/tom_mid.wav",
+  "Low-Mid Tom": "/drums/rock/tom_mid.wav",
+  "Hi-Mid Tom": "/drums/rock/tom_hi.wav",
+  "High Tom": "/drums/rock/tom_hi.wav",
+
+  "Crash Cymbal 1": "/drums/rock/crash.wav",
+  "Crash Cymbal 2": "/drums/rock/crash.wav",
+  "Splash Cymbal": "/drums/rock/crash.wav",
+  "Chinese Cymbal": "/drums/rock/crash.wav",
+  "Ride Cymbal 1": "/drums/rock/crash.wav",
+  "Ride Cymbal 2": "/drums/rock/crash.wav",
+  "Ride Bell": "/drums/rock/crash.wav",
+  "Vibraslap": "/drums/rock/crash.wav",
+
+  "Cowbell": "/drums/rock/hihat_closed.wav",
+  "Tambourine": "/drums/rock/hihat_open.wav",
+
+  "_default": "/drums/rock/hihat_closed.wav"
+}

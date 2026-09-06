@@ -1,0 +1,6590 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "title": "Jasná zpráva",
+    "artist": "Olympic",
+    "durationMs": 265824,
+    "countInBars": 4,
+    "sampleSet": "kit_default_v1",
+    "audioFile": "C:/Users/prich/Documents/Arduino/Guitar_Pro_Viewer/jasna_zprava.wav",
+    "audioOffsetMs": -8885,
+    "audioStretch": 0.983,
+    "migrationNotes": [
+      "Sekce z markerů section (6 z 22 řádků).",
+      "Sloučeno 1 akordů, které zněly současně na víc stopách (nový model má jeden seznam akordů na sekci).",
+      "27 událostí vyšlo po odečtení odpočtu do záporného času — přichyceny na nulu.",
+      "originalKey se ve format_version 2 nevyskytuje — doplň tóninu ručně."
+    ]
+  },
+  "tempoMap": [
+    {
+      "bar": 1,
+      "beat": 1.0,
+      "bpm": 65.0
+    }
+  ],
+  "meterMap": [
+    {
+      "bar": 1,
+      "num": 4,
+      "den": 4
+    }
+  ],
+  "pickupBeats": 0,
+  "sections": [
+    {
+      "name": "Sloka 1",
+      "startBar": 1,
+      "source": "manual",
+      "lyrics": [
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "text": "1. Skončili jsme, jasná zpráva,",
+          "source": "manual"
+        },
+        {
+          "bar": 7,
+          "beat": 1.0,
+          "text": "proč o Tebe zakopávám dál,",
+          "source": "manual"
+        },
+        {
+          "bar": 9,
+          "beat": 1.0,
+          "text": "projít bytem já abych se bál.",
+          "source": "manual"
+        }
+      ],
+      "chords": [
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 1,
+          "beat": 2.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 1,
+          "beat": 3.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 1,
+          "beat": 4.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 2,
+          "beat": 1.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 2,
+          "beat": 2.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 2,
+          "beat": 3.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 2,
+          "beat": 4.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 3,
+          "beat": 2.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 3,
+          "beat": 3.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 3,
+          "beat": 4.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 4,
+          "beat": 1.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 4,
+          "beat": 2.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 4,
+          "beat": 3.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 4,
+          "beat": 4.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 5,
+          "beat": 2.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 6,
+          "beat": 3.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 7,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 8,
+          "beat": 1.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 8,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 9,
+          "beat": 1.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 9,
+          "beat": 3.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 10,
+          "beat": 3.0,
+          "chord": "G",
+          "source": "manual"
+        }
+      ],
+      "drums": [
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 1,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 2.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        }
+      ],
+      "bass": [],
+      "tab": []
+    },
+    {
+      "name": "Sloka 2",
+      "startBar": 10,
+      "source": "manual",
+      "lyrics": [
+        {
+          "bar": 11,
+          "beat": 1.0,
+          "text": "2. Dík tobě se vidím zvenčí,",
+          "source": "manual"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "text": "připadám si starší, menší sám,",
+          "source": "manual"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "text": "kam se kouknu, kousek Tebe mám.",
+          "source": "manual"
+        }
+      ],
+      "chords": [
+        {
+          "bar": 11,
+          "beat": 2.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 12,
+          "beat": 3.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 13,
+          "beat": 4.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 14,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 16,
+          "beat": 1.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 16,
+          "beat": 3.0,
+          "chord": "G",
+          "source": "manual"
+        }
+      ],
+      "drums": [
+        {
+          "bar": 11,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        }
+      ],
+      "bass": [],
+      "tab": []
+    },
+    {
+      "name": "Refrén",
+      "startBar": 17,
+      "source": "manual",
+      "lyrics": [
+        {
+          "bar": 17,
+          "beat": 1.0,
+          "text": "R. Pěnu s vůní jablečnou, vyvanulý sprej,",
+          "source": "manual"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "text": "telefon, cos ustřihla mu šňůru.",
+          "source": "manual"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "text": "Knížku krásně zbytečnou, co má lživý děj,",
+          "source": "manual"
+        },
+        {
+          "bar": 23,
+          "beat": 1.0,
+          "text": "píše se v ní, jak se lítá vzhůru,",
+          "source": "manual"
+        },
+        {
+          "bar": 25,
+          "beat": 1.0,
+          "text": "lítá vzhůru, ve dvou vzhůru.",
+          "source": "manual"
+        }
+      ],
+      "chords": [
+        {
+          "bar": 17,
+          "beat": 2.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 18,
+          "beat": 1.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 18,
+          "beat": 2.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 18,
+          "beat": 3.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 19,
+          "beat": 4.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 20,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 21,
+          "beat": 3.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 21,
+          "beat": 4.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 22,
+          "beat": 3.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 23,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 24,
+          "beat": 1.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 24,
+          "beat": 4.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 25,
+          "beat": 2.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 26,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        }
+      ],
+      "drums": [
+        {
+          "bar": 17,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        }
+      ],
+      "bass": [],
+      "tab": []
+    },
+    {
+      "name": "Sloka 3",
+      "startBar": 27,
+      "source": "manual",
+      "lyrics": [
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "text": "3. Odešla's mi před úsvitem,",
+          "source": "manual"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "text": "mám snad bloudit vlastním bytem sám,",
+          "source": "manual"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "text": "kam se kouknu, kousek Tebe mám. Óooo",
+          "source": "manual"
+        }
+      ],
+      "chords": [
+        {
+          "bar": 27,
+          "beat": 2.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 28,
+          "beat": 3.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 30,
+          "beat": 1.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 30,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 31,
+          "beat": 4.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 32,
+          "beat": 2.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 33,
+          "beat": 2.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 33,
+          "beat": 3.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 33,
+          "beat": 4.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 34,
+          "beat": 1.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 34,
+          "beat": 2.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 34,
+          "beat": 3.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 34,
+          "beat": 4.0,
+          "chord": "G",
+          "source": "manual"
+        }
+      ],
+      "drums": [
+        {
+          "bar": 27,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        }
+      ],
+      "bass": [],
+      "tab": []
+    },
+    {
+      "name": "Refrén",
+      "startBar": 35,
+      "source": "manual",
+      "lyrics": [
+        {
+          "bar": 35,
+          "beat": 1.0,
+          "text": "R. Pěnu s vůní jablečnou, vyvanulý sprej,",
+          "source": "manual"
+        },
+        {
+          "bar": 37,
+          "beat": 1.0,
+          "text": "telefon, cos ustřihla mu šňůru.",
+          "source": "manual"
+        },
+        {
+          "bar": 39,
+          "beat": 1.0,
+          "text": "Knížku krásně zbytečnou, co má lživý děj,",
+          "source": "manual"
+        },
+        {
+          "bar": 41,
+          "beat": 1.0,
+          "text": "píše se v ní, jak se lítá vzhůru,",
+          "source": "manual"
+        },
+        {
+          "bar": 43,
+          "beat": 1.0,
+          "text": "lítá vzhůru, ve dvou vzhůru.",
+          "source": "manual"
+        }
+      ],
+      "chords": [
+        {
+          "bar": 35,
+          "beat": 2.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 36,
+          "beat": 1.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 36,
+          "beat": 2.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 36,
+          "beat": 3.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 37,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 37,
+          "beat": 4.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 38,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 39,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 39,
+          "beat": 3.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 39,
+          "beat": 4.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 40,
+          "beat": 3.0,
+          "chord": "Hmi",
+          "source": "manual"
+        },
+        {
+          "bar": 41,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 42,
+          "beat": 1.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 42,
+          "beat": 4.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 43,
+          "beat": 2.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 44,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        }
+      ],
+      "drums": [
+        {
+          "bar": 35,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        }
+      ],
+      "bass": [],
+      "tab": []
+    },
+    {
+      "name": "Sloka 4",
+      "startBar": 45,
+      "source": "manual",
+      "lyrics": [
+        {
+          "bar": 45,
+          "beat": 1.0,
+          "text": "4. Skončili jsme jasná zpráva,",
+          "source": "manual"
+        },
+        {
+          "bar": 47,
+          "beat": 1.0,
+          "text": "není komu z okna mávat víc,",
+          "source": "manual"
+        },
+        {
+          "bar": 49,
+          "beat": 1.0,
+          "text": "jasná zpráva, rub, co nemá líc. Óooo",
+          "source": "manual"
+        }
+      ],
+      "chords": [
+        {
+          "bar": 45,
+          "beat": 2.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 46,
+          "beat": 3.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 47,
+          "beat": 1.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 48,
+          "beat": 1.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 48,
+          "beat": 3.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 49,
+          "beat": 1.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 49,
+          "beat": 3.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 50,
+          "beat": 2.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 51,
+          "beat": 2.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 51,
+          "beat": 3.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 51,
+          "beat": 4.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 52,
+          "beat": 1.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 52,
+          "beat": 2.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 52,
+          "beat": 3.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 52,
+          "beat": 4.0,
+          "chord": "G",
+          "source": "manual"
+        },
+        {
+          "bar": 53,
+          "beat": 2.0,
+          "chord": "Gmaj7",
+          "source": "manual"
+        },
+        {
+          "bar": 53,
+          "beat": 3.0,
+          "chord": "Emi",
+          "source": "manual"
+        },
+        {
+          "bar": 53,
+          "beat": 4.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 54,
+          "beat": 1.0,
+          "chord": "D",
+          "source": "manual"
+        },
+        {
+          "bar": 54,
+          "beat": 2.0,
+          "chord": "Ami",
+          "source": "manual"
+        },
+        {
+          "bar": 54,
+          "beat": 3.0,
+          "chord": "C",
+          "source": "manual"
+        },
+        {
+          "bar": 54,
+          "beat": 4.0,
+          "chord": "G",
+          "source": "manual"
+        }
+      ],
+      "drums": [
+        {
+          "bar": 45,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 2.0,
+          "sample": "tom_hi",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 71,
+          "beat": 4.5,
+          "sample": "tom_low",
+          "source": "gp"
+        },
+        {
+          "bar": 72,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        }
+      ],
+      "bass": [],
+      "tab": []
+    }
+  ],
+  "screens": [
+    {
+      "bar": 1,
+      "beat": 1.0,
+      "mode": "chords-only",
+      "source": "generated"
+    },
+    {
+      "bar": 7,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 9,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 11,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 13,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 15,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 17,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 19,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 21,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 23,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 25,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 27,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 29,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 31,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 33,
+      "beat": 2.0,
+      "mode": "chords-only",
+      "source": "generated"
+    },
+    {
+      "bar": 37,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 39,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 41,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 43,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 45,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 47,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 49,
+      "beat": 1.0,
+      "mode": "lyrics+chords",
+      "source": "generated"
+    },
+    {
+      "bar": 51,
+      "beat": 2.0,
+      "mode": "chords-only",
+      "source": "generated"
+    }
+  ]
+}
