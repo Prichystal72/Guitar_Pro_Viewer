@@ -452,6 +452,48 @@ def is_solo_like(track) -> bool:
     return False
 
 
+# --- automatická extrakce ASCII sólo tabulatury z GP not ---------------------
+#
+# Uživatel si tabulaturu obvykle NAPÍŠE ručně (viz `BlockItem` kind="tab" v
+# timeline_editor.py), ale u GP souborů se solidním přepisem (typicky
+# stažených ze Songsterr Plus apod., kde má string/fret/techniku přesně) se
+# vyplatí ASCII blok rovnou vygenerovat — uživatel si ho pak jen doladí,
+# místo aby opisoval celé sólo od nuly. Samotný renderer je sdílený s MIDI
+# importem (`midi_import.py`) — viz `ascii_tab.py`.
+
+from ascii_tab import segment_and_render_tab_blocks as _segment_and_render_tab_blocks
+
+
+def _note_tech_char(note) -> str:
+    """Krátký textový sufix za pražcem v ASCII tabulatuře (viz
+    `ascii_tab.render_ascii_tab_block`) — 'h' hammer-on/pull-off (GP3
+    attribut `hammer` nerozlišuje směr), '~' vibrato, '/' slide, 'b' bend."""
+    if not note.effect:
+        return ""
+    e = note.effect
+    tech = ""
+    if e.hammer:
+        tech += "h"
+    if e.vibrato:
+        tech += "~"
+    if e.slides:
+        tech += "/"
+    if e.bend and e.bend.points:
+        tech += "b"
+    return tech
+
+
+def _tab_string_labels(track) -> list[str]:
+    """Jedno písmeno na strunu (bez oktávy) pro levý okraj ASCII tabulatury
+    — první (nejvyšší, `string==1`) struna malým písmenem podle konvence
+    ("e|---" u standardního ladění), zbytek velkým, přesně jako v
+    uživatelově referenčním příkladu."""
+    labels = [midi_to_name(s.value) for s in track.strings]
+    if labels:
+        labels[0] = labels[0].lower()
+    return labels
+
+
 # Druh stopy → i18n klíč popisku ve sloupci "Typ" levého panelu. Skutečný
 # text se dopočítává přes `_track_type_label()` znovu při KAŽDÉM přepnutí
 # jazyka (viz `_retranslate_track_tree`, registrováno v `_setup_ui`) — bez
@@ -1110,6 +1152,10 @@ class GuitarProViewer(QMainWindow):
                                    shortcut="Ctrl+I", slot=self.open_file,
                                    icon=std_icon(self, QStyle.StandardPixmap.SP_ArrowDown))
         file_menu.addAction(act_import_gp)
+        act_import_midi = tr_action(self, "file.import_midi", tooltip_key="file.import_midi.tooltip",
+                                     shortcut="Ctrl+Shift+I", slot=self.open_midi,
+                                     icon=std_icon(self, QStyle.StandardPixmap.SP_ArrowDown))
+        file_menu.addAction(act_import_midi)
         file_menu.addSeparator()
         act_save = tr_action(self, "file.save", tooltip_key="file.save.tooltip",
                               shortcut="Ctrl+S", slot=self.save_json,
@@ -1190,6 +1236,10 @@ class GuitarProViewer(QMainWindow):
                                    slot=lambda: self.timeline.add_block("chord"),
                                    icon=icon("add_chord"))
         timeline_menu.addAction(act_add_chord)
+        act_add_tab = tr_action(self, "timeline.add_tab", tooltip_key="timeline.add_tab.tooltip",
+                                 slot=lambda: self.timeline.add_block("tab"),
+                                 icon=icon("add_lyric"))
+        timeline_menu.addAction(act_add_tab)
         timeline_menu.addSeparator()
         act_autotime = tr_action(self, "timeline.autotime", tooltip_key="timeline.autotime.tooltip",
                                   slot=lambda: self.timeline.auto_time_dialog(), icon=icon("ruler"))
@@ -1287,6 +1337,7 @@ class GuitarProViewer(QMainWindow):
         tb.addSeparator()
         tb.addAction(act_open_json)
         tb.addAction(act_import_gp)
+        tb.addAction(act_import_midi)
         tb.addSeparator()
         tb.addAction(act_save)
         tb.addAction(act_save_as)
@@ -1326,6 +1377,7 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addAction(act_count_in)
         tb_timeline.addAction(act_add_lyric)
         tb_timeline.addAction(act_add_chord)
+        tb_timeline.addAction(act_add_tab)
         tb_timeline.addAction(act_delete)
         tb_timeline.addAction(act_shift_sel)
         tb_timeline.addSeparator()
@@ -1481,6 +1533,35 @@ class GuitarProViewer(QMainWindow):
         self.current_gp_file = None
         self.current_json_file = path
         self._present_karaoke_data(data, source_desc=tr("source.json", path=path))
+
+    def open_midi(self) -> None:
+        """Import ze standardního .mid/.midi souboru (`midi_import.py`) —
+        VŽDY do NOVÉ karty (na rozdíl od GP importu, který doplňuje
+        aktuální — MIDI nemá GP `Song` objekt, se kterým by šlo cokoliv
+        sloučit, takže sloučení do rozpracované karty nedává smysl).
+        Typický zdroj: placený export ze Songsterr Plus (MIDI/Guitar Pro/
+        MP3/WAV) pro soubory, které `pyguitarpro` neumí přečíst (GP6/GP7+,
+        viz `_unsupported_gp_format`)."""
+        path, _ = QFileDialog.getOpenFileName(
+            self, tr("file.import_midi.dialog_title"), "",
+            tr("file.import_midi.dialog_filter")
+        )
+        if not path:
+            return
+        import midi_import as MI
+        try:
+            data, warnings = MI.build_karaoke_json_from_midi(path)
+        except Exception as ex:
+            QMessageBox.critical(self, tr("common.error_title"),
+                                 tr("midi_import.load_error_body", ex=ex))
+            self.status.showMessage(tr("status.load_error"))
+            return
+        self._tab_for_new_document()
+        self.current_gp_file = None
+        self.current_json_file = None
+        self._present_karaoke_data(data, source_desc=tr("source.midi", path=path))
+        if warnings:
+            QMessageBox.warning(self, tr("midi_import.warnings_title"), "\n\n".join(warnings))
 
     def _render_docks_from_json(self) -> None:
         """Vykreslí sdílené doky (Stopy/Náhledy) z `self.timeline.data`
@@ -2050,7 +2131,15 @@ class GuitarProViewer(QMainWindow):
         - **Bicí** i **basa** (4strunná, ne bicí) se exportují vždy (do
           `drums_timeline`/`bass_timeline`) — basa nese výšku (`midi`/
           `note_name`/`string`/`fret`), stejně jako v `_gp_bass_for_merge`.
-        - Do `tracks[]` jde jen zpěv, bicí, basa a stopy nesoucí akordy.
+        - **Sólo tabulatura** (stopa detekovaná `is_solo_like()` — jméno
+          "solo/lead", nebo hodně bend efektů) se z GP not AUTOMATICKY
+          vygeneruje jako ASCII bloky do `tab_timeline` (`_render_ascii_tab_
+          block`/`_segment_and_render_tab_blocks`) — noty se rozdělí na
+          fráze podle pauz a každá se vykreslí jako textový blok se
+          `source: "gp"`. Blok je pak v editoru normální `BlockItem`
+          (kind="tab") — text lze ručně doladit/přepsat stejně jako
+          kterýkoli jiný ručně napsaný blok.
+        - Do `tracks[]` jde zpěv, bicí, basa, sólo a stopy nesoucí akordy.
         """
         song = self.song
         if not song:
@@ -2097,12 +2186,14 @@ class GuitarProViewer(QMainWindow):
             "chords_timeline": [],
             "drums_timeline": [],
             "bass_timeline": [],
+            "tab_timeline": [],
             "karaoke_lines": [],
         }
 
         all_chord_events: list[dict] = []
         all_drum_events: list[dict] = []
         all_bass_events: list[dict] = []
+        all_tab_events: list[dict] = []
         vocal_beats: list[dict] = []   # {time_s, duration_s, text} ze zpěvní stopy
         contributes: dict[int, bool] = {}
 
@@ -2122,7 +2213,9 @@ class GuitarProViewer(QMainWindow):
                 "is_drums": track.isPercussionTrack,
                 "instrument_midi": track.channel.instrument if track.channel else 0,
             }
-            contributes[ti] = track.isPercussionTrack or (ti == vocal_ti) or track_type == "bass"
+            contributes[ti] = (track.isPercussionTrack or (ti == vocal_ti)
+                              or track_type in ("bass", "solo_guitar"))
+            track_solo_notes: list[tuple[float, int, int, str, float]] = []
 
             # walk_track_beats = repetice rozbalené (viz jeho docstring) —
             # naivní `for m in track.measures` dělalo časovou osu kratší
@@ -2155,6 +2248,13 @@ class GuitarProViewer(QMainWindow):
                         })
                     continue
 
+                if track_type == "solo_guitar":
+                    bpm = tempo_at_tick(b.start, self.tempo_map)
+                    for n in sorted(b.notes, key=lambda n: n.string):
+                        track_solo_notes.append(
+                            (time_s, n.string, n.value, _note_tech_char(n), bpm))
+                    continue
+
                 chord_name = get_chord_name(b)
                 if chord_name:
                     all_chord_events.append({
@@ -2172,11 +2272,18 @@ class GuitarProViewer(QMainWindow):
                             "text": beat_txt.strip(),
                         })
 
+            if track_solo_notes:
+                track_solo_notes.sort(key=lambda e: e[0])
+                all_tab_events.extend(_segment_and_render_tab_blocks(
+                    track_solo_notes, _tab_string_labels(track), ti,
+                    tuning=[s.value for s in track.strings]))
+
             if contributes[ti]:
                 result["tracks"].append(track_data)
 
         all_chord_events.sort(key=lambda e: e["time_s"])
         all_drum_events.sort(key=lambda e: e["time_s"])
+        all_tab_events.sort(key=lambda e: e["time_s"])
         vocal_beats.sort(key=lambda e: e["time_s"])
 
         all_lyrics_events, line_ranges = self._vocal_beats_to_lines(vocal_beats, vocal_ti)
@@ -2210,6 +2317,7 @@ class GuitarProViewer(QMainWindow):
         result["chords_timeline"] = all_chord_events
         result["drums_timeline"] = all_drum_events
         result["bass_timeline"] = all_bass_events
+        result["tab_timeline"] = all_tab_events
 
         # karaoke_lines — jeden záznam na řádek
         karaoke_lines: list[dict] = []

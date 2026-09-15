@@ -44,12 +44,17 @@ def _line_types() -> list[tuple[str, str]]:
 # Chord detekce
 # ---------------------------------------------------------------------------
 
-# Podpora českého značení akordů:
+# Podpora českého/německého značení akordů:
 #   H = B (české H), mi = moll (Ami, Hmi, Cmi …), basový tón /H
+#   Německé předznamenání (běžné na českých akordových webech): "is" = křížek
+#   (Cis, Fis, Gis, Dis, Ais), "es"/"s" = béčko (Ces, Des, Ges / As, Es —
+#   u A a E se "e" vynechává). Bez týhle přípony se "Es"/"As" (moll akord Es,
+#   Ab) rozpoznaly jako obyčejný text, ne jako akord, a spadly do textu
+#   písně (viz oprava "web import: German-style akordy Es/As/cmi…").
 _CHORD_RE = re.compile(
-    r'^[A-H][#b]?'
+    r'^[A-H](?:#|b|is|es|s)?'
     r'(mi|maj7?|m(?:in)?7?|M7?|aug|dim7?|sus[24]?|add\d+|\d{1,2}|[#+°ø])*'
-    r'(/[A-H][#b]?)?$'
+    r'(/[A-H](?:#|b|is|es|s)?)?$'
 )
 _SECTION_RE = re.compile(
     r'^\[.+\]$|^(Verse|Chorus|Bridge|Outro|Intro|Pre.?Chorus|Interlude'

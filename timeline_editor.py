@@ -44,6 +44,7 @@ from jog_shuttle import JogShuttleWidget
 from waveform import WaveformData, WaveformLoader, estimate_alignment
 from i18n import tr, tr_action, register_tr, tr_label
 from icons import icon, std_icon
+import ascii_tab
 
 # --- ikonky bicích (assets/drum_icons/*), klíč = _drum_icon_key() ---
 DRUM_ICON_DIR = os.path.join(os.path.dirname(__file__), "assets", "drum_icons")
@@ -117,6 +118,8 @@ BLOCK_MIN_W = 14
 EDGE = 6            # zóna u okraje pro resize
 DRUM_ICON_SIZE = 22     # px — fixní velikost ikonky bubnu v pruhu bicích
 DRUM_ROW_H = 26.0       # px — výška JEDNOHO řádku bicí stopy (ikona + okraj)
+TAB_BLOCK_H = 100.0     # px — výška bloku sólo tabulatury (6 řádků ASCII + okraj)
+TAB_BLOCK_DEFAULT_DUR_S = 4.0   # výchozí délka nově přidaného ASCII bloku sóla
 UNDO_LIMIT = 50         # max. počet kroků historie (deepcopy self.data na krok)
 WAVEFORM_MIN_H = 24.0    # px — nejmenší výška stopy vlnovky (tažením dolů)
 WAVEFORM_MAX_H = 200.0   # px — největší výška (ať je vidět i tichý nástup bicích)
@@ -128,6 +131,7 @@ LINE_COLOR = QColor("#9141ac")   # fialová = karaoke řádky
 
 CHORD_COLOR = QColor("#1a5fb4")
 LYRIC_COLOR = QColor("#2d7d2d")
+TAB_COLOR = QColor("#7c3fc9")
 SEL_COLOR = QColor("#e5a50a")
 
 def _track_fallback_name(ti) -> str:
@@ -556,7 +560,8 @@ def _apply_group_snap(item, editor: "TimelineEditor", new_pos: QPointF, lane_y: 
 
 
 class BlockItem(QGraphicsRectItem):
-    """Jeden blok na časové ose (text nebo akord), navázaný na event dict."""
+    """Jeden blok na časové ose (text, akord, nebo — `kind="tab"` — ASCII
+    blok sólo tabulatury), navázaný na event dict."""
 
     def __init__(self, editor: "TimelineEditor", event: dict, kind: str, lane_y: float, height: float):
         super().__init__()
@@ -590,8 +595,12 @@ class BlockItem(QGraphicsRectItem):
         try:
             pps = self.editor.pps
             t = float(self.event.get("time_s", 0.0))
-            dur = float(self.event.get("duration_s", 0.5)) if self.kind == "lyric" else \
-                float(self.event.get("duration_s", self.editor.default_chord_dur))
+            if self.kind == "lyric":
+                dur = float(self.event.get("duration_s", 0.5))
+            elif self.kind == "tab":
+                dur = float(self.event.get("duration_s", TAB_BLOCK_DEFAULT_DUR_S))
+            else:
+                dur = float(self.event.get("duration_s", self.editor.default_chord_dur))
             w = max(BLOCK_MIN_W, dur * pps)
             self.setRect(0, 0, w, self.h)
             self.setPos(HEADER_W + t * pps, self.lane_y)
@@ -599,11 +608,13 @@ class BlockItem(QGraphicsRectItem):
             self._syncing = False
 
     def _label(self) -> str:
-        return self.event.get("text", "") if self.kind == "lyric" else self.event.get("chord", "")
+        if self.kind == "chord":
+            return self.event.get("chord", "")
+        return self.event.get("text", "")   # 'lyric' i 'tab' (ASCII blok, viz JSON_FORMAT.md §3.6)
 
     # --- vykreslení ---
     def paint(self, p: QPainter, opt, widget=None):
-        base = CHORD_COLOR if self.kind == "chord" else LYRIC_COLOR
+        base = TAB_COLOR if self.kind == "tab" else CHORD_COLOR if self.kind == "chord" else LYRIC_COLOR
         if self.isSelected():
             base = SEL_COLOR
         r = self.rect()
@@ -611,6 +622,18 @@ class BlockItem(QGraphicsRectItem):
         p.setPen(QPen(base, 1.5))
         p.drawRoundedRect(r, 4, 4)
         p.setPen(QPen(QColor("#1a1a1a")))
+        if self.kind == "tab":
+            # ASCII tabulatura — monospace, řádek po řádku (6 linek strun,
+            # jak to napsal uživatel/GP), ne jeden vystředěný nápis
+            f = QFont("Consolas", 9)
+            p.setFont(f)
+            fm = p.fontMetrics()
+            lines = self._label().split("\n") or [""]
+            y = r.top() + fm.ascent() + 2
+            for line in lines:
+                p.drawText(QPointF(r.left() + 4, y), line)
+                y += fm.height()
+            return
         f = QFont("Segoe UI", 9)
         f.setBold(self.kind == "chord")
         p.setFont(f)
@@ -1015,9 +1038,9 @@ class DrumShiftButton(QGraphicsRectItem):
 
 def _add_paste_action(menu: QMenu, editor: "TimelineEditor"):
     """Sdílená položka „Vložit sem“ pro kontextová menu pozadí stop
-    (`DrumRowBackground`/`BassLaneBackground`) — vrátí přidanou akci, nebo
-    `None`, když je schránka prázdná (pak se do menu vůbec nepřidá nic
-    navíc, viz `copy_selected`/`cut_selected`)."""
+    (`DrumRowBackground`/`BassLaneBackground`/`TabLaneBackground`) — vrátí
+    přidanou akci, nebo `None`, když je schránka prázdná (pak se do menu
+    vůbec nepřidá nic navíc, viz `copy_selected`/`cut_selected`)."""
     if not editor._clipboard:
         return None
     menu.addSeparator()
@@ -2038,7 +2061,8 @@ class TimelineEditor(QWidget):
         # bicí/basa (dřív chyběly — instrumentální outro může mít bicí déle,
         # než sahá poslední text/akord, a zrovna DÉLKA bicích z GP je to,
         # co chceme umět ověřit proti reálné nahrávce — viz set_bpm/waveform)
-        for ev in self.data.get("drums_timeline", []) + self.data.get("bass_timeline", []):
+        for ev in (self.data.get("drums_timeline", []) + self.data.get("bass_timeline", [])
+                   + self.data.get("tab_timeline", [])):
             max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 0)))
         for t in self.tracks:
             for b in t.get("beats", []) or []:
@@ -2279,7 +2303,8 @@ class TimelineEditor(QWidget):
         # tak neměl žádný řádek → úder se přidal do dat, ale nikdy se
         # nevykreslil, viz oprava „vložit bicí z jiného souboru")
         for ev in (self.data.get("lyrics_timeline", []) + self.data.get("chords_timeline", [])
-                   + self.data.get("drums_timeline", []) + self.data.get("bass_timeline", [])):
+                   + self.data.get("drums_timeline", []) + self.data.get("bass_timeline", [])
+                   + self.data.get("tab_timeline", [])):
             ti = ev.get("track_index", 1)
             if ti not in idxs:
                 idxs.append(ti)
@@ -2305,6 +2330,8 @@ class TimelineEditor(QWidget):
             max_t = max(max_t, float(ev.get("time_s", 0)))
         for ev in self.data.get("bass_timeline", []):
             max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 0)))
+        for ev in self.data.get("tab_timeline", []):
+            max_t = max(max_t, float(ev.get("time_s", 0)) + float(ev.get("duration_s", 0)))
         if self.waveform is not None:
             max_t = max(max_t, self._audio_to_timeline_t(self.waveform.duration_s))
 
@@ -2319,6 +2346,8 @@ class TimelineEditor(QWidget):
                 lane_h[ti] = 0.0
             elif self._track_is_drums(ti):
                 lane_h[ti] = 8 + self._drum_row_count(ti) * DRUM_ROW_H + TRACK_GAP
+            elif self._track_is_tab(ti):
+                lane_h[ti] = TAB_BLOCK_H + TRACK_GAP
             else:
                 lane_h[ti] = PER_TRACK
 
@@ -2343,6 +2372,9 @@ class TimelineEditor(QWidget):
                 self._draw_drums_lane(ti, top, names.get(ti, _track_fallback_name(ti)), total_w, h_slot)
             elif self._track_is_bass(ti):
                 self._draw_bass_lane(ti, top, names.get(ti, _track_fallback_name(ti)), total_w, h_slot)
+            elif self._track_is_tab(ti):
+                self._track_lane[ti] = {"tab_y": top + 2}
+                self._draw_tab_track_bg(ti, top, names.get(ti, _track_fallback_name(ti)), total_w)
             else:
                 line_y = top + 2
                 chord_y = line_y + LINE_H
@@ -2356,6 +2388,8 @@ class TimelineEditor(QWidget):
             self._add_block_item(ev, "chord")
         for ev in self.data.get("lyrics_timeline", []):
             self._add_block_item(ev, "lyric")
+        for ev in self.data.get("tab_timeline", []):
+            self._add_block_item(ev, "tab")
 
         # kurzor (playhead) navrchu všeho
         self._playhead = PlayheadItem(self, total_h)
@@ -2860,8 +2894,8 @@ class TimelineEditor(QWidget):
         self.audio_label.setStyleSheet("color:#c01c28;")
 
     def _on_playback_state_changed(self, _state=None) -> None:
-        """Napojeno na VŠECHNY přehrávače (nahrávka + GP bicí + GP basa) —
-        přehrává se, pokud hraje ASPOŇ JEDEN z nich (ne podle argumentu
+        """Napojeno na VŠECHNY přehrávače (nahrávka + GP bicí + GP basa)
+        — přehrává se, pokud hraje ASPOŇ JEDEN z nich (ne podle argumentu
         signálu, ten by u jiného přehrávače přepsal stav prvního); viz
         `toggle_play_pause` pro stejný princip "ověř skutečný stav, ne co
         si widget pamatuje")."""
@@ -3116,9 +3150,9 @@ class TimelineEditor(QWidget):
             self._on_audio_devices_changed()
 
     def play_audio(self) -> None:
-        """Spustí VŠECHNY přehrávače (nahrávka + GP bicí mix + GP basa mix),
-        pokud mají zdroj — sdílejí transport, aby šlo poslouchat souběžně/
-        A-B (viz hlasitostní slidery „Nahrávka“/„GP bicí“/„GP basa“)."""
+        """Spustí VŠECHNY přehrávače (nahrávka + GP bicí/basa mix), pokud
+        mají zdroj — sdílejí transport, aby šlo poslouchat souběžně/A-B
+        (viz hlasitostní slidery „Nahrávka“/„GP bicí“/„GP basa“)."""
         if (not self.player.source().isValid() and not self.gp_player.source().isValid()
                 and not self.bass_player.source().isValid()):
             return
@@ -3144,7 +3178,7 @@ class TimelineEditor(QWidget):
     def toggle_play_pause(self) -> None:
         """Spojené tlačítko ▶/⏸ na ovladači — rozhoduje se podle SKUTEČNÉHO
         stavu PŘEHRÁVAČŮ (ne podle toho, co si pamatuje widget), aby se stav
-        tlačítka nemohl rozejít s realitou. Hraje-li ASPOŇ JEDEN z trojice
+        tlačítka nemohl rozejít s realitou. Hraje-li ASPOŇ JEDEN z party
         (nahrávka/GP bicí/GP basa), tlačítko pauzíruje všechny; jinak
         všechny spustí."""
         playing = (self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
@@ -3231,8 +3265,8 @@ class TimelineEditor(QWidget):
 
         Hodiny (co udává aktuální čas) jsou přednostně skutečná nahrávka
         (`self.player`, respektuje offset/stretch) — pokud není načtená,
-        řídí se GP bicí mixem, a pokud není ani ten, GP basa mixem; oba
-        jsou 1:1 s časovou osou (bez převodu)."""
+        řídí se GP bicí mixem, pak GP basa mixem; všechny jsou 1:1 s
+        časovou osou (bez převodu)."""
         if self.player.source().isValid():
             t = self._audio_to_timeline_t(self.player.position() / 1000.0)
         elif self.gp_player.source().isValid():
@@ -3384,6 +3418,26 @@ class TimelineEditor(QWidget):
             it.setPos(12, y); it.setBrush(QBrush(QColor(col)))
             self._register_header_item(it, 12)
         self._add_lyrics_shift_controls(ti, top)
+
+    def _draw_tab_track_bg(self, ti: int, top: float, name: str, total_w: float) -> None:
+        """Vykreslí stopu se sólo tabulaturou — jeden vysoký pruh pro ASCII
+        bloky (`BlockItem` s `kind="tab"`, viz `JSON_FORMAT.md` §3.6), NE
+        řádky/akordy/text jako `_draw_lane_bg`. Obsah bloku je přímo
+        vložený/editovaný ASCII text (6 řádků strun), ne odvozený
+        z jednotlivých not na časové ose — přidává se přes kontextové menu
+        prázdného místa v pruhu (`+ Sólo` / dvojklik na blok = editace)."""
+        tab_y = top + 2
+        w = total_w - HEADER_W
+        self.scene.addRect(HEADER_W, tab_y, w, TAB_BLOCK_H,
+                           QPen(Qt.NoPen), QBrush(QColor("#f6f0fc")))
+        self._register_header_item(
+            self.scene.addRect(0, top, HEADER_W, TAB_BLOCK_H - TRACK_GAP + 2,
+                               QPen(QColor("#c9b3e6")), QBrush(QColor("#f1e8fb"))))
+        nm = self.scene.addSimpleText("🎸 " + name)
+        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm.setPos(6, top + 3)
+        nm.setBrush(QBrush(QColor("#7c3fc9")))
+        self._register_header_item(nm, 6)
 
     def _add_lyrics_shift_controls(self, ti: int, top: float) -> None:
         """Tlačítka v hlavičce textové stopy pro posun VŠECH slov i akordů
@@ -3716,6 +3770,14 @@ class TimelineEditor(QWidget):
         # (typicky vloženo napříč soubory), pozná se podle bass_timeline
         return any(ev.get("track_index") == ti for ev in self.data.get("bass_timeline", []))
 
+    def _track_is_tab(self, ti: int) -> bool:
+        for t in self.tracks:
+            if t.get("index") == ti:
+                return t.get("type") == "solo_guitar"
+        # viz komentář u _track_is_drums — stopa nedeklarovaná v self.tracks
+        # (typicky vloženo napříč soubory), pozná se podle tab_timeline
+        return any(ev.get("track_index") == ti for ev in self.data.get("tab_timeline", []))
+
     def _draw_bass_lane(self, ti: int, top: float, name: str, total_w: float,
                         h_slot: float | None = None) -> None:
         """Vykreslí basovou stopu: noty jako úsečky (délka = duration_s) ve
@@ -3767,8 +3829,12 @@ class TimelineEditor(QWidget):
         lane = self._track_lane.get(ti)
         if lane is None:
             return
-        y = lane["chord_y"] if kind == "chord" else lane["lyric_y"]
-        h = CHORD_H - 4 if kind == "chord" else LYRIC_H - 4
+        if kind == "chord":
+            y, h = lane["chord_y"], CHORD_H - 4
+        elif kind == "tab":
+            y, h = lane["tab_y"], TAB_BLOCK_H - 6
+        else:
+            y, h = lane["lyric_y"], LYRIC_H - 4
         block = BlockItem(self, ev, kind, y + 2, h)
         self.scene.addItem(block)
         self.blocks.append(block)
@@ -3797,6 +3863,17 @@ class TimelineEditor(QWidget):
             if ok:
                 self._push_undo()
                 block.event["chord"] = text.strip()
+        elif block.kind == "tab":
+            # ASCII tabulatura je víceřádková — jednořádkový QInputDialog.getText
+            # by ji rozbil, proto getMultiLineText (viz JSON_FORMAT.md §3.6:
+            # obsah je přímo vložený text, ne odvozený z jednotlivých not)
+            text, ok = QInputDialog.getMultiLineText(
+                self, tr("dialog.edit_tab_title"), tr("dialog.edit_tab_label"),
+                block.event.get("text", ""))
+            if ok:
+                self._push_undo()
+                block.event["text"] = text.rstrip("\n")
+                self._regen_tab_variants(block.event)
         else:
             text, ok = QInputDialog.getText(self, tr("dialog.edit_text_title"), tr("dialog.edit_text_label"),
                                             text=block.event.get("text", ""))
@@ -3805,19 +3882,58 @@ class TimelineEditor(QWidget):
                 block.event["text"] = text.strip()
         block.update()
 
+    def _regen_tab_variants(self, ev: dict) -> None:
+        """Po každé úpravě ručně psaného ASCII bloku (`edit_block`/
+        `add_block`) přegeneruje transpoziční varianty
+        (`ascii_tab.generate_transpose_variants`) — staré varianty by po
+        změně textu odpovídaly JINÉMU obsahu, takže se musí buď
+        přepočítat, nebo (když text nejde bezpečně rozebrat zpátky na
+        noty — jiná konvence zápisu než appka generuje) smazat úplně, aby
+        firmware neukázal zastaralý/nesouhlasící posun."""
+        variants = ascii_tab.generate_transpose_variants(ev.get("text", ""))
+        if variants is None:
+            ev.pop("variants", None)
+        else:
+            ev["variants"] = variants
+
+    # Výchozí ASCII šablona nového bloku sóla — standardní ladění (e nejtenčí
+    # nahoře), uživatel/GP si obsah přepíše přes edit_block()/import.
+    _DEFAULT_TAB_TEXT = (
+        "e|--------------------|\n"
+        "B|--------------------|\n"
+        "G|--------------------|\n"
+        "D|--------------------|\n"
+        "A|--------------------|\n"
+        "E|--------------------|"
+    )
+
     def add_block(self, kind: str) -> None:
         self._push_undo()
         order = self._track_order()
-        ti = order[0] if order else 1
         if kind == "chord":
+            ti = order[0] if order else 1
             ev = {"time_s": 0.0, "duration_s": self.default_chord_dur,
                   "chord": "C", "measure": 1, "track_index": ti, "source": "manual"}
             self.data.setdefault("chords_timeline", []).append(ev)
+        elif kind == "tab":
+            # cílí na stopu typu "solo_guitar" — vytvoří ji, pokud song
+            # zatím žádnou nemá (čistě GP import/web bez sóla)
+            ti = next((t for t in order if self._track_is_tab(t)), None)
+            if ti is None:
+                ti = (max(order) + 1) if order else 1
+                self.tracks.append({"index": ti, "name": tr("track.solo_fallback_name"),
+                                    "type": "solo_guitar", "is_drums": False})
+                self.data["tracks"] = self.tracks
+            ev = {"time_s": 0.0, "duration_s": TAB_BLOCK_DEFAULT_DUR_S,
+                  "text": self._DEFAULT_TAB_TEXT, "track_index": ti, "source": "manual"}
+            self._regen_tab_variants(ev)
+            self.data.setdefault("tab_timeline", []).append(ev)
         else:
+            ti = order[0] if order else 1
             ev = {"time_s": 0.0, "duration_s": 0.5, "text": "text",
                   "measure": 1, "track_index": ti, "source": "manual"}
             self.data.setdefault("lyrics_timeline", []).append(ev)
-        self._add_block_item(ev, kind)
+        self._relayout()
 
     # --- přichycení na mřížku (jediný correctní způsob časování — dle tempa,
     #     žádné odhady z délky textu/slabik) ---
@@ -4047,7 +4163,8 @@ class TimelineEditor(QWidget):
                 continue
             if not isinstance(it, BlockItem):
                 continue
-            key = "chords_timeline" if it.kind == "chord" else "lyrics_timeline"
+            key = ("chords_timeline" if it.kind == "chord" else
+                   "tab_timeline" if it.kind == "tab" else "lyrics_timeline")
             try:
                 self.data.get(key, []).remove(it.event)
             except ValueError:
@@ -4070,8 +4187,7 @@ class TimelineEditor(QWidget):
         entries = []
         for it in sel:
             if isinstance(it, BlockItem):
-                entries.append(("chord" if it.kind == "chord" else "lyric",
-                                dict(it.event), self._item_time(it)))
+                entries.append((it.kind, dict(it.event), self._item_time(it)))
             elif isinstance(it, DrumHitItem):
                 entries.append(("drum", dict(it.event), self._item_time(it)))
             elif isinstance(it, BassNoteItem):
@@ -4127,6 +4243,11 @@ class TimelineEditor(QWidget):
                 d["time_s"] = new_t
                 d.pop("line", None)
                 self.data.setdefault("chords_timeline", []).append(d)
+            elif kind == "tab":
+                d["time_s"] = new_t
+                if target_ti is not None:
+                    d["track_index"] = target_ti
+                self.data.setdefault("tab_timeline", []).append(d)
             elif kind == "drum":
                 d["time_s"] = new_t
                 if target_ti is not None:

@@ -2,9 +2,12 @@
 
 > **Účel:** závazný návod pro implementaci **přehrávače karaoke JSONu** na
 > ESP32. Popisuje, jak z JSONu řídit displej (**které řádky ve správný čas**,
-> **akordy nad textem**), jak přehrávat **bicí** (`sections[].drums`, dnes
-> implementováno) a **basu** (`sections[].bass`, **zatím NEimplementováno** —
-> viz §5).
+> **akordy nad textem**, **sólo tabulatura** — `sections[].tab`, **zatím
+> NEimplementováno**, viz §3.3b), jak přehrávat **bicí** (`sections[].drums`,
+> dnes implementováno) a **basu** (`sections[].bass`, **zatím
+> NEimplementováno** — viz §5). Sólo je na rozdíl od basy **jen vizuální**
+> (noty pro živého kytaristu, ne zvuk k přehrání) — firmware ho zobrazuje,
+> nehraje.
 >
 > **Vstup:** výstup `TimelineEditor.to_json()` — `schemaVersion: 1`, formát
 > viz `JSON_FORMAT.md`. **Tohle nahrazuje dřívější verzi tohoto dokumentu**,
@@ -21,15 +24,17 @@
 
 1. Načti JSON, ověř `schemaVersion == 1`.
 2. Při načtení (jednou) spočítej z `tempoMap`+`meterMap` mřížku `bar/beat ↔
-   ms`, přepočti do ní všechny události (`lyrics`/`chords`/`drums`/`bass`
-   napříč sekcemi do plochých, podle pozice seřazených polí).
+   ms`, přepočti do ní všechny události (`lyrics`/`chords`/`drums`/`bass`/
+   `tab` napříč sekcemi do plochých, podle pozice seřazených polí).
 3. Měj **hodiny přehrávání** `t` (ms od začátku skladby, `t < 0` = ještě
    probíhá odpočet `meta.countInBars`).
 4. Renderuj **bezstavově**: každý snímek zavolej `render(t)`, které z dat
-   samo spočítá, co má být na displeji — **žádná uložená režie** (viz §3,
+   samo spočítá, co má být na displeji — text+akordy, NEBO sólo tabulatura
+   (jiný layout, §3.3b), NEBO jen akord — **žádná uložená režie** (viz §3,
    nahrazuje dřívější `display_timeline`).
 5. **Paralelně** (nezávisle na displeji) přehrávej `sections[].drums`
-   (implementováno, §4) a `sections[].bass` (**úkol**, §5).
+   (implementováno, §4) a `sections[].bass` (**úkol**, §5). `sections[].tab`
+   se **nehraje** — je to vizuální notace pro živého kytaristu (§3.3b).
 
 ---
 
@@ -59,7 +64,7 @@
 
 Struktura `sections[]` je pohodlná pro **ukládání** (pojmenované úseky), ale
 pro **přehrávání** je nejjednodušší si při načtení VŠECHNY položky
-`lyrics`/`chords`/`drums`/`bass` ze všech sekcí slít do čtyř plochých polí,
+`lyrics`/`chords`/`drums`/`bass`/`tab` ze všech sekcí slít do plochých polí,
 seřadit podle `timeMs`, a `sections[].startBar`/`name` použít jen tam, kde
 je fakt potřeba (název sekce na displeji, pokud to chceš zobrazovat).
 
@@ -68,20 +73,27 @@ typedef struct { uint32_t timeMs; const char* text; } KLine;
 typedef struct { uint32_t timeMs; const char* name; } KChord;
 typedef struct { uint32_t timeMs; const char* sample; } KDrum;
 typedef struct { uint32_t timeMs; uint8_t midi; float durS; } KBass;   // §5
+typedef struct {                                                       // §3.3b
+    uint32_t timeMs;
+    const char* text;        // celý ASCII blok, "\n"-oddělené řádky (6 strun typicky)
+    const char* variants[6]; // NULL, nebo hotový alternativní text — index podle
+                              // SEMITONE_TO_VARIANT_IDX (viz §3.3b), pořadí ±1..±3
+} KTabBlock;
 
 typedef struct {
-    KLine*  lines;  uint16_t nLines;    // sections[*].lyrics, seřazené
-    KChord* chords; uint16_t nChords;   // sections[*].chords, seřazené
-    KDrum*  drums;  uint16_t nDrums;    // sections[*].drums, seřazené
-    KBass*  bass;   uint16_t nBass;     // sections[*].bass, seřazené (§5)
+    KLine*     lines;  uint16_t nLines;    // sections[*].lyrics, seřazené
+    KChord*    chords; uint16_t nChords;   // sections[*].chords, seřazené
+    KDrum*     drums;  uint16_t nDrums;    // sections[*].drums, seřazené
+    KBass*     bass;   uint16_t nBass;     // sections[*].bass, seřazené (§5)
+    KTabBlock* tab;    uint16_t nTab;      // sections[*].tab, seřazené (§3.3b)
     float   bpm; uint32_t durationMs; uint16_t countInBars;
 } Song;
 ```
 
 **Při načtení (jednou):** ověř `schemaVersion`, postav mřížku z
 `tempoMap`/`meterMap`, přepočti `bar/beat → timeMs` pro každou položku
-(respektuj `tMsOverride`), setřiď čtyři pole podle `timeMs`. **Za běhu** už
-jen binární hledání.
+(respektuj `tMsOverride`), setřiď pole podle `timeMs`. **Za běhu** už jen
+binární hledání.
 
 ---
 
@@ -103,11 +115,21 @@ void render(uint32_t t) {
         return;
     }
 
-    // 2) žádný řádek aktivní → zkus aktivní akord
+    // 2) žádný řádek aktivní → zkus aktivní okno sóla (JINÝ layout, §3.3b)
+    int ti = lastTabBlockAtOrBefore(t);
+    if (ti >= 0) {
+        uint32_t tabEnd = (ti + 1 < song.nTab) ? song.tab[ti+1].timeMs
+                                                 : song.durationMs;
+        drawTabBlock(&song.tab[ti]);                            // §3.3b — hotový text, jen vypsat
+        drawChordsInWindow(song.tab[ti].timeMs, tabEnd);        // stejný vzorec, §3.2
+        return;
+    }
+
+    // 3) ani řádek, ani sólo → zkus aktivní akord
     int ci = lastChordAtOrBefore(t);
     if (ci >= 0) { drawChordOnly(song.chords[ci].name); return; }
 
-    // 3) ani jedno → idle / úvodní obrazovka / náhled dalšího řádku (volitelné)
+    // 4) nic z toho → idle / úvodní obrazovka / náhled dalšího řádku (volitelné)
     drawIdle(t);
 }
 ```
@@ -136,8 +158,63 @@ NENÍ z klipu, ale z **rozestupu dvou sousedních řádků**.
 
 ### 3.3 `mode: "chords"` (bez textu)
 
-Nastává implicitně, když `t` padne do mezery beze řádku, ale je aktivní
-akord — zobraz ho velkým fontem uprostřed (žádný text).
+Nastává implicitně, když `t` padne do mezery beze řádku i beze sóla, ale je
+aktivní akord — zobraz ho velkým fontem uprostřed (žádný text).
+
+### 3.3b Sólo tabulatura (`sections[].tab`) — ÚKOL, zatím neimplementováno
+
+**Revidováno 2026-09** — první verze tohoto oddílu popisovala tabulaturu po
+JEDNOTLIVÝCH notách (`string`/`fret`/`tech`). To se ukázalo být špatný model
+(uživatel chtěl vizuální tabulaturu jako z papíru/webu, ne strukturovaná
+data odvozená z not) a bylo nahrazeno **hotovými ASCII textovými bloky** —
+viz `JSON_FORMAT.md` §3.6. Každá položka v `tab[]` je CELÝ blok (typicky
+6řádkový text, jeden řádek na strunu), ne jedna nota.
+
+"Aktivní okno" najdeš **stejným binárním hledáním jako u řádku textu**
+(poslední `tab[i].timeMs <= t`, platí do `tab[i+1].timeMs`) — v tomhle se
+nic nezměnilo. Co se zásadně liší, je VYKRESLENÍ:
+
+- **Statická mřížka, ne rolující/wipe text jako u zpěvu** — proto to
+  render() (§3) musí rozeznat jako SAMOSTATNOU větev, ne odvozovat za běhu
+  uprostřed kreslení. Přítomnost dat v `tab[]` pro dané okno JE ten signál
+  (žádné další pole v JSONu navíc netřeba).
+- **`drawTabBlock()` text JEN VYPÍŠE** — rozdělí `song.tab[ti].text` podle
+  `\n` a každý řádek napíše na svůj řádek displeje (monospace font,
+  ideálně stejná šířka znaku jako na desktopu, ať se nic nezalamuje
+  neočekávaně). **Žádné parsování** `string`/`fret`/pozic — to všechno je
+  už hotové v samotném textu (viz `JSON_FORMAT.md` §3.6 pro přesný formát
+  `LABEL|----7----|`). Počet řádků odpovídá počtu `\n`-oddělených řádků v
+  `text` (typicky 6, ale ber to obecně — neházej to na pevných 6).
+- **Transpozice** (kapo/jiná tónina zpěváka) — `variants[]` obsahuje
+  HOTOVÉ alternativní texty pro ±1 až ±3 půltóny (`JSON_FORMAT.md` §3.6,
+  §7.4). Firmware transpozici řeší TRIVIÁLNĚ:
+  ```c
+  const char* tabTextForSemitones(const KTabBlock* blk, int semitones) {
+      if (semitones == 0 || semitones < -3 || semitones > 3) return blk->text;
+      int idx = semitones > 0 ? semitones - 1 : semitones + 3;  // -3..-1,1..3 -> 0..5
+      const char* v = blk->variants[idx];
+      return v ? v : blk->text;   // chybí-li varianta, netransponovaný text jako fallback
+  }
+  ```
+  **Žádné živé přepočítávání ASCII textu na firmwaru** — to už je vyřešené
+  na desktopu (přepočet skutečného hracího hmatu pro posunutou výšku, ne
+  jen `+N` na čísle pražce). Firmware jen vybere správný `const char*`.
+- Číslo pražce je v textu HLAVNÍ obsah — bez něj to není čitelná
+  tabulatura. Technické značky (`h`/`~`/`/`/`b` hned za číslem, bez
+  mezery) jsou volitelný doplňkový symbol, stejná konvence jako na
+  desktopu.
+- **Sólo se NEHRAJE jako zvuk** — na rozdíl od bicích/basy (§4/§5) je to
+  notace PRO ŽIVÉHO KYTARISTU, ne data k syntéze. Firmware ho jen ukazuje.
+  (Appka dřív měla i syntetizátor sóla — byl celý odstraněn, viz
+  `JSON_FORMAT.md` §7.4, uživatel chtěl jen vizuální tabulaturu.)
+- Akordy nad tabulaturou (má-li song v okně nějaké) se kreslí stejným
+  vzorcem jako nad textem (§3.2) — jen zdroj okna je teď sólo, ne řádek.
+
+**Známé omezení `variants`** — dvojhmaty/akordíky v sólu (dvě noty znějící
+SOUČASNĚ) nejsou při přepočtu hmatu explicitně kontrolované na hratelnost
+(mohly by teoreticky vyjít na stejnou strunu). Firmware s tím nemusí nic
+dělat (data přicházejí hotová), ale je to otevřený úkol na desktop straně —
+viz `TODO_FORMAT_V2.md`.
 
 ### 3.4 Count-in (`meta.countInBars`)
 
@@ -263,17 +340,24 @@ nastav `t` a překresli, restart = `t = -countInMs`.
    count-inu.
 6. **Basa hraje nezávisle na displeji stejně jako bicí** (až bude
    implementována, §5) — na správné výšce (`midi`), ne jen jako klik.
-7. Seek na libovolné `t` zobrazí správný řádek/akord bez "dohánění".
-8. Otestuj na [`schema_v1_reference_iron_maiden.json`](schema_v1_reference_iron_maiden.json)
-   — 5168 bicích, 1511 basových not, `countInBars: 2`.
+7. **Sólo tabulatura (`tab[]`) se zobrazí jako statická mřížka (tolik
+   řádků, kolik má `text` — typicky 6 strun)** (až bude implementována,
+   §3.3b) — NENÍ to rolující text, i když se zobrazuje ve STEJNÉM místě
+   displeje jako řádek. Aktivní jen když žádný řádek textu není aktivní
+   (§3 bod 2 má přednost).
+8. Seek na libovolné `t` zobrazí správný řádek/sólo/akord bez "dohánění".
+9. Otestuj na [`schema_v1_reference_iron_maiden.json`](schema_v1_reference_iron_maiden.json)
+   — 5168 bicích, 1511 basových not, sólo tabulatura, `countInBars: 2`.
 
 ---
 
 ### Shrnutí filozofie
 
 > **Firmware si CO/KDY/JAK spočítá sám z `bar`/`beat` pozic v
-> `sections[].lyrics`/`chords`** (§3) — žádná uložená režie.
+> `sections[].lyrics`/`chords`/`tab`** (§3) — žádná uložená režie.
 > **`drums`/`bass` hrají nezávisle na displeji** (§4/§5), stejným `Voice`
-> mixerem. **`render(t)` je bezstavové.** Basa je dnes jediný chybějící
-> kus — data už na to čekají (`JSON_FORMAT.md` §3.5), zbývá jen napsat
-> parser + syntézu (§5).
+> mixerem. **`tab` se naopak nehraje, jen zobrazuje** — jiný vykreslovací
+> režim (statická mřížka strun, §3.3b), ne zvuk. **`render(t)` je
+> bezstavové.** Basa a sólo jsou dnes jediné chybějící kusy — data už na
+> to čekají (`JSON_FORMAT.md` §3.5/§3.6), zbývá jen napsat parser + (u
+> basy) syntézu (§5) / (u sóla) statický render (§3.3b).

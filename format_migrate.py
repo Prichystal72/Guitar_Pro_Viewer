@@ -354,6 +354,28 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
             item["source"] = ev["source"]
         sections[section_index(ev.get("time_s"))]["bass"].append(item)
 
+    # --- sólo tabulatura — ASCII textový blok (ruční vstup, viz `BlockItem`
+    #     v timeline_editor.py), NE po jednotlivých notách jako basa ---
+    for ev in sorted(data.get("tab_timeline") or [], key=lambda e: e.get("time_s", 0)):
+        if in_count_in(ev.get("time_s")):
+            dropped_count_in += 1
+            continue
+        item = pos(ev.get("time_s"))
+        item["text"] = ev.get("text", "")
+        dur_s = float(ev.get("duration_s") or 0.0)
+        if dur_s > 0:
+            b0 = grid.beat(max(0.0, t(ev.get("time_s"))))
+            item["durationBeats"] = round(grid.beat(max(0.0, t(ev.get("time_s")) + dur_s)) - b0, 4)
+        if ev.get("source"):
+            item["source"] = ev["source"]
+        # Předpřipravené transpoziční varianty (`ascii_tab.generate_transpose_
+        # variants`/`segment_and_render_tab_blocks`) — firmware jen PŘEPÍNÁ
+        # mezi hotovými texty podle aktuálního posunu, žádné parsování ASCII
+        # za běhu (viz diskuze o transpozici sóla).
+        if ev.get("variants"):
+            item["variants"] = dict(ev["variants"])
+        sections[section_index(ev.get("time_s"))]["tab"].append(item)
+
     if dropped_count_in:
         warnings.append("Zahozeno %d událostí z pásma odpočtu (klikací stopa "
                         "metronomu) — nový model odpočet neukládá, firmware si "
@@ -362,8 +384,8 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
         warnings.append("%d událostí vyšlo po odečtení odpočtu do záporného času "
                         "— přichyceny na nulu." % below_zero)
 
-    n_events = sum(len(s[k]) for s in sections for k in ("lyrics", "chords", "drums", "bass"))
-    n_override = sum(1 for s in sections for k in ("lyrics", "chords", "drums", "bass")
+    n_events = sum(len(s[k]) for s in sections for k in ("lyrics", "chords", "drums", "bass", "tab"))
+    n_override = sum(1 for s in sections for k in ("lyrics", "chords", "drums", "bass", "tab")
                      for e in s[k] if "tMsOverride" in e)
     if n_override:
         warnings.append("%d z %d událostí (%.1f %%) nesedí na mřížku a nese "
@@ -373,7 +395,7 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
 
     # --- délka písně ---
     ends = [t(meta.get("duration_seconds"))] if meta.get("duration_seconds") else []
-    for key in ("lyrics_timeline", "chords_timeline", "drums_timeline", "bass_timeline"):
+    for key in ("lyrics_timeline", "chords_timeline", "drums_timeline", "bass_timeline", "tab_timeline"):
         for ev in data.get(key) or []:
             ends.append(t(ev.get("time_s")) + float(ev.get("duration_s") or 0.0))
     duration_ms = int(round(max(ends + [0.0]) * 1000))
@@ -435,7 +457,7 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
 # tam, kde začíná následující. Tím je pravidlo „žádný konec" vidět i uvnitř
 # editoru, ne až při ukládání.
 
-VOCAL_TI, DRUMS_TI, BASS_TI = 1, 2, 3
+VOCAL_TI, DRUMS_TI, BASS_TI, TAB_TI = 1, 2, 3, 4
 
 
 def _abs_seconds(grid: TimeGrid, ev: dict) -> float:
@@ -504,6 +526,7 @@ def to_editor_model(doc: dict) -> dict:
     chords: list[dict] = []
     drums: list[dict] = []
     bass: list[dict] = []
+    tab: list[dict] = []
     rev_samples = {}
     for drum, sample in _load_drum_samples(os.path.dirname(os.path.abspath(__file__))).items():
         rev_samples.setdefault(sample, drum)
@@ -544,13 +567,26 @@ def to_editor_model(doc: dict) -> dict:
             if ev.get("source"):
                 item["source"] = ev["source"]
             bass.append(item)
+        for ev in sec.get("tab") or []:
+            item = {"time_s": round(_abs_seconds(grid, ev), 3),
+                    "text": ev.get("text", ""), "track_index": TAB_TI}
+            if ev.get("durationBeats"):
+                item["duration_s"] = round(float(ev["durationBeats"]) * 60.0
+                                           / grid.segments[0][1], 3)
+            if ev.get("source"):
+                item["source"] = ev["source"]
+            if ev.get("variants"):
+                item["variants"] = dict(ev["variants"])
+            tab.append(item)
 
-    for seq in (lyrics, chords, drums, bass):
+    for seq in (lyrics, chords, drums, bass, tab):
         seq.sort(key=lambda e: e["time_s"])
     _derive_durations(lyrics, grid, beats_per_bar)
     _derive_durations(chords, grid, 1.0)
     for ev in bass:
         ev.setdefault("duration_s", 0.3)
+    for ev in tab:
+        ev.setdefault("duration_s", 4.0)   # viz TAB_BLOCK_DEFAULT_DUR_S v timeline_editor.py
 
     # `line` = index textového řádku; akordy dědí řádek, do jehož času spadají
     for i, ev in enumerate(lyrics):
@@ -574,14 +610,15 @@ def to_editor_model(doc: dict) -> dict:
                                   "track_index": VOCAL_TI}],
                        "track_index": VOCAL_TI})
 
-    # Stopy se skládají VŽDY všechny tři, i když jsou zatím prázdné. Dělat je
-    # jen podle obsahu vypadá úsporně, ale znamená to, že do prázdné stopy
-    # nejde nic přidat — odpočet si nemá kam odložit klikací údery a tiše
-    # neudělá nic (chyceno testem `set_count_in`).
+    # Stopy se skládají VŽDY všechny čtyři, i když jsou zatím prázdné. Dělat
+    # je jen podle obsahu vypadá úsporně, ale znamená to, že do prázdné
+    # stopy nejde nic přidat — odpočet si nemá kam odložit klikací údery a
+    # tiše neudělá nic (chyceno testem `set_count_in`).
     tracks = [{"index": VOCAL_TI, "name": meta.get("title") or "Zpěv",
                "type": "vocal", "is_drums": False},
               {"index": DRUMS_TI, "name": "Bicí", "type": "drums", "is_drums": True},
-              {"index": BASS_TI, "name": "Basa", "type": "bass", "is_drums": False}]
+              {"index": BASS_TI, "name": "Basa", "type": "bass", "is_drums": False},
+              {"index": TAB_TI, "name": "Sólo", "type": "solo_guitar", "is_drums": False}]
 
     out = {
         "meta": {
@@ -609,6 +646,8 @@ def to_editor_model(doc: dict) -> dict:
     }
     if bass:
         out["bass_timeline"] = bass
+    if tab:
+        out["tab_timeline"] = tab
     for src, dst in (("audioFile", "audio_file"), ("audioStretch", "audio_stretch")):
         if meta.get(src) is not None:
             out["meta"][dst] = meta[src]

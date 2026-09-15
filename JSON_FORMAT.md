@@ -132,16 +132,16 @@ skladby).
   "chords": [ { ... } ],
   "drums":  [ { ... } ],
   "bass":   [ { ... } ],
-  "tab":    []
+  "tab":    [ { ... } ]
 }
 ```
 
 - `source` — `"manual"` (člověk označil marker/section), nebo `"generated"`
   (konvertor odhadl z opakování textu / jediná sekce). Jen informační.
-- `tab` — **vždy prázdné pole.** Rezervováno, žádný producent do něj dnes nic
-  nezapisuje (formát nenese tabulaturu).
-- Všechny čtyři obsahové seznamy (`lyrics`/`chords`/`drums`/`bass`) jsou
-  seřazené podle pozice (`bar`,`beat`).
+- `tab` — sólo tabulatura (kytarové sólo), viz §3.6. Prázdné pole, když
+  song sólo stopu nemá.
+- Všech pět obsahových seznamů (`lyrics`/`chords`/`drums`/`bass`/`tab`) je
+  seřazeno podle pozice (`bar`,`beat`).
 
 ### 3.1 Společný tvar položky
 
@@ -217,15 +217,48 @@ formátu) — viz §7.3. Jeden záznam = jedna nota.
 firmware repu) — tahle sekce popisuje **cílový stav**, ne to, co je
 implementované.
 
+### 3.6 `tab[]` — sólo tabulatura
+
+**NE po jednotlivých notách** (na rozdíl od basy, §3.5) — jeden `tab[]`
+prvek je **celý ASCII textový blok** (typicky 6 řádků, jeden na strunu),
+buď ručně napsaný/vložený v editoru, nebo automaticky vygenerovaný z not
+GP/MIDI importu (`ascii_tab.py::segment_and_render_tab_blocks` — noty
+rozdělené na fráze podle pauz, každá fráze = jeden blok). Firmware text
+JEN ZOBRAZÍ, nic z něj neparsuje ani neodvozuje — je to hotový obsah pro
+displej.
+
+```jsonc
+{ "bar": 4, "beat": 1.0, "durationBeats": 6.0,
+  "text": "e|----7-------------7-7-7----|\nB|-----8------7-8-10----------|\nG|------7~-7-9-----------------|\nD|------------------------------|\nA|------------------------------|\nE|------------------------------|",
+  "source": "gp",
+  "variants": { "-1": "e|----6----...", "1": "e|----8----...", "2": "...", "3": "...", "-2": "...", "-3": "..." } }
+```
+
+| klíč | typ | pozn. |
+|------|-----|-------|
+| `text` | str | Hotový ASCII text bloku, `\n`-oddělené řádky ve formátu `LABEL\|----7----\|` — `LABEL` je jméno struny (bez oktávy, první/nejvyšší struna malým písmenem), obsah mezi `\|...\|` jsou pomlčky (klid) a čísla pražců (případně s jedním technickým znakem hned za číslem — `h`/`~`/`/`/`b`, viz níže). Firmware text vykreslí přesně tak, jak je — žádná transformace |
+| `durationBeats` | number | jak dlouho blok zůstává na displeji (do dalšího `tab`/`lyrics` okna, §5 bod 3) |
+| `source` | str | `"gp"` (auto z GP/MIDI importu) / `"manual"` (uživatel napsal ručně) |
+| `variants` | object | **(nepovinné)** předpřipravené transponované verze `text`, klíč = počet půltónů jako string (`"-3"`…`"3"`, bez `"0"` — to je `text` samo), hodnota = kompletní alternativní ASCII text ve STEJNÉM formátu. Generuje se na desktopu (`ascii_tab.py::generate_transpose_variants`/`segment_and_render_tab_blocks`) — přepočítá se **skutečný hrací hmat** pro posunutou výšku (ne jen `+N` na čísle pražce, to by u nízkých pražců vyšlo do záporna), takže firmware nikdy neparsuje ani nepřepočítává text sám, jen PŘEPÍNÁ mezi hotovými řetězci podle aktuálního nastavení transpozice písně. Chybí-li klíč (starý export, nebo blok, který se nepodařilo desktopu zpětně rozebrat — typicky ručně psaný text v jiné konvenci), firmware při netransponovaném stavu (0) zobrazí `text` a při jiném nastavení buď nejbližší dostupnou variantu, nebo netransponovaný `text` jako fallback — VŽDY něco zobrazí, nikdy prázdný displej jen kvůli chybějící variantě. |
+
+Technické značky v `text` (append hned za číslo pražce, bez mezery):
+`h` = hammer-on/pull-off (GP3 je neumí rozlišit), `~` = vibrato, `/` =
+slide, `b` = bend. Ryze zobrazovací — na přehrávání ostatních stop to
+nemá vliv.
+
+**Firmware dnes sólo tabulaturu vůbec nezná** — stejně jako basa (§7.3),
+je to nová sekce, viz §5 bod 3 a `TODO_FORMAT_V2.md`.
+
 ---
 
 ## 4. Co číst pro který účel
 
 | Účel | Potřebné sekce | Lze ignorovat |
 |------|----------------|---------------|
-| **Karaoke displej** (co+kdy) | `meta`, `tempoMap`, `meterMap`, `sections[].lyrics`/`chords` → runtime odvození (§5) | `linearMap`, `pickupBeats` |
+| **Karaoke displej** (co+kdy) | `meta`, `tempoMap`, `meterMap`, `sections[].lyrics`/`chords`/`tab` → runtime odvození (§5) | `linearMap`, `pickupBeats` |
 | **Přehrávání bicích** | `meta`, `tempoMap`, `meterMap`, `sections[].drums` | vše ostatní |
 | **Přehrávání basy** (cílový stav, zatím neimplementováno) | `sections[].bass` | vše ostatní |
+| **Zobrazení sóla** (cílový stav, zatím neimplementováno) | `sections[].tab` | vše ostatní |
 | **Zpětné dohledání not v partituře** | `linearMap` | za běhu nepotřeba |
 
 ---
@@ -241,13 +274,25 @@ přehrávání přes `tempoMap`/`meterMap`) firmware **spočítá sám**:
    toho dalšího** (poslední řádek: do konce skladby, `meta.durationMs`).
 2. **Je-li aktivní řádek** → zobraz jeho `text` + všechny `chords` položky,
    jejichž pozice padne do STEJNÉHO okna (od aktivního řádku po další) —
-   to je ekvivalent dřívějšího `mode: "lyrics_chords"`.
-3. **Není-li aktivní řádek** (pozice PŘED prvním řádkem, nebo PO posledním, nebo
-   V MEZEŘE, kterou žádný řádek nepokrývá — intro/mezihra/sólo) → zkus
-   **aktivní akord** stejnou logikou (poslední `chords` položka s `bar/beat
-   <=` pozice, platí do dalšího akordu). Je-li nějaký → zobraz JEN akord,
-   velkým fontem (ekvivalent `mode: "chords"`).
-4. **Není-li ani jedno** → prázdný/idle displej (nebo úvodní obrazovka
+   to je ekvivalent dřívějšího `mode: "lyrics_chords"`. **Layout: rolující
+   text** (jeden řádek, případně scroll/wipe).
+3. **Není-li aktivní řádek, ale JE aktivní okno v `sections[*].tab`**
+   (poslední `tab` položka s `bar/beat <=` pozice, platí do další `tab`
+   položky stejnou logikou jako řádek textu) → **sólo tabulatura + akordy
+   ve stejném okně** (§3.2 vzorec, jen okno je teď mezi dvěma sousedními
+   notami sóla, ne mezi dvěma řádky textu). **Layout: STATICKÝ, 6 pevných
+   řádků (strun) — NE rolující text.** Tohle je záměrně **samostatný,
+   třetí typ obsahu** (ne jen "chybí text, tak zkus akord") — firmware musí
+   předem vědět, že jde o tabulaturu, aby zvolil správný vykreslovací režim
+   (nejde napůl kreslit jako rolující řádek a napůl jako mřížku strun).
+   Přítomnost dat v `tab[]` pro dané okno JE ten signál — žádné další pole
+   navíc netřeba. Sólo a zpívaný text se přirozeně nepřekrývají (bod 2 má
+   proto vždy přednost, když oboje náhodou vyjde na stejnou pozici).
+4. **Není-li ani řádek, ani aktivní tab okno** → zkus **aktivní akord**
+   stejnou logikou (poslední `chords` položka s `bar/beat <=` pozice, platí
+   do dalšího akordu). Je-li nějaký → zobraz JEN akord, velkým fontem
+   (ekvivalent `mode: "chords"`).
+5. **Není-li nic z toho** → prázdný/idle displej (nebo úvodní obrazovka
    `meta.title`/`meta.artist`, náhled dalšího řádku apod. — volitelné, viz
    starší `ESP32_KARAOKE_IMPLEMENTATION.md` §7/§12 pro nápady, i když jsou
    psané pro starý formát).
@@ -257,6 +302,8 @@ Tohle je **čistá funkce pozice** — žádný uložený stav, žádné klipy, 
 
 **Bicí a basa hrají nezávisle** na tomhle pravidle, pořád podle svého
 vlastního `bar`/`beat` — displej na ně nečeká a ony nečekají na displej.
+**Sólo (`tab[]`) je jiné** — to naopak DISPLEJ přímo řídí (bod 3), protože
+jde o vizuální obsah k zobrazení, ne jen zvuk na pozadí.
 
 ---
 
@@ -312,3 +359,61 @@ přehrávač ji vždy může ignorovat — je jen pro vizuální kontrolu". To u
 **Firmware basu vůbec neparsuje ani nehraje** (`Song.h`/`Song.cpp` — žádná
 struktura, žádné pole). To je teď hlavní otevřený úkol, viz
 `TODO_FORMAT_V2.md` ve firmware repu.
+
+### 7.4 Sólo tabulatura (`tab[]`) — ASCII textové bloky (2026-09, revidováno)
+
+Na rozdíl od basy (§7.3, po jednotlivých notách) je sólo v `tab_timeline`
+**celý ASCII textový blok najednou** (§3.6) — rozhodnutí padlo poté, co
+první implementace (per-notový model + syntetizovaný zvuk sóla) neseděla
+s tím, co uživatel skutečně chtěl: vizuální tabulaturu jako z papíru/webu,
+ne zvukovou stopu. Zvuk sóla byl proto z appky celý odstraněn.
+
+Blok vzniká dvěma způsoby:
+- **automaticky** z GP/MIDI importu — `_build_karaoke_json()` (guitar_pro_
+  viewer.py) / `midi_import.py` seberou noty ze stopy, kterou `is_solo_
+  like()` (GP) nebo jméno+MIDI program (MIDI) rozpozná jako sólo, rozdělí
+  je na fráze podle pauz a každou vyrenderují jako ASCII blok
+  (`ascii_tab.py::segment_and_render_tab_blocks`) — string/pražec u MIDI
+  importu (který na rozdíl od GP nemá předem daný hmat) dopočítá heuristika
+  "nejbližší pozice od předchozí noty" (`ascii_tab.py::note_to_string_
+  fret`), aby tabulatura nedělala nesmyslné skoky po hmatníku;
+- **ručně** — uživatel text napíše/vloží přímo v editoru
+  (`TimelineEditor.edit_block()`, `QInputDialog.getMultiLineText`), stejně
+  jako by psal do textového souboru. **Toto je primární způsob** — auto-
+  generování je pomůcka, ne náhrada.
+
+**Transpozice** (uživatelský požadavek: firmware musí umět sólo posunout,
+typicky kvůli kapu/jiné tónině zpěváka) se řeší **předpočítáním na
+desktopu**, ne za běhu na firmwaru — viz `variants` v §3.6. Live
+přepočítávání ASCII textu na firmwaru by muselo řešit rozjíždění sloupců
+(delší číslo pražce = posun všeho napravo NA TÉ STRUNĚ, ale ne na
+ostatních řádcích → tabulatura se vizuálně rozhodí) a navíc je tabulatura
+ze své podstaty vázaná na konkrétní hmat, ne jen na abstraktní výšku —
+proto se u KAŽDÉHO bloku (auto i ručně psaného, pokud ho jde spolehlivě
+zpětně rozebrat — `ascii_tab.py::parse_ascii_tab_block`) předgeneruje ±3
+půltóny jako hotové alternativní texty. Firmware pak transpozici řeší
+TRIVIÁLNĚ — jen vybere správný klíč z `variants` (nebo `text`, když
+transpozice je 0 nebo varianta chybí), žádné parsování.
+
+Editor umí blok zobrazit (víceřádkový text v jedné buňce časové osy),
+editovat (dvojklik → textový dialog, po uložení se `variants`
+přegenerují/zneplatní) a přesouvat/kopírovat/mazat stejně jako
+text/akordy (`BlockItem` kind="tab").
+
+**Známé omezení transpozice — dvojhmaty/akordíky v sólu.**
+`transpose_events`/`note_to_string_fret` zpracovávají noty JEDNU PO DRUHÉ
+(preferují stejnou strunu, jen posunutý pražec — viz výše), ale nekontrolují,
+jestli dvě noty, které v tabulatuře znějí SOUČASNĚ (stejný časový sloupec,
+dvojhmat/akordík), po transpozici pořád vyjdou na RŮZNÉ struny. U extrémního
+posunu (blízko ±3 půltóny u fráze u kraje hmatníku) teoreticky může vzniknout
+varianta, která žádá dvě noty na jedné struně naráz — fyzicky nehratelné.
+V praxi jde o řídký okrajový případ (naprostá většina sóla jsou jednotlivé
+noty, ne dvojhmaty), ale není to zaručeno. Úkol pro zpřesnění viz
+`TODO_FORMAT_V2.md`.
+
+**Firmware sólo tabulaturu vůbec neparsuje ani nezobrazuje** — úplně nová
+sekce, nulová implementace. Na rozdíl od basy (jen zvuk na pozadí) jde o
+**vizuální obsah, který musí umět zobrazit displej** — vyžaduje si vlastní
+runtime režim (§5 bod 3): statická mřížka (tolik řádků, kolik má `text`
+řádků — typicky 6), NE rolující text jako u zpívaného řádku. Detaily a
+konkrétní úkoly viz `TODO_FORMAT_V2.md`.
