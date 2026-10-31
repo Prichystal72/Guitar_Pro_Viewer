@@ -1,0 +1,15 @@
+Texty a akordy k písni „Iron Maiden – Run to the Hills“ (staženo 2026-10-31).
+Soubor | web | adresa | co v něm je / proč chybí
+
+karaoketexty.html | karaoketexty | https://www.karaoketexty.cz/texty-pisni/iron-maiden/run-to-the-hills-18233 | HTML — čistý text (bez akordů), řádky <br>
+ultimate-guitar.html | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/iron-maiden/run-to-the-hills-chords-1092125 | HTML — obsah v JSONu js-store
+ultimate-guitar.ug.txt | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/iron-maiden/run-to-the-hills-chords-1092125 | TXT — značkování UG: [ch]akord[/ch] nad textem, [tab]…[/tab], [Verse]
+genius.html | genius | https://genius.com/Iron-maiden-run-to-the-hills-lyrics | HTML — text v <div data-lyrics-container>, sekce [Verse 1]/[Chorus], bez akordů
+lyrics-ovh.json | lyrics-ovh | https://api.lyrics.ovh/v1/Iron%20Maiden/Run%20to%20the%20Hills | JSON — {lyrics: prostý text, \r\n/\n}
+—  | lrclib | https://lrclib.net/api/get?artist_name=Iron%20Maiden&track_name=Run%20to%20the%20Hills | NESTAŽENO: HTTP 502 — web nedostupný
+guitaretab.html | guitaretab | https://www.guitaretab.com/i/iron-maiden/291923.html | HTML — akordy nad textem v <pre>, Run To The Hills chords
+chordie.html | chordie | https://www.chordie.com/chord.pere/www.guitartabs.cc/tabs/i/iron_maiden/run_to_the_hills_tab.html | HTML — akordy vložené do textu [C] (ChordPro styl) nebo nad textem
+—  | musixmatch | https://www.musixmatch.com/lyrics/Iron-Maiden/Run-to-the-Hills | NESTAŽENO: HTTP 404 — stránka neexistuje
+—  | pisnicky-akordy | https://pisnicky-akordy.cz/iron-maiden/run-to-the-hills | NESTAŽENO: HTTP 403 — ochrana proti robotům
+—  | supermusic | https://www.supermusic.cz/piesen.php?id=355570 | NESTAŽENO: JS výzva proti robotům (supermusic)
+—  | velkyzpevnik | https://www.velkyzpevnik.cz/iron-maiden/run-to-the-hills | NESTAŽENO: HTTP 503 — web nedostupný

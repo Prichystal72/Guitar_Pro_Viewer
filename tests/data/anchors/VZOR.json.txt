@@ -1,0 +1,11 @@
+{
+  "gp": "pisne/Olympic - Jasná zpráva/Olympic - Jasná Zpráva.gp5",
+  "audio": "pisne/Olympic - Jasná zpráva/20. olympic - jasna zprava (live).mp3",
+  "tolerance_ms": 120,
+  "anchors": [
+    {"bar": 1,  "beat": 1, "time_s": 0.00, "note": "prvni uder bicich"},
+    {"bar": 13, "beat": 1, "time_s": 0.00, "note": "zacatek 1. sloky"},
+    {"bar": 30, "beat": 1, "time_s": 0.00, "note": "refren"},
+    {"bar": 60, "beat": 1, "time_s": 0.00, "note": "posledni crash"}
+  ]
+}

@@ -15,7 +15,7 @@
 > ("klipy") — ta v editoru zanikla, viz `JSON_FORMAT.md` §6.
 >
 > **Referenční testovací soubor:**
-> [`schema_v1_reference_iron_maiden.json`](schema_v1_reference_iron_maiden.json)
+> [`schema_v1_reference_iron_maiden.json`](pisne/Iron%20Maiden%20-%20Run%20To%20the%20Hills/schema_v1_reference_iron_maiden.json)
 > — reálný GP import s bicími (5168) i basou (1511 not) a count-inem.
 
 ---
@@ -346,7 +346,7 @@ nastav `t` a překresli, restart = `t = -countInMs`.
    displeje jako řádek. Aktivní jen když žádný řádek textu není aktivní
    (§3 bod 2 má přednost).
 8. Seek na libovolné `t` zobrazí správný řádek/sólo/akord bez "dohánění".
-9. Otestuj na [`schema_v1_reference_iron_maiden.json`](schema_v1_reference_iron_maiden.json)
+9. Otestuj na [`schema_v1_reference_iron_maiden.json`](pisne/Iron%20Maiden%20-%20Run%20To%20the%20Hills/schema_v1_reference_iron_maiden.json)
    — 5168 bicích, 1511 basových not, sólo tabulatura, `countInBars: 2`.
 
 ---

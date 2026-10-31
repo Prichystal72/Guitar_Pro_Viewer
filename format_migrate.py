@@ -72,6 +72,13 @@ QUANTIZE = 4                   # dělení doby při kvantizaci (4 = šestnáctin
 # nahrávka (tam jdou odchylky do stovek ms, viz kapitola o volných
 # nahrávkách v návrhu).
 MAX_GRID_DRIFT_BEATS = 0.05
+# Jemné notové hodnoty z GP: 32iny (8), 16tinové trioly (6, 12), 64iny (16),
+# 32inové trioly (24), kvintoly (5, 10, 20), septoly (7, 14) a devítiholy
+# (9, 18 — Run to the Hills (3).gp3 má v base 9:8). Práh je úzký (~2 ms při
+# 120 BPM): i kdyby se na některý bod přichytila volně hraná nahrávka, čas
+# se změní nejvýš o tyto ~2 ms.
+FINE_SUBDIVISIONS = (8, 6, 12, 16, 24, 5, 10, 20, 7, 14, 9, 18)
+FINE_DRIFT_BEATS = 0.004
 SECTION_GAP_BARS = 2.0         # pauza, která bez markerů ukončí sekci
 DEFAULT_SAMPLE_SET = "kit_default_v1"
 
@@ -95,10 +102,21 @@ def _load_drum_samples(base_dir: str) -> dict[str, str]:
 
 def _pos(grid: TimeGrid, seconds: float) -> dict:
     """Společný tvar pozice události: `bar` + `beat`, a když se to na
-    mřížku netrefí (volná nahrávka), navíc přesné `tMsOverride`."""
-    bar, beat, drift_beats = grid.quantize(seconds, QUANTIZE)
+    mřížku netrefí (volná nahrávka), navíc přesné `tMsOverride`.
+
+    Nejdřív šestnáctiny s velkorysým prahem (zaokrouhlovací šum starých
+    souborů, viz `MAX_GRID_DRIFT_BEATS`), pak jemnější notové hodnoty z GP
+    (32iny, trioly, 64iny) s úzkým prahem — ty jsou „na klik" stejně jako
+    šestnáctiny, jen `beat` vyjde třeba 2.3333."""
+    bar, beat, drift = grid.quantize(seconds, QUANTIZE)
+    if drift > MAX_GRID_DRIFT_BEATS:
+        for sub in FINE_SUBDIVISIONS:
+            b2, beat2, d2 = grid.quantize(seconds, sub)
+            if d2 <= FINE_DRIFT_BEATS:
+                bar, beat, drift = b2, beat2, 0.0
+                break
     out = {"bar": bar, "beat": beat}
-    if drift_beats > MAX_GRID_DRIFT_BEATS:
+    if drift > MAX_GRID_DRIFT_BEATS:
         out["tMsOverride"] = int(round(seconds * 1000))
     return out
 
@@ -397,7 +415,14 @@ def migrate(data: dict) -> tuple[dict, list[str]]:
     ends = [t(meta.get("duration_seconds"))] if meta.get("duration_seconds") else []
     for key in ("lyrics_timeline", "chords_timeline", "drums_timeline", "bass_timeline", "tab_timeline"):
         for ev in data.get(key) or []:
-            ends.append(t(ev.get("time_s")) + float(ev.get("duration_s") or 0.0))
+            dur = float(ev.get("duration_s") or 0.0)
+            # Konec textu/akordu se neukládá (platí do další události) a jeho
+            # `duration_s` je jen pracovní odhad editoru (poslední řádek GP
+            # importu = +2 s). Je-li známý skutečný konec písně (GP: konec
+            # posledního taktu), nesmí ho takový odhad prodloužit.
+            if ends and key in ("lyrics_timeline", "chords_timeline"):
+                dur = 0.0
+            ends.append(t(ev.get("time_s")) + dur)
     duration_ms = int(round(max(ends + [0.0]) * 1000))
 
     new_meta = {
@@ -562,8 +587,9 @@ def to_editor_model(doc: dict) -> dict:
             if ev.get("fret") is not None:
                 item["fret"] = int(ev["fret"])
             if ev.get("durationBeats"):
-                item["duration_s"] = round(float(ev["durationBeats"]) * 60.0
-                                           / grid.segments[0][1], 3)
+                g0 = grid.beat(item["time_s"])
+                item["duration_s"] = round(grid.seconds(g0 + float(ev["durationBeats"]))
+                                           - item["time_s"], 3)
             if ev.get("source"):
                 item["source"] = ev["source"]
             bass.append(item)

@@ -1,0 +1,13 @@
+Zdroje k písni „Beatles - Let It Be“ — odkud soubory pocházejí.
+
+zdroje/Beatles (The) - Let It Be  (2).gp4  <- C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles (The)\Beatles (The) - Let It Be  (2).gp4
+zdroje/Beatles (The) - Let It Be (4).gp3  <- C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles (The)\Beatles (The) - Let It Be (4).gp3
+zdroje/Beatles (The) - Let It Be (5).gp4  <- C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles (The)\Beatles (The) - Let It Be (5).gp4
+zdroje/Beatles (The) - Let It Be.gp3  <- C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles (The)\Beatles (The) - Let It Be.gp3
+zdroje/Beatles (The) - Let It Be.gp4  <- C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles (The)\Beatles (The) - Let It Be.gp4
+zdroje/Beatles (The) - Let it be (2).gp3  <- C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles (The)\Beatles (The) - Let it be (2).gp3
+zdroje/Beatles (The) - Let it be (3).gp3  <- C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles (The)\Beatles (The) - Let it be (3).gp3
+zdroje/Beatles (The) - Let It Be (4).gp3  = C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles\Beatles (The) - Let It Be (4).gp3 (shodný soubor už je u písně)
+zdroje/Beatles (The) - Let It Be (5).gp4  = C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles\Beatles (The) - Let It Be (5).gp4 (shodný soubor už je u písně)
+Beatles (The) - Let It Be.gp4  = C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles\Beatles (The) - Let It Be.gp4 (shodný soubor už je u písně)
+zdroje/Beatles (The) - Let it be (2).gp3  = C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles\Beatles (The) - Let it be (2).gp3 (shodný soubor už je u písně)

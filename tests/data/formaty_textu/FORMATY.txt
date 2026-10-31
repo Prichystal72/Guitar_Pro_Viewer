@@ -1,0 +1,5 @@
+Vzory formátů textu/akordů bez vazby na konkrétní píseň z `pisne/` (staženo 2026-10-31).
+Soubor | adresa | co v něm je
+
+swinglow.cho | https://raw.githubusercontent.com/ChordPro/chordpro/master/lib/ChordPro/res/examples/swinglow.cho | ChordPro — {title:}, {comment:}, akordy [D] uvnitř textu (lidová, volné dílo)
+mollymalone.cho | https://raw.githubusercontent.com/ChordPro/chordpro/master/lib/ChordPro/res/examples/mollymalone.cho | ChordPro — {start_of_chorus}/{end_of_chorus}, direktivy (lidová, volné dílo)

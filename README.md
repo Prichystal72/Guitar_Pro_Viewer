@@ -1,6 +1,7 @@
 # Guitar Pro Viewer & Karaoke Exporter
 
-Desktopová aplikace (PySide6) pro procházení souborů **Guitar Pro** (`.gp3/.gp4/.gp5`)
+Desktopová aplikace (PySide6) pro procházení souborů **Guitar Pro** (`.gp3/.gp4/.gp5`,
+GP6 `.gpx`, GP7+ `.gp`)
 a jejich export do **JSON** pro karaoke systémy — text, akordy a bicí (např.
 přehrávač na ESP32 ze SD karty). Součástí je i **import akordů a textu z webu**
 a **dávkové stažení celého interpreta**.
@@ -188,7 +189,7 @@ python guitar_pro_viewer.py
    na to, jestli píseň přišla z GP souboru, JSONu nebo z webu.
 
 ### Prohlížení GP souborů (doplňkově)
-**Guitar Pro se do appky vždy jen IMPORTUJE** (`.gp3/.gp4/.gp5`, **Soubor ▸
+**Guitar Pro se do appky vždy jen IMPORTUJE** (`.gp3/.gp4/.gp5/.gpx/.gp`, **Soubor ▸
 Importovat z Guitar Pro…**, `Ctrl+I`) — appka do něj nikdy nezapisuje zpátky,
 jen zobrazí stopy/takty/tabulatury v docku náhledů. Pro karaoke export z GP
 samotného ale GP nemá dost informací (žádná řádková struktura, často ani
@@ -211,11 +212,17 @@ editoru — to je jediný formát, který appka doopravdy "otevírá"/"ukládá"
 | `guitar_pro_viewer.py` | Hlavní GUI aplikace (vstupní bod), menu bar + toolbary, rozvržení oken |
 | `timeline_editor.py` | Editor časové osy — master „Displej" stopa, klipy, playhead, auto-časování, přehrávání audia + GP mix bicích |
 | `web_import.py` | Import z webu, detekce akordů, JSON export, stažení interpreta |
+| `drum_align.py` | Zarovnání nahrávky na bicí z GP: údery po pásmech (kopák/virbl/činely), posun + roztažení, kontrola ujíždění tempa |
+| `gpif_reader.py` | Čtení Guitar Pro 6 (`.gpx`, kontejner BCFZ/BCFS) a 7+ (`.gp`, ZIP) — XML `score.gpif` převedené na objekty `pyguitarpro` |
 | `jog_shuttle.py` | Kruhový jog/shuttle transportní ovladač (styl Sony) |
 | `waveform.py` | Dekódování audia, vlnovka, detekce úderů, odhad zarovnání dle rytmu |
 | `i18n.py` | Vícejazyčnost — načítání `lang/*.json`, `tr()` + živé přepínání za běhu |
 | `lang/*.json` | Překlady, jeden soubor = jeden jazyk (`cs`, `en`, `de`, `es`, `pl`) |
 | `tools/check_translations.py` | Kontrola překladů (chybějící klíče, zástupné symboly) |
+| `tools/select_library.py` | Výběr testovacích písní z GP knihovny → `tests/data/library_selection.txt` |
+| `tools/stahni_texty.py` | Stažení textů/akordů z webů jako vzorky formátů → `pisne/<píseň>/texty/` |
+| `pisne/<píseň>/` | Píseň: GP/MIDI, nahrávka, JSON; `zdroje/` + `ZDROJE.txt` (původ GP), `texty/` + `TEXTY.txt` (weby) |
+| `tests/` | Testy (`python -m pytest tests -q`), viz `CLAUDE.md` |
 | `icons.py` | Pomůcky pro ikony (systémové Qt + vlastní SVG) |
 | `assets/icons/` | Vlastní ploché SVG ikony pro menu/toolbary |
 | `assets/drum_icons/` | Ikonky bubnů kreslené na časovou osu |
@@ -225,6 +232,7 @@ editoru — to je jediný formát, který appka doopravdy "otevírá"/"ukládá"
 | `drum_samples.json` | Mapa jméno bubnu → `.wav` na SD kartě (zkopíruj do `/drums/` na kartě) |
 | `requirements.txt` | Python závislosti |
 | `settings.json` | Uživatelské nastavení (jazyk) — generuje se za běhu |
+| `pisne/` | Ukázkové písně, každá ve vlastní složce (GP, text, nahrávka, JSON) |
 | `stažené/` | Stažené písně (generovaný výstup — **není** ve verzování) |
 
 ---

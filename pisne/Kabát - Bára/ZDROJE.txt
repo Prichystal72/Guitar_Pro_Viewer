@@ -1,0 +1,4 @@
+Zdroje k písni „Kabát - Bára“ — odkud soubory pocházejí.
+
+zdroje/Kabát - Bára.gpx  <- C:\Users\prich\Music\Guitar Pro Tabs\___czech\Kabát - Bára.gpx
+zdroje/Kab_t - B_ra.gp4  <- C:\Users\prich\Music\Guitar Pro Tabs\K\Kabát, V pekle sudy válej\Kab_t - B_ra.gp4

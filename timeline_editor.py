@@ -16,6 +16,7 @@ stejné schéma, takže úpravy jdou rovnou exportovat do JSON.
 from __future__ import annotations
 
 import array
+import bisect
 import copy
 import math
 import os
@@ -37,7 +38,7 @@ from PySide6.QtWidgets import (
     QGraphicsSimpleTextItem, QGraphicsPixmapItem, QInputDialog, QCheckBox,
     QSplitter, QFormLayout, QLineEdit, QDoubleSpinBox, QSpinBox,
     QDialog, QDialogButtonBox, QMenu, QFileDialog, QSlider, QStyle,
-    QGraphicsLineItem,
+    QGraphicsLineItem, QSizePolicy,
 )
 
 from jog_shuttle import JogShuttleWidget
@@ -45,6 +46,33 @@ from waveform import WaveformData, WaveformLoader, estimate_alignment
 from i18n import tr, tr_action, register_tr, tr_label
 from icons import icon, std_icon
 import ascii_tab
+
+def _header_name(scene, text: str, max_w: float, color: str | None = None,
+                 size: int = 9, bold: bool = True):
+    """Popisek v hlavičce stopy zkrácený („…") na `max_w` px — dlouhé jméno
+    stopy jinak leží přes tlačítka posunu/popisky řádků. Celé jméno je
+    v tooltipu."""
+    from PySide6.QtGui import QFontMetrics
+    font = QFont("Segoe UI", size, QFont.Bold if bold else QFont.Normal)
+    shown = QFontMetrics(font).elidedText(text, Qt.ElideRight, int(max_w))
+    it = scene.addSimpleText(shown)
+    it.setFont(font)
+    it.setToolTip(text)
+    if color:
+        it.setBrush(QBrush(QColor(color)))
+    return it
+
+
+def _strip_leading_symbol(text: str) -> str:
+    """„🎵 Načíst MP3/WAV…" -> „Načíst MP3/WAV…" — u tlačítek s vlastní
+    ikonou by emoji z překladu byla druhá ikona a jen by brala místo."""
+    t = (text or "").lstrip()
+    if t and not t[0].isalnum():
+        head, _sep, rest = t.partition(" ")
+        if rest and not any(ch.isalnum() for ch in head):
+            return rest.lstrip()
+    return t
+
 
 # --- ikonky bicích (assets/drum_icons/*), klíč = _drum_icon_key() ---
 DRUM_ICON_DIR = os.path.join(os.path.dirname(__file__), "assets", "drum_icons")
@@ -85,6 +113,10 @@ DRUM_MIDI_NAMES = {
     80: "Mute Triangle", 81: "Open Triangle",
 }
 DRUM_NAME_TO_MIDI = {v: k for k, v in DRUM_MIDI_NAMES.items()}
+# nabídka „Změnit všechny údery na…": běžná souprava po skupinách
+# (kopák, virbl, hi-hat, tomy, činely), zbytek v podnabídce „Ostatní"
+DRUM_REMAP_GROUPS = [(36, 35), (38, 40, 37), (42, 46, 44),
+                     (50, 48, 47, 45, 43, 41), (49, 57, 51, 59, 53, 55, 52)]
 
 # Výchozí řádky bicí stopy, když na ní ještě NEJSOU žádné údery (viz
 # `_drum_names_for` — jinak by prázdná stopa neměla ani jeden interaktivní
@@ -117,13 +149,19 @@ PER_TRACK = LINE_H + CHORD_H + LYRIC_H + TRACK_GAP
 BLOCK_MIN_W = 14
 EDGE = 6            # zóna u okraje pro resize
 DRUM_ICON_SIZE = 22     # px — fixní velikost ikonky bubnu v pruhu bicích
+DRUM_HEAD_H = 20.0      # px — pruh se jménem stopy a tlačítky posunu nad řádky bubnů
 DRUM_ROW_H = 26.0       # px — výška JEDNOHO řádku bicí stopy (ikona + okraj)
 TAB_BLOCK_H = 100.0     # px — výška bloku sólo tabulatury (6 řádků ASCII + okraj)
 TAB_BLOCK_DEFAULT_DUR_S = 4.0   # výchozí délka nově přidaného ASCII bloku sóla
 UNDO_LIMIT = 50         # max. počet kroků historie (deepcopy self.data na krok)
 WAVEFORM_MIN_H = 24.0    # px — nejmenší výška stopy vlnovky (tažením dolů)
 WAVEFORM_MAX_H = 200.0   # px — největší výška (ať je vidět i tichý nástup bicích)
-WAVEFORM_DEFAULT_H = 64.0
+WAVEFORM_DEFAULT_H = 80.0   # název, roztažení, zesílení, legenda bicích, soubor
+# údery bicích nalezené v nahrávce (WaveformItem): barva a pruh výšky stopy
+DRUM_ONSET_COLORS = {"kick": QColor("#e08a00"), "snare": QColor("#c01c28"),
+                     "cymbal": QColor("#b89c00")}
+DRUM_ONSET_ROWS = {"cymbal": (0.0, 0.2), "snare": (0.6, 0.8), "kick": (0.8, 1.0)}
+
 AUDIO_STRETCH_MIN = 0.90   # −10 %
 AUDIO_STRETCH_MAX = 1.10   # +10 %
 
@@ -355,6 +393,36 @@ def render_drums_mixdown(data: dict, duration_s: float, rate: int = 44100) -> st
         wf.setframerate(rate)
         wf.writeframes(out.tobytes())
     return path
+
+
+def side_wav(pcm_mono, rate: int, side: str) -> str:
+    """Mono zvuk (int16) -> dočasný STEREO WAV se zvukem jen v jednom
+    kanálu (`side` = "left"/"right"). Qt přehrávač neumí vyvážení, Windows
+    mixer posouvá celou aplikaci najednou — proto „nahrávka vlevo, GP
+    vpravo" (TimelineEditor.set_split_ears) dostane rovnou takový soubor."""
+    import numpy as np
+    pcm = np.asarray(pcm_mono, dtype=np.int16)
+    st = np.zeros((pcm.size, 2), dtype=np.int16)
+    st[:, 0 if side == "left" else 1] = pcm
+    fd, path = tempfile.mkstemp(suffix="_%s.wav" % side, prefix="timeline_editor_")
+    os.close(fd)
+    with wave.open(path, "w") as wf:
+        wf.setnchannels(2)
+        wf.setsampwidth(2)
+        wf.setframerate(int(rate))
+        wf.writeframes(st.tobytes())
+    return path
+
+
+def side_wav_from_file(path: str, side: str) -> str:
+    """Totéž pro 16bit WAV na disku (GP mix bicích/basy je mono WAV)."""
+    import numpy as np
+    with wave.open(path) as wf:
+        ch, rate = wf.getnchannels(), wf.getframerate()
+        pcm = np.frombuffer(wf.readframes(wf.getnframes()), dtype=np.int16)
+    if ch > 1:
+        pcm = pcm.reshape(-1, ch).mean(axis=1).astype(np.int16)
+    return side_wav(pcm, rate, side)
 
 
 # --- syntetizovaná basa (zatím jediná "reálná" možnost — na rozdíl od
@@ -1068,11 +1136,29 @@ class DrumRowBackground(QGraphicsRectItem):
         menu = QMenu()
         act = menu.addAction(tr("menu.add_drum_hit_here", drum=self.drum_name))
         paste_act = _add_paste_action(menu, self.editor)
+        # Přepis CELÉHO řádku na jiný buben — opravy špatně zapsaných tabů
+        # (Jasná zpráva: virbl na dobách 2 a 4 zapsaný jako Hi-Mid Tom).
+        menu.addSeparator()
+        remap = menu.addMenu(tr("menu.remap_drum", drum=self.drum_name))
+        targets: dict = {}
+        for group in DRUM_REMAP_GROUPS:
+            for midi in group:
+                name = DRUM_MIDI_NAMES[midi]
+                if name != self.drum_name:
+                    targets[remap.addAction(name)] = name
+            remap.addSeparator()
+        other = remap.addMenu(tr("menu.remap_drum_other"))
+        common = {m for g in DRUM_REMAP_GROUPS for m in g}
+        for midi, name in sorted(DRUM_MIDI_NAMES.items()):
+            if midi not in common and name != self.drum_name:
+                targets[other.addAction(name)] = name
         chosen = menu.exec(ev.screenPos())
         if chosen is act:
             self.editor.add_drum_hit(self.ti, self.drum_name, t)
         elif chosen is paste_act:
             self.editor.paste_at(t, target_ti=self.ti)
+        elif chosen in targets:
+            self.editor.remap_drum(self.ti, self.drum_name, targets[chosen])
         ev.accept()
 
 
@@ -1096,6 +1182,11 @@ class WaveformItem(QGraphicsRectItem):
         self.setPos(HEADER_W, top)
         self.setPen(QPen(Qt.NoPen))
         self.setZValue(5)
+        # Bez tohohle příznaku dává Qt v `option.exposedRect` CELOU položku —
+        # vlnovka se pak při každém překreslení (přehrávání, myš) počítala
+        # přes celou píseň: při 321 px/s 87 320 sloupců a polygon o 175 tis.
+        # bodech → program zamrzl (změřeno py-spy, 2026-10-31).
+        self.setFlag(QGraphicsItem.ItemUsesExtendedStyleOption, True)
         self.setAcceptHoverEvents(True)
         self.setCursor(Qt.OpenHandCursor)
         self.setToolTip(tr("waveform.tooltip"))
@@ -1113,6 +1204,13 @@ class WaveformItem(QGraphicsRectItem):
         exposed = option.exposedRect if option is not None else r
         x0 = max(0.0, exposed.left())
         x1 = min(r.width(), exposed.right())
+        # pojistka: nikdy víc než to, co je opravdu vidět v okně editoru
+        view = getattr(editor, "view", None)
+        if view is not None:
+            vis = self.mapFromScene(view.mapToScene(view.viewport().rect()).boundingRect()
+                                    ).boundingRect()
+            x0 = max(x0, vis.left() - 2)
+            x1 = min(x1, vis.right() + 2)
 
         if not wf or len(wf) == 0:
             p.setPen(QPen(QColor("#8a97a3")))
@@ -1150,6 +1248,25 @@ class WaveformItem(QGraphicsRectItem):
 
             p.setPen(QPen(QColor("#0d3b66"), 1))
             p.drawLine(QPointF(x0, mid), QPointF(x1, mid))
+
+            # Údery bicích NALEZENÉ V NAHRÁVCE (drum_align, po pásmech) —
+            # barevné čárky přes vlnovku, ať jsou bicí vidět i ve směsi
+            # s kytarami a dají se očima porovnat se stopou bicích z GP pod
+            # ní. Jen viditelný výřez (bisect), ne celá píseň.
+            onsets = getattr(wf, "drum_onsets", None) or {}
+            if onsets:
+                a_lo = editor._timeline_to_audio_t(x0 / pps)
+                a_hi = editor._timeline_to_audio_t(x1 / pps)
+                for band, (y0f, y1f) in DRUM_ONSET_ROWS.items():
+                    times = onsets.get(band)
+                    if times is None or not len(times):
+                        continue
+                    i0 = bisect.bisect_left(times, a_lo)
+                    i1 = bisect.bisect_right(times, a_hi)
+                    p.setPen(QPen(DRUM_ONSET_COLORS[band], 2))
+                    for t_a in times[i0:i1]:
+                        gx = editor._audio_to_timeline_t(float(t_a)) * pps
+                        p.drawLine(QPointF(gx, self.h * y0f), QPointF(gx, self.h * y1f))
 
         # značky bodů zarovnání A/B (viz editor.set_align_point) — nakreslí
         # se VŽDY, i bez načtené vlnovky (bod jde nastavit i bez ní)
@@ -1469,10 +1586,15 @@ class TrackMixPanel(QWidget):
         self.vbox.setSpacing(2)
 
     def _clear(self) -> None:
+        # Skrýt a odpojit HNED — `deleteLater` maže až v příští smyčce
+        # událostí a do té doby zůstávaly staré řádky vidět; při několika
+        # přestavbách za sebou se pak kreslily přes sebe.
         while self.vbox.count():
             item = self.vbox.takeAt(0)
             w = item.widget()
             if w is not None:
+                w.hide()
+                w.setParent(None)
                 w.deleteLater()
 
     def _add_row(self, widgets: list) -> None:
@@ -1520,6 +1642,12 @@ class TrackMixPanel(QWidget):
         mute.toggled.connect(ed._on_bass_mute)
         vol = self._vol_slider(ed._bass_volume, ed._on_bass_volume)
         self._add_row([name, mute, vol])
+
+        split = QCheckBox(tr("mix_panel.split_ears"))
+        split.setToolTip(tr("mix_panel.split_ears.tooltip"))
+        split.setChecked(getattr(ed, "split_ears", False))
+        split.toggled.connect(ed.set_split_ears)
+        self._add_row([split])
 
         name = QLabel(tr("mix_panel.drums_editing"))
         vol = self._vol_slider(ed._drum_click_volume, ed._on_drum_click_volume)
@@ -1766,6 +1894,9 @@ class TimelineEditor(QWidget):
 
         self.scene = QGraphicsScene(self)
         self.view = TimelineView(self.scene, self)
+        # scéna menší než výřez (píseň s málo stopami) — nahoru doleva, ne na
+        # střed (jinak nad pravítkem zůstával prázdný pruh)
+        self.view.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         # levý sloupec s názvy stop zůstává přilepený vlevo i při
         # vodorovném rolování (viz _pin_headers)
         self.view.horizontalScrollBar().valueChanged.connect(
@@ -1780,140 +1911,108 @@ class TimelineEditor(QWidget):
         root.addWidget(splitter)
 
         # --- spodní lišta: přehrávač MP3/WAV + shuttle/jog ovladač ---
+        # Dva řádky ovládání + kolečko vpravo. V jednom řádku se všechno
+        # nevešlo: tlačítka se smrskla (useknuté popisky) a kolečko vyjelo
+        # z okna. Tlačítka mají ikonu, takže emoji z překladu se v popisku
+        # nezdvojuje; pod šířku textu se tlačítko nezmenší (Minimum).
         audio_widget = QWidget()
-        # musí se vejít celý jog ovladač (128 px) i s okraji layoutu —
-        # nižší strop mu ořezával spodek mezikruží
-        audio_widget.setMaximumHeight(142)
-        audio_bar = QHBoxLayout(audio_widget)
-        audio_bar.setContentsMargins(8, 4, 8, 4)
+        # Lišta nesmí růst do výšky — jinak sebere místo časové ose (u písně
+        # s málo stopami zůstala z osy jen Nahrávka). Výška = jog ovladač
+        # (128 px) + okraje.
+        audio_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        audio_widget.setFixedHeight(136)
+        audio_outer = QHBoxLayout(audio_widget)
+        audio_outer.setContentsMargins(8, 2, 8, 2)
+        rows = QVBoxLayout()
+        rows.setSpacing(2)
+        row1, row2 = QHBoxLayout(), QHBoxLayout()
+        rows.addStretch(1)
+        rows.addLayout(row1)
+        rows.addLayout(row2)
+        rows.addStretch(1)
+        audio_outer.addLayout(rows, 1)
 
-        load_audio_btn = QPushButton()
-        tr_label(load_audio_btn, "audio.load")
-        load_audio_btn.setStyleSheet(btn_style)
-        load_audio_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_DirOpenIcon))
-        load_audio_btn.clicked.connect(self._load_audio_dialog)
-        audio_bar.addWidget(load_audio_btn)
+        def bar_button(key: str, ico, slot, tooltip: bool = True) -> QPushButton:
+            btn = QPushButton()
+            register_tr(lambda txt, _b=btn: _b.setText(_strip_leading_symbol(txt)), key)
+            if tooltip:
+                register_tr(btn.setToolTip, key + ".tooltip")
+            btn.setStyleSheet(btn_style)
+            btn.setIcon(ico)
+            btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+            btn.clicked.connect(slot)
+            return btn
 
-        self.audio_label = QLabel()
-        tr_label(self.audio_label, "audio.no_audio")
-        self.audio_label.setStyleSheet("color:#999999;")
-        audio_bar.addWidget(self.audio_label)
+        def status_label(key: str) -> QLabel:
+            lbl = QLabel()
+            tr_label(lbl, key)
+            lbl.setStyleSheet("color:#999999;")
+            lbl.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+            lbl.setMinimumWidth(40)
+            return lbl
 
-        audio_bar.addSpacing(12)
+        # řádek 1: nahrávka + výstup + hlasitosti
+        row1.addWidget(bar_button("audio.load",
+                                  std_icon(self, QStyle.StandardPixmap.SP_DirOpenIcon),
+                                  self._load_audio_dialog, tooltip=False))
+        self.audio_label = status_label("audio.no_audio")
+        row1.addWidget(self.audio_label, 1)
         output_lbl = QLabel()
         tr_label(output_lbl, "audio.output_label")
-        audio_bar.addWidget(output_lbl)
+        row1.addWidget(output_lbl)
         self.device_combo = QComboBox()
         self.device_combo.setMaximumHeight(24)
-        self.device_combo.setMinimumWidth(160)
+        self.device_combo.setMinimumWidth(120)
+        self.device_combo.setMaximumWidth(260)
+        self.device_combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.device_combo.setMinimumContentsLength(12)
         register_tr(self.device_combo.setToolTip, "audio.device_combo.tooltip")
         self._populate_device_combo()
         self.device_combo.currentIndexChanged.connect(self._on_device_changed)
-        audio_bar.addWidget(self.device_combo)
-
-        refresh_btn = QPushButton("↻")
-        refresh_btn.setMaximumWidth(28)
-        refresh_btn.setStyleSheet(btn_style)
+        row1.addWidget(self.device_combo)
+        refresh_btn = QPushButton()
+        refresh_btn.setFixedWidth(30)
         refresh_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_BrowserReload))
         register_tr(refresh_btn.setToolTip, "audio.refresh.tooltip")
         refresh_btn.clicked.connect(self._populate_device_combo)
-        audio_bar.addWidget(refresh_btn)
+        row1.addWidget(refresh_btn)
+        row1.addWidget(bar_button("audio.test_tone",
+                                  std_icon(self, QStyle.StandardPixmap.SP_MediaVolume),
+                                  self._play_test_tone))
+        row1.addWidget(bar_button("audio.check_duration",
+                                  std_icon(self, QStyle.StandardPixmap.SP_DialogApplyButton),
+                                  self._check_duration_vs_audio))
+        row1.addSpacing(8)
+        for emoji, tip_key, slot in (("🎵", "audio.rec_volume.tooltip", self._on_rec_volume),
+                                     ("🥁", "audio.gp_volume.tooltip", self._on_gp_volume),
+                                     ("🎸", "audio.bass_volume.tooltip", self._on_bass_volume)):
+            row1.addWidget(QLabel(emoji))
+            vol = QSlider(Qt.Horizontal)
+            vol.setRange(0, 100)
+            vol.setValue(100)
+            vol.setFixedWidth(56)
+            register_tr(vol.setToolTip, tip_key)
+            vol.valueChanged.connect(slot)
+            row1.addWidget(vol)
 
-        test_btn = QPushButton()
-        tr_label(test_btn, "audio.test_tone")
-        test_btn.setStyleSheet(btn_style)
-        test_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_MediaVolume))
-        register_tr(test_btn.setToolTip, "audio.test_tone.tooltip")
-        test_btn.clicked.connect(self._play_test_tone)
-        audio_bar.addWidget(test_btn)
-
-        waveform_btn = QPushButton()
-        tr_label(waveform_btn, "audio.waveform_pos")
-        waveform_btn.setStyleSheet(btn_style)
-        waveform_btn.setIcon(icon("waveform_align"))
-        register_tr(waveform_btn.setToolTip, "audio.waveform_pos.tooltip")
-        waveform_btn.clicked.connect(self.waveform_dialog)
-        audio_bar.addWidget(waveform_btn)
-
-        auto_align_btn = QPushButton()
-        tr_label(auto_align_btn, "audio.auto_align")
-        auto_align_btn.setStyleSheet(btn_style)
-        auto_align_btn.setIcon(icon("auto_align_rhythm"))
-        register_tr(auto_align_btn.setToolTip, "audio.auto_align.tooltip")
-        auto_align_btn.clicked.connect(self.auto_align_audio)
-        audio_bar.addWidget(auto_align_btn)
-
-        check_dur_btn = QPushButton()
-        tr_label(check_dur_btn, "audio.check_duration")
-        check_dur_btn.setStyleSheet(btn_style)
-        check_dur_btn.setIcon(std_icon(self, QStyle.StandardPixmap.SP_DialogApplyButton))
-        register_tr(check_dur_btn.setToolTip, "audio.check_duration.tooltip")
-        check_dur_btn.clicked.connect(self._check_duration_vs_audio)
-        audio_bar.addWidget(check_dur_btn)
-
-        audio_bar.addSpacing(12)
-        gp_mix_btn = QPushButton()
-        tr_label(gp_mix_btn, "audio.gp_mix")
-        gp_mix_btn.setStyleSheet(btn_style)
-        gp_mix_btn.setIcon(icon("gp_drum_mix"))
-        register_tr(gp_mix_btn.setToolTip, "audio.gp_mix.tooltip")
-        gp_mix_btn.clicked.connect(self._load_gp_mix)
-        audio_bar.addWidget(gp_mix_btn)
-
-        self.gp_audio_label = QLabel()
-        tr_label(self.gp_audio_label, "audio.gp_mix_not_generated")
-        self.gp_audio_label.setStyleSheet("color:#999999;")
-        audio_bar.addWidget(self.gp_audio_label)
-
-        audio_bar.addSpacing(12)
-        bass_mix_btn = QPushButton()
-        tr_label(bass_mix_btn, "audio.bass_mix")
-        bass_mix_btn.setStyleSheet(btn_style)
-        bass_mix_btn.setIcon(icon("gp_drum_mix"))
-        register_tr(bass_mix_btn.setToolTip, "audio.bass_mix.tooltip")
-        bass_mix_btn.clicked.connect(self._load_bass_mix)
-        audio_bar.addWidget(bass_mix_btn)
-
-        self.bass_audio_label = QLabel()
-        tr_label(self.bass_audio_label, "audio.bass_mix_not_generated")
-        self.bass_audio_label.setStyleSheet("color:#999999;")
-        audio_bar.addWidget(self.bass_audio_label)
-
-        audio_bar.addSpacing(8)
-        audio_bar.addWidget(QLabel("🎵"))
-        rec_vol = QSlider(Qt.Horizontal)
-        rec_vol.setRange(0, 100)
-        rec_vol.setValue(100)
-        rec_vol.setMaximumWidth(70)
-        rec_vol.setToolTip(tr("audio.rec_volume.tooltip"))
-        rec_vol.valueChanged.connect(self._on_rec_volume)
-        audio_bar.addWidget(rec_vol)
-
-        audio_bar.addWidget(QLabel("🥁"))
-        gp_vol = QSlider(Qt.Horizontal)
-        gp_vol.setRange(0, 100)
-        gp_vol.setValue(100)
-        gp_vol.setMaximumWidth(70)
-        gp_vol.setToolTip(tr("audio.gp_volume.tooltip"))
-        gp_vol.valueChanged.connect(self._on_gp_volume)
-        audio_bar.addWidget(gp_vol)
-
-        audio_bar.addWidget(QLabel("🎸"))
-        bass_vol = QSlider(Qt.Horizontal)
-        bass_vol.setRange(0, 100)
-        bass_vol.setValue(100)
-        bass_vol.setMaximumWidth(70)
-        bass_vol.setToolTip(tr("audio.bass_volume.tooltip"))
-        bass_vol.valueChanged.connect(self._on_bass_volume)
-        audio_bar.addWidget(bass_vol)
-
-        audio_bar.addStretch()
+        # řádek 2: zarovnání nahrávky + kontrolní mixy z GP
+        row2.addWidget(bar_button("audio.waveform_pos", icon("waveform_align"),
+                                  self.waveform_dialog))
+        row2.addWidget(bar_button("audio.auto_align", icon("auto_align_rhythm"),
+                                  self.auto_align_audio))
+        row2.addSpacing(12)
+        row2.addWidget(bar_button("audio.gp_mix", icon("gp_drum_mix"), self._load_gp_mix))
+        self.gp_audio_label = status_label("audio.gp_mix_not_generated")
+        row2.addWidget(self.gp_audio_label, 1)
+        row2.addWidget(bar_button("audio.bass_mix", icon("gp_drum_mix"), self._load_bass_mix))
+        self.bass_audio_label = status_label("audio.bass_mix_not_generated")
+        row2.addWidget(self.bass_audio_label, 1)
 
         self.jog = JogShuttleWidget()
         self.jog.playPauseRequested.connect(self.toggle_play_pause)
         self.jog.stopRequested.connect(self.stop_audio)
         self.jog.shuttleChanged.connect(self._on_shuttle)
-        audio_bar.addWidget(self.jog)
+        audio_outer.addWidget(self.jog, 0, Qt.AlignVCenter)
 
         root.addWidget(audio_widget)
 
@@ -2345,7 +2444,7 @@ class TimelineEditor(QWidget):
             if ti in self._hidden_tracks:
                 lane_h[ti] = 0.0
             elif self._track_is_drums(ti):
-                lane_h[ti] = 8 + self._drum_row_count(ti) * DRUM_ROW_H + TRACK_GAP
+                lane_h[ti] = 8 + DRUM_HEAD_H + self._drum_row_count(ti) * DRUM_ROW_H + TRACK_GAP
             elif self._track_is_tab(ti):
                 lane_h[ti] = TAB_BLOCK_H + TRACK_GAP
             else:
@@ -2525,6 +2624,8 @@ class TimelineEditor(QWidget):
             self._playhead._sync()
         self._update_playhead_label()
         if seek_audio:
+            # ruční přesun kurzoru = nové místo, kam se Stop vrací
+            self._play_start_s = self.playhead_s
             self._seek_audio(self.playhead_s)
 
     def _update_playhead_label(self) -> None:
@@ -2748,6 +2849,44 @@ class TimelineEditor(QWidget):
             self.waveform_item.update()
         self._waveform_loader.load(path)
 
+    def set_split_ears(self, on: bool) -> None:
+        """🎧 Nahrávka do LEVÉHO sluchátka, GP mix (bicí + basa) do PRAVÉHO —
+        poslechem je hned slyšet, kdo komu ujíždí. Přepne zdroje přehrávačů
+        na stereo soubory s jedním kanálem (`side_wav`); pozice i přehrávání
+        pokračují."""
+        self.split_ears = bool(on)
+        self._apply_split_sources()
+
+    def _side_source(self, key: str, src: str, make) -> str:
+        cache = self.__dict__.setdefault("_split_cache", {})
+        k = (key, src)
+        if k not in cache or not os.path.isfile(cache[k]):
+            cache[k] = make()
+        return cache[k]
+
+    def _apply_split_sources(self) -> None:
+        playing = any(pl.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+                      for pl in (self.player, self.gp_player, self.bass_player))
+        split = getattr(self, "split_ears", False)
+        wf = self.waveform
+        if self.audio_path:
+            src = self.audio_path
+            if split and wf is not None and getattr(wf, "pcm", None) is not None:
+                src = self._side_source("rec", self.audio_path,
+                                        lambda: side_wav(wf.pcm, wf.sample_rate, "left"))
+            if self.player.source().toLocalFile() != src:
+                self.player.setSource(QUrl.fromLocalFile(src))
+        for pl, path in ((self.gp_player, self.gp_audio_path), (self.bass_player, self.bass_audio_path)):
+            if not path:
+                continue
+            src = (self._side_source("gp", path, lambda p=path: side_wav_from_file(p, "right"))
+                   if split else path)
+            if pl.source().toLocalFile() != src:
+                pl.setSource(QUrl.fromLocalFile(src))
+        self._seek_audio(self.playhead_s)
+        if playing:
+            self.play_audio(keep_start=True)
+
     def _load_gp_mix(self) -> None:
         """Vygeneruje syntetizovaný mixdown bicích z aktuálních GP dat
         (`drums_timeline`) a nahraje ho do `gp_player` — druhý přehrávač
@@ -2770,7 +2909,7 @@ class TimelineEditor(QWidget):
         self.gp_player.setSource(QUrl.fromLocalFile(path))
         self.gp_audio_label.setText(tr("audio.gp_mix_generated", dur=f"{duration:.1f}", bpm=f"{self.bpm:g}"))
         self.gp_audio_label.setStyleSheet("color:#2d7d2d;")
-        self._seek_audio(self.playhead_s)
+        self._apply_split_sources()
 
     def _load_bass_mix(self) -> None:
         """Vygeneruje syntetizovaný mixdown BASY z aktuálních GP dat
@@ -2792,7 +2931,7 @@ class TimelineEditor(QWidget):
         self.bass_player.setSource(QUrl.fromLocalFile(path))
         self.bass_audio_label.setText(tr("audio.bass_mix_generated", dur=f"{duration:.1f}", bpm=f"{self.bpm:g}"))
         self.bass_audio_label.setStyleSheet("color:#2d7d2d;")
-        self._seek_audio(self.playhead_s)
+        self._apply_split_sources()
 
     def _on_rec_volume(self, val: int) -> None:
         self._rec_volume = val / 100.0
@@ -2852,6 +2991,8 @@ class TimelineEditor(QWidget):
         self._waveform_loading = False
         if self.waveform_item is not None:
             self.waveform_item.update()
+        if getattr(self, "split_ears", False):
+            self._apply_split_sources()   # levý kanál jde udělat až z dekódovaného zvuku
         # ZÁMĚRNĚ se tu NEVOLÁ _check_duration_vs_audio() automaticky —
         # nahrávka je pro ČLOVĚKA, aby si mohl OVĚŘIT/POSLECHNOUT, jestli
         # editor sedí na skutečnost, ne aby cokoliv sama od sebe měnila
@@ -3096,6 +3237,12 @@ class TimelineEditor(QWidget):
                                    tr("dialog.auto_align_no_audio_body"))
             return
 
+        # Jsou-li v projektu bicí (z GP), zarovnává se na NĚ — přesnější než
+        # mřížka tempa a funguje i bez znalosti tempa (drum_align.py).
+        if self.data.get("drums_timeline") and getattr(self.waveform, "onset_env", None):
+            if self._auto_align_to_drums():
+                return
+
         onsets = self.waveform.detect_onsets()
         result = estimate_alignment(onsets, self.beat_s, AUDIO_STRETCH_MIN, AUDIO_STRETCH_MAX)
         if result is None:
@@ -3129,6 +3276,189 @@ class TimelineEditor(QWidget):
             self.set_audio_stretch(result["stretch"], relayout=False)
             self._relayout()
 
+    def _auto_align_to_drums(self) -> bool:
+        """Zarovnání nahrávky na bicí z GP (`drum_align.align_to_drums`) +
+        kontrola, jestli nahrávka drží tempo (`local_drift` po 20 s úsecích).
+        Výsledek jen NABÍDNE — použije se až po potvrzení (audio je pro
+        kontrolu člověkem, nic samo neřídí). Vrací False, když bicích je na
+        porovnání málo (volající pak zkusí zarovnání na mřížku tempa)."""
+        import drum_align as DA
+        hits = DA.gp_hits(self.data.get("drums_timeline", []))
+        envs = self.waveform.onset_env
+        result = DA.align_to_drums(envs, hits, AUDIO_STRETCH_MIN, AUDIO_STRETCH_MAX)
+        if result is None:
+            return False
+        drift = DA.local_drift(envs, hits, result["offset"], result["stretch"])
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle(tr("dialog.auto_align_drums_title"))
+        form = QFormLayout(dlg)
+        pct = result["match"] * 100.0
+        med = result["median_err_ms"]
+        summary = QLabel(tr("dialog.auto_align_drums_summary", n=result["n_hits"],
+                            pct=f"{pct:.0f}", med=f"{med:.0f}" if med is not None else "—"))
+        summary.setWordWrap(True)
+        form.addRow(summary)
+        form.addRow(tr("dialog.auto_align_stretch_label"), QLabel(f"{result['stretch'] * 100:.2f} %"))
+        form.addRow(tr("dialog.auto_align_offset_label"), QLabel(f"{result['offset']:.3f} s"))
+        if drift:
+            worst = max(abs(d) for _t, d in drift)
+            if worst <= 0.08:
+                info = QLabel(tr("dialog.auto_align_drift_ok", max_ms=f"{worst * 1000:.0f}"))
+                info.setStyleSheet("color:#2d7d2d;")
+            else:
+                bad = sorted(drift, key=lambda x: -abs(x[1]))[:3]
+                examples = ", ".join("%d:%02d %+.2f s" % (int(t) // 60, int(t) % 60, d)
+                                     for t, d in sorted(bad))
+                info = QLabel(tr("dialog.auto_align_drift_bad", max_s=f"{worst:.2f}",
+                                 examples=examples))
+                info.setStyleSheet("color:#c64600;")
+            info.setWordWrap(True)
+            form.addRow(info)
+        if pct < 50:
+            warn = QLabel(tr("dialog.auto_align_drums_low"))
+            warn.setWordWrap(True)
+            warn.setStyleSheet("color:#c64600;")
+            form.addRow(warn)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.button(QDialogButtonBox.Ok).setText(tr("dialog.auto_align_apply_btn"))
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        FIT = 2
+        if drift and max(abs(d) for _t, d in drift) > 0.08:
+            # nahrávka plyne — nabídni rovnou napasování po taktech
+            fit_btn = bb.addButton(tr("fit.button"), QDialogButtonBox.ActionRole)
+            fit_btn.clicked.connect(lambda: dlg.done(FIT))
+        form.addRow(bb)
+        self.last_drum_alignment = {**result, "drift": drift}   # pro testy/diagnostiku
+        code = dlg.exec()
+        if code == FIT:
+            self.fit_tempo_to_audio()
+        elif code:
+            self._push_undo()
+            self.set_audio_offset(result["offset"], relayout=False)
+            self.set_audio_stretch(result["stretch"], relayout=False)
+            self._relayout()
+        return True
+
+    def fit_tempo_to_audio(self) -> None:
+        """Časová osa ▸ Napasovat tempo na nahrávku — pro nahrávky hrané BEZ
+        klikačky (tempo plyne: Jasná zpráva 63,8 → 65,7 BPM). Najde začátek
+        KAŽDÉHO taktu v nahrávce (`drum_align.fit_bars` podle bicích z GP),
+        ukáže výsledek a po potvrzení:
+          • mapa tempa = jedno tempo na takt (tak, jak hraje kapela),
+          • všechny události (text, akordy, bicí, basa, sólo) se v rámci
+            svého taktu přepočítají na nové časy (poloha v taktu zůstává),
+          • nahrávka bez roztažení, posun = začátek taktu 1 v nahrávce.
+        Časování tak řídí nahrávka (rozhodnutí uživatele 2026-10-31 —
+        jinak platí, že je pánem GP). Jde vrátit přes Ctrl+Z."""
+        import numpy as np
+        import drum_align as DA
+        from PySide6.QtWidgets import QMessageBox
+        if self.waveform is None or not getattr(self.waveform, "onset_env", None):
+            QMessageBox.information(self, tr("fit.title"), tr("dialog.auto_align_no_audio_body"))
+            return
+        drums = self.data.get("drums_timeline") or []
+        envs = self.waveform.onset_env
+        grid = self._music_grid()
+        end = self._song_end()
+        starts = [0.0]
+        bar = 1
+        while starts[-1] < end - 1e-6 and bar < 5000:
+            bar += 1
+            starts.append(grid.bar_start_seconds(bar))
+        starts_a = np.asarray(starts)
+        bar_len = np.diff(starts_a)
+        n = bar_len.size
+        bar_hits: list[list[tuple[float, str]]] = [[] for _ in range(n)]
+        for ev in drums:
+            grp = DA.drum_group(int(ev.get("midi") or 0))
+            t = float(ev.get("time_s", 0.0))
+            if grp is None or n == 0:
+                continue
+            b = int(np.clip(np.searchsorted(starts_a, t, side="right") - 1, 0, n - 1))
+            bar_hits[b].append((t - starts_a[b], grp))
+        glob = DA.align_to_drums(envs, DA.gp_hits(drums), AUDIO_STRETCH_MIN, AUDIO_STRETCH_MAX)
+        if glob is None or n < 2:
+            QMessageBox.information(self, tr("fit.title"), tr("fit.need_drums"))
+            return
+        audio = DA.fit_bars(envs, bar_hits, bar_len, -glob["offset"] / glob["stretch"], glob["stretch"])
+        after = DA.bar_match(envs, bar_hits, bar_len, audio)
+        quarters = np.array([grid.quarters_in_bar(b + 1) for b in range(n)])
+        bpm = quarters * 60.0 / np.diff(audio)
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle(tr("fit.title"))
+        form = QFormLayout(dlg)
+        lbl = QLabel(tr("fit.summary", n=n, before=f"{glob['match'] * 100:.0f}",
+                        after=f"{after * 100:.0f}", lo=f"{bpm.min():.1f}", hi=f"{bpm.max():.1f}",
+                        med=f"{float(np.median(bpm)):.1f}", start=f"{audio[0]:.2f}"))
+        lbl.setWordWrap(True)
+        form.addRow(lbl)
+        if after < 0.6:
+            warn = QLabel(tr("fit.low"))
+            warn.setWordWrap(True)
+            warn.setStyleSheet("color:#c64600;")
+            form.addRow(warn)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.button(QDialogButtonBox.Ok).setText(tr("dialog.auto_align_apply_btn"))
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        form.addRow(bb)
+        self.last_tempo_fit = {"bar_audio": audio, "before": glob["match"], "after": after, "bpm": bpm}
+        if not dlg.exec():
+            return
+        self.apply_bar_times(starts_a, audio - audio[0], bpm, audio_offset=-float(audio[0]))
+
+    def apply_bar_times(self, old_starts, new_starts, bpm, audio_offset: float) -> None:
+        """Přepočítá celou časovou osu na nové začátky taktů (viz
+        `fit_tempo_to_audio`). `old_starts`/`new_starts` mají n+1 hodnot
+        (začátky taktů + konec), `bpm` n hodnot (tempo každého taktu)."""
+        import numpy as np
+        old = np.asarray(old_starts, dtype=float)
+        new = np.asarray(new_starts, dtype=float)
+        n = old.size - 1
+        self._push_undo()
+
+        def remap(t: float) -> float:
+            b = int(np.clip(np.searchsorted(old, t, side="right") - 1, 0, n - 1))
+            f = (t - old[b]) / (old[b + 1] - old[b])
+            return float(new[b] + f * (new[b + 1] - new[b]))
+
+        for key in ("lyrics_timeline", "chords_timeline", "drums_timeline",
+                    "bass_timeline", "tab_timeline"):
+            for ev in self.data.get(key, []) or []:
+                t0 = float(ev.get("time_s", 0.0))
+                if ev.get("duration_s") is not None:
+                    t1 = t0 + float(ev["duration_s"])
+                    ev["duration_s"] = round(max(0.01, remap(t1) - remap(t0)), 4)
+                ev["time_s"] = round(remap(t0), 4)
+        for kl in self.data.get("karaoke_lines", []) or []:
+            for k in ("start_s", "end_s"):
+                if kl.get(k) is not None:
+                    kl[k] = round(remap(float(kl[k])), 4)
+            for w in kl.get("words", []) or []:
+                t0 = float(w.get("time_s", 0.0))
+                if w.get("duration_s") is not None:
+                    w["duration_s"] = round(max(0.01, remap(t0 + float(w["duration_s"])) - remap(t0)), 4)
+                w["time_s"] = round(remap(t0), 4)
+        grid = self._music_grid()
+        self.data["tempo_map"] = [
+            {"tick": 960 + int(round(grid.beats_before_bar(b + 1) * 960)), "bpm": round(float(bpm[b]), 3)}
+            for b in range(n)]
+        meta = self.data.setdefault("meta", {})
+        meta["tempo_bpm"] = int(round(float(np.median(bpm))))
+        if meta.get("duration_seconds"):
+            meta["duration_seconds"] = round(remap(float(meta["duration_seconds"])), 3)
+        self.bpm = meta["tempo_bpm"]
+        self.beat_s = 60.0 / self.bpm
+        self.bar_s = self.beat_s * self.beats_per_measure
+        self.default_chord_dur = round(self.beat_s, 3)
+        self._update_snap_s()
+        self.set_audio_offset(audio_offset, relayout=False)
+        self.set_audio_stretch(1.0, relayout=False)
+        self._relayout()
+
     def _seek_audio(self, t: float) -> None:
         """`t` je čas na ČASOVÉ OSE — převede se na čas uvnitř souboru
         (`_timeline_to_audio_t`, respektuje posun i roztažení nahrávky).
@@ -3149,13 +3479,21 @@ class TimelineEditor(QWidget):
         if not any(d.id() == cur.id() for d in QMediaDevices.audioOutputs()):
             self._on_audio_devices_changed()
 
-    def play_audio(self) -> None:
+    def play_audio(self, keep_start: bool = False) -> None:
         """Spustí VŠECHNY přehrávače (nahrávka + GP bicí/basa mix), pokud
         mají zdroj — sdílejí transport, aby šlo poslouchat souběžně/A-B
-        (viz hlasitostní slidery „Nahrávka“/„GP bicí“/„GP basa“)."""
+        (viz hlasitostní slidery „Nahrávka“/„GP bicí“/„GP basa“).
+
+        Zapamatuje si, ODKUD se pustilo (`_play_start_s`) — Stop tam kurzor
+        vrátí (při ladění se pouští pořád dokola od stejného místa). Pokračování
+        po pauze ani interní restart (`keep_start`, přepnutí sluchátek) start
+        nemění."""
         if (not self.player.source().isValid() and not self.gp_player.source().isValid()
                 and not self.bass_player.source().isValid()):
             return
+        if not keep_start and not getattr(self, "_paused", False):
+            self._play_start_s = self.playhead_s
+        self._paused = False
         self._ensure_device_alive()
         self._stop_shuttle_timer()
         self.player.setPlaybackRate(1.0 / (self.audio_stretch or 1.0))
@@ -3171,6 +3509,7 @@ class TimelineEditor(QWidget):
 
     def pause_audio(self) -> None:
         self._stop_shuttle_timer()
+        self._paused = True
         self.player.pause()
         self.gp_player.pause()
         self.bass_player.pause()
@@ -3190,14 +3529,20 @@ class TimelineEditor(QWidget):
             self.play_audio()
 
     def stop_audio(self) -> None:
-        """Zastaví přehrávání (všechny přehrávače). Qt `stop()` interně
-        vrací pozici na 0 — editor to hned poté vrátí zpět na `playhead_s`,
-        aby "Stop" v editačním nástroji nepřekvapil skokem na začátek."""
+        """Zastaví přehrávání (všechny přehrávače) a vrátí kurzor tam, ODKUD
+        se naposledy pustilo (`play_audio`) — jako v běžných editorech zvuku;
+        při ladění se poslouchá pořád stejný úsek. (Qt `stop()` interně vrací
+        pozici na 0, proto se hned poté nastaví znovu.)"""
         self._stop_shuttle_timer()
         self.player.stop()
         self.gp_player.stop()
         self.bass_player.stop()
-        self._seek_audio(self.playhead_s)
+        self._paused = False
+        start = getattr(self, "_play_start_s", None)
+        if start is not None:
+            self.set_playhead(start, seek_audio=True)
+        else:
+            self._seek_audio(self.playhead_s)
 
     # --- shuttle (mezikruží ovladače) ---
 
@@ -3312,10 +3657,15 @@ class TimelineEditor(QWidget):
         nm.setPos(6, top + 3)
         nm.setBrush(QBrush(QColor("#2f6690")))
         self._register_header_item(nm, 6)
+        def fits(y: float) -> bool:
+            # popisek (~11 px) se vejde do řádku — nižší řádek (tažením)
+            # spodní popisky prostě nevykreslí, ať nelezou do další stopy
+            return y + 11 <= top + h
         if self.audio_path:
             sub = self.scene.addSimpleText(os.path.basename(self.audio_path))
             sub.setFont(QFont("Segoe UI", 7))
-            sub.setPos(6, top + h - 15)
+            sub.setPos(6, max(top + 57, top + h - 15))
+            sub.setVisible(fits(max(top + 57, top + h - 15)))
             sub.setBrush(QBrush(QColor("#6a8aa8")))
             self._register_header_item(sub, 6)
             if abs(self.audio_stretch - 1.0) > 0.001:
@@ -3324,10 +3674,25 @@ class TimelineEditor(QWidget):
                 st.setPos(6, top + 18)
                 st.setBrush(QBrush(QColor("#c64600")))
                 self._register_header_item(st, 6)
+            if self.waveform is not None and getattr(self.waveform, "drum_onsets", None):
+                # legenda barevných čárek (údery v nahrávce), každé slovo svou
+                # barvou — řádek pod zesílením (top+31), nad jménem souboru
+                x = 6.0
+                for band, word in zip(("kick", "snare", "cymbal"),
+                                      tr("waveform.drum_legend").split("■")[1:]):
+                    it = self.scene.addSimpleText("■" + word.rstrip())
+                    it.setFont(QFont("Segoe UI", 7))
+                    it.setBrush(QBrush(DRUM_ONSET_COLORS[band]))
+                    it.setPos(x, top + 44)
+                    it.setVisible(fits(top + 44))
+                    it.setToolTip(tr("waveform.drum_legend"))
+                    self._register_header_item(it, x)
+                    x += it.boundingRect().width() + 4
             if self.waveform is not None and self.waveform.display_gain > 1.05:
                 g = self.scene.addSimpleText(tr("waveform.display_gain_label", gain=f"{self.waveform.display_gain:.1f}"))
                 g.setFont(QFont("Segoe UI", 7))
                 g.setPos(6, top + 31)
+                g.setVisible(fits(top + 31))
                 g.setToolTip(tr("waveform.display_gain.tooltip"))
                 g.setBrush(QBrush(QColor("#888888")))
                 self._register_header_item(g, 6)
@@ -3372,7 +3737,7 @@ class TimelineEditor(QWidget):
             x = HEADER_W + t * self.pps
             self.scene.addLine(x, 0, x, total_h, pen_bar)
             if bar_i % label_every == 0:
-                lbl = self.scene.addSimpleText(tr("ruler.bar_label", bar=bar_no, t=f"{t:g}"))
+                lbl = self.scene.addSimpleText(tr("ruler.bar_label", bar=bar_no, t=f"{t:.1f}"))
                 lbl.setFont(QFont("Segoe UI", 7, QFont.Bold))
                 lbl.setPos(x + 3, RULER_H - 13)
                 lbl.setBrush(QBrush(QColor("#555")))
@@ -3407,12 +3772,13 @@ class TimelineEditor(QWidget):
         self._register_header_item(
             self.scene.addRect(0, top, HEADER_W, PER_TRACK - TRACK_GAP + 2,
                                QPen(QColor("#dddddd")), QBrush(QColor("#fafafa"))))
-        nm = self.scene.addSimpleText(name)
-        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        # 1. pruh (řádky) nese jméno stopy + tlačítka posunu; jeho význam
+        # je v tooltipu — popisek „řádky" by ležel přes jméno.
+        nm = _header_name(self.scene, name, HEADER_W - 72 - 10)
+        nm.setToolTip(name + " — " + tr("lane.rows"))
         nm.setPos(6, top + 3)
         self._register_header_item(nm, 6)
-        for txt, y, col in [(tr("lane.rows"), line_y + 4, "#9141ac"),
-                            (tr("lane.chords"), chord_y + 4, "#1a5fb4"),
+        for txt, y, col in [(tr("lane.chords"), chord_y + 4, "#1a5fb4"),
                             (tr("lane.lyrics"), lyric_y + 6, "#2d7d2d")]:
             it = self.scene.addSimpleText(txt)
             it.setPos(12, y); it.setBrush(QBrush(QColor(col)))
@@ -3433,10 +3799,8 @@ class TimelineEditor(QWidget):
         self._register_header_item(
             self.scene.addRect(0, top, HEADER_W, TAB_BLOCK_H - TRACK_GAP + 2,
                                QPen(QColor("#c9b3e6")), QBrush(QColor("#f1e8fb"))))
-        nm = self.scene.addSimpleText("🎸 " + name)
-        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm = _header_name(self.scene, "🎸 " + name, HEADER_W - 12, "#7c3fc9")
         nm.setPos(6, top + 3)
-        nm.setBrush(QBrush(QColor("#7c3fc9")))
         self._register_header_item(nm, 6)
 
     def _add_lyrics_shift_controls(self, ti: int, top: float) -> None:
@@ -3570,15 +3934,16 @@ class TimelineEditor(QWidget):
         self._register_header_item(
             self.scene.addRect(0, top, HEADER_W, h + 2,
                                QPen(QColor("#e6c9a3")), QBrush(QColor("#fbf0e0"))))
-        nm = self.scene.addSimpleText("🥁 " + name)
-        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm = _header_name(self.scene, "🥁 " + name, HEADER_W - 72 - 10, "#b56b1e")
         nm.setPos(6, top + 3)
-        nm.setBrush(QBrush(QColor("#b56b1e")))
         self._register_header_item(nm, 6)
         self._add_drum_shift_controls(ti, top)
 
         drum_names = self._drum_names_for(ti)
         n_rows = max(1, len(drum_names))
+        # řádky bubnů až POD pruhem se jménem (dřív jméno leželo přes 1. řádek)
+        y += DRUM_HEAD_H
+        h -= DRUM_HEAD_H
         rows_h = (h - 8) / n_rows
         row_of = {dn: i for i, dn in enumerate(drum_names)}
         colors = {dn: self._drum_family(dn)[1] for dn in drum_names}
@@ -3588,10 +3953,8 @@ class TimelineEditor(QWidget):
             # interaktivní pozadí řádku — pravý klik = přidat úder tohoto bubnu
             bg = DrumRowBackground(self, ti, dn, HEADER_W, ry, w, rows_h)
             self.scene.addItem(bg)
-            it = self.scene.addSimpleText(dn)
-            it.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            it = _header_name(self.scene, dn, HEADER_W - 16, colors[dn].darker(140).name())
             it.setPos(12, ry + rows_h / 2 - 8)
-            it.setBrush(QBrush(colors[dn].darker(140)))
             self._register_header_item(it, 12)
             # jemná vodicí linka řady (skrz střed)
             self.scene.addLine(HEADER_W, ry + rows_h / 2, HEADER_W + w, ry + rows_h / 2,
@@ -3713,6 +4076,36 @@ class TimelineEditor(QWidget):
         self._relayout()
         self._play_drum_sound(drum_name)
 
+    def remap_drum(self, ti: int, old_name: str, new_name: str) -> int:
+        """Všechny údery bubnu `old_name` ve stopě `ti` přepíše na `new_name`
+        (jméno i MIDI). Úder, který by se tím zdvojil s už existujícím úderem
+        nového bubnu ve stejném okamžiku, se vynechá. Vrací počet přepsaných."""
+        evs = self.data.get("drums_timeline", [])
+        hits = [e for e in evs if e.get("track_index") == ti and e.get("drum") == old_name]
+        if not hits:
+            return 0
+        self._push_undo()
+        existing = {round(float(e.get("time_s", 0)), 3) for e in evs
+                    if e.get("track_index") == ti and e.get("drum") == new_name}
+        drop = []
+        for e in hits:
+            t = round(float(e.get("time_s", 0)), 3)
+            if t in existing:
+                drop.append(e)
+                continue
+            e["drum"] = new_name
+            e["midi"] = DRUM_NAME_TO_MIDI.get(new_name, e.get("midi", 0))
+            e["source"] = "manual"   # změnil uživatel, viz JSON_FORMAT.md §7.2
+            existing.add(t)
+        if drop:
+            self.data["drums_timeline"] = [e for e in evs if not any(e is d for d in drop)]
+        self._relayout()
+        main = self.window()
+        if hasattr(main, "status"):
+            main.status.showMessage(tr("status.drum_remapped", n=len(hits),
+                                       old=old_name, new=new_name))
+        return len(hits)
+
     def remove_drum_hit(self, item: "DrumHitItem") -> None:
         try:
             self.data.get("drums_timeline", []).remove(item.event)
@@ -3793,10 +4186,8 @@ class TimelineEditor(QWidget):
         self._register_header_item(
             self.scene.addRect(0, top, HEADER_W, h + 2,
                                QPen(QColor("#a3c2e6")), QBrush(QColor("#e0ecfb"))))
-        nm = self.scene.addSimpleText("🎸 " + name)
-        nm.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        nm = _header_name(self.scene, "🎸 " + name, HEADER_W - 52, "#1a5fb4")
         nm.setPos(6, top + 3)
-        nm.setBrush(QBrush(QColor("#1a5fb4")))
         self._register_header_item(nm, 6)
 
         n_strings = 4
@@ -3808,11 +4199,13 @@ class TimelineEditor(QWidget):
             # interaktivní pozadí řádku — pravý klik = přidat notu téhle struny
             bg = BassLaneBackground(self, ti, s, HEADER_W, ry, w, rows_h)
             self.scene.addItem(bg)
+            # popisek struny vpravo v hlavičce — vlevo je jméno stopy
             it = self.scene.addSimpleText(tr("lane.string", n=s))
             it.setFont(QFont("Segoe UI", 7))
-            it.setPos(12, ry - 2)
+            sx = HEADER_W - 6 - it.boundingRect().width()
+            it.setPos(sx, ry + rows_h / 2 - it.boundingRect().height() / 2)
             it.setBrush(QBrush(QColor("#4a7fc9")))
-            self._register_header_item(it, 12)
+            self._register_header_item(it, sx)
             self.scene.addLine(HEADER_W, ry + rows_h / 2, HEADER_W + w, ry + rows_h / 2,
                                QPen(QColor("#cfe0f5"), 1))
 

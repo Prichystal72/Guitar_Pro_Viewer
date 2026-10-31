@@ -4,6 +4,7 @@ Guitar Pro Viewer & Karaoke Exporter
 PySide6 aplikace pro procházení .gp3/.gp4/.gp5 souborů a export do JSON pro karaoke systémy.
 """
 
+import re
 import sys
 import json
 from html import escape as html_escape
@@ -26,6 +27,7 @@ from PySide6.QtWidgets import (
     QScrollArea, QStatusBar, QHeaderView, QMessageBox,
     QCheckBox, QFrame, QLineEdit, QComboBox, QToolBar, QSizePolicy,
     QTextBrowser, QDockWidget, QInputDialog, QDialog, QStyle, QDialogButtonBox,
+    QFormLayout, QSpinBox,
 )
 from PySide6.QtCore import Qt, QSize, QThread, Signal
 from PySide6.QtGui import QFont, QColor, QAction, QActionGroup, QIcon, QBrush, QPalette
@@ -49,6 +51,23 @@ def get_beat_text(beat) -> str:
     if hasattr(t, 'value'):
         return t.value or ""
     return str(t)
+
+
+def join_syllables(tokens) -> str:
+    """Slabiky textu z GP po notách -> slova: „la-" + „dy" = „lady".
+    Guitar Pro (i GP6/GP7) dělí slovo na slabiky spojovníkem na KONCI
+    slabiky; samostatný „-" je jen prodloužení slabiky přes další notu.
+    Slovo se spojovníkem uvnitř („rock-and-roll") zůstává beze změny."""
+    out = ""
+    for tok in tokens:
+        tok = (tok or "").strip()
+        if not tok or tok == "-":
+            continue
+        if out.endswith("-"):
+            out = out[:-1] + tok
+        else:
+            out = (out + " " + tok) if out else tok
+    return out.rstrip("-")
 
 
 def get_chord_name(beat) -> str:
@@ -102,20 +121,59 @@ def duration_name(value: int) -> str:
 
 
 def build_tempo_map(song) -> list[tuple[int, int]]:
-    """Vrátí seznam (tick, tempo_bpm) seřazený podle ticku.
-    GP3 nemá per-takt tempo → stačí globální. GP4/5 mohou mít změny v MeasureHeader.
+    """Vrátí seznam (tick, tempo_bpm) seřazený podle ticku — ticky jsou
+    SUROVÉ ticky partitury (bez rozbalení repetic), viz `play_tempo_map`.
+
+    GP3/4/5 ukládá změny tempa do mix table na konkrétním beatu
+    (`beat.effect.mixTableChange.tempo`), `MeasureHeader` je v pyguitarpro
+    nenese. Sbírá se ze všech stop — změnu tempa může mít zapsanou kterákoli.
+    GP6/GP7 je mají v automaci hlavní stopy (`song.extraTempoChanges`,
+    viz gpif_reader.py).
     """
-    tempo_map = [(960, song.tempo)]  # GP tick začíná na 960
-    for track in song.tracks[:1]:
+    changes: dict[int, int] = {960: song.tempo}   # GP tick začíná na 960
+    for track in song.tracks:
         for m in track.measures:
-            h = m.header
-            # GP4/5 mají h.tempo jako Tempo objekt; GP3 tenhle atribut nemá
-            h_tempo = getattr(h, "tempo", None)
-            if h_tempo is not None:
-                val = getattr(h_tempo, "value", h_tempo)  # Tempo obj nebo int
-                if isinstance(val, int) and val > 0 and val != tempo_map[-1][1]:
-                    tempo_map.append((h.start, val))
-    return sorted(set(tempo_map))
+            h_tempo = getattr(m.header, "tempo", None)
+            val = getattr(h_tempo, "value", h_tempo)
+            if isinstance(val, int) and val > 0:
+                changes[m.header.start] = val
+            for v in m.voices:
+                for b in v.beats:
+                    mc = getattr(b.effect, "mixTableChange", None)
+                    t = getattr(mc, "tempo", None) if mc is not None else None
+                    if t is not None and getattr(t, "value", 0) > 0:
+                        changes[b.start] = t.value
+    # GP6/GP7 (gpif_reader) mají tempo v automaci hlavní stopy, ne v beatu
+    for tick, bpm in getattr(song, "extraTempoChanges", None) or []:
+        if bpm > 0:
+            changes[int(tick)] = int(bpm)
+    out: list[tuple[int, int]] = []
+    for tick, bpm in sorted(changes.items()):
+        if not out or out[-1][1] != bpm:
+            out.append((tick, bpm))
+    return out
+
+
+def play_tempo_map(measures, order, tempo_map: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Mapa tempa v tickách PŘEHRÁVÁNÍ (repetice rozbalené, `order` =
+    `expand_measure_order`). Surová mapa z `build_tempo_map` má ticky
+    partitury — po repetici by změna tempa padla o rozbalené takty dřív.
+    Každý přehraný takt dostane tempo platné v JEHO místě partitury."""
+    if not order:
+        return list(tempo_map)
+    out: list[tuple[int, int]] = []
+    play_tick = 960
+    for src in order:
+        h = measures[src].header
+        start, length = h.start, h.length
+        bpm0 = tempo_at_tick(start, tempo_map)
+        if not out or out[-1][1] != bpm0:
+            out.append((play_tick, bpm0))
+        for t, bpm in tempo_map:
+            if start < t < start + length and bpm != out[-1][1]:
+                out.append((play_tick + t - start, bpm))
+        play_tick += length
+    return out
 
 
 def ticks_to_seconds(tick: int, tempo_map: list[tuple[int, int]]) -> float:
@@ -242,14 +300,20 @@ def expand_measure_plan(measures) -> tuple[list[tuple[int, int]], list[str]]:
         h = measures[i].header
         alt = getattr(h, "repeatAlternative", 0) or 0
         cur_pass = pass_count.get(repeat_start, 1)
-        if alt == 0 or (alt & (1 << (cur_pass - 1))):
+        is_played = alt == 0 or bool(alt & (1 << (cur_pass - 1)))
+        if is_played:
             played[i] = played.get(i, 0) + 1
             plan.append((i, played[i]))
         if getattr(h, "isRepeatOpen", False):
             repeat_start = i
             pass_count.setdefault(repeat_start, 1)
         close = getattr(h, "repeatClose", -1) or -1
-        if close > 0:
+        # Repetice na taktu, který se v tomhle průchodu NEHRAJE (jiné
+        # zakončení), se nevyhodnocuje. Jinak u zakončení 1.+3. / 2.+4.
+        # s repeticí na obou taktech (Tublatanka – Môj starý dobrý kabát, GP7)
+        # skočil nezahraný takt 1./3. zakončení zpět dřív, než zazněl takt
+        # 2./4. zakončení.
+        if close > 0 and is_played:
             done = pass_count.get(repeat_start, 1)
             if done <= close:
                 pass_count[repeat_start] = done + 1
@@ -329,6 +393,31 @@ def expand_measure_order(measures) -> list[int]:
     return [idx for idx, _pass in plan]
 
 
+def repeat_blocks(measures) -> list[tuple[int, int, int]]:
+    """Bloky repetic v partituře: [(první takt, poslední takt, počet zaznění)]
+    (indexy od 0). Konec bloku si hlavička pamatuje i po nastavení na jedno
+    zaznění (`_repeatEnd`) — jinak by blok ze seznamu zmizel a nešel vrátit."""
+    out: list[tuple[int, int, int]] = []
+    start = 0
+    for i, m in enumerate(measures):
+        h = m.header
+        if getattr(h, "isRepeatOpen", False):
+            start = i
+        close = getattr(h, "repeatClose", -1) or -1
+        if close > 0:
+            h._repeatEnd = True
+        if close > 0 or getattr(h, "_repeatEnd", False):
+            out.append((start, i, max(1, close + 1)))
+    return out
+
+
+def set_repeat_plays(measures, end_idx: int, plays: int) -> None:
+    """Počet zaznění bloku repetice končícího taktem `end_idx` (1 = bez opakování)."""
+    h = measures[end_idx].header
+    h._repeatEnd = True
+    h.repeatClose = plays - 1 if plays > 1 else -1
+
+
 def tempo_at_tick(tick: int, tempo_map: list[tuple[int, int]]) -> int:
     """Tempo (BPM) platné v daném absolutním (surovém, nerozbaleném) GP ticku."""
     bpm = tempo_map[0][1]
@@ -339,52 +428,141 @@ def tempo_at_tick(tick: int, tempo_map: list[tuple[int, int]]) -> int:
     return bpm
 
 
-def walk_track_beats(track, tempo_map: list[tuple[int, int]]):
+def walk_track_beats(track, tempo_map: list[tuple[int, int]], all_voices: bool = False):
     """Generuje `(measure_idx0, beat, time_s, duration_s)` pro stopu **v
     reálném pořadí přehrávání** — repetice rozbalené (`expand_measure_order`).
 
-    `time_s` se skládá ze DVOU nezávislých částí:
+    `tempo_map` je SUROVÁ mapa z `build_tempo_map` (ticky partitury); tady se
+    převede na ticky přehrávání (`play_tempo_map`), takže změna tempa za
+    repeticí padne na správný takt.
 
-    1. **Začátek taktu** — z autoritativní `TimeGrid` (repetice + mapa metra
-       ze sdílené hlavičky taktu, stejná pro všechny stopy v souboru).
-    2. **Pozice beatu UVNITŘ taktu** — z rozdílu jeho ticku a ticku začátku
-       toho taktu (`b.start - m.header.start`), převedená tempem platným
-       v tom místě.
+    Čas beatu = začátek taktu z mřížky (rozbalené pořadí + metrum) + pozice
+    beatu v taktu z jeho ticku, obojí přes mřížku tempa (změna tempa uvnitř
+    taktu se započítá). Reset na každé taktové čáře: špatně notovaný „tichý"
+    takt (vokál přes mezihru s chybějící pauzou) utrhne čas jen uvnitř
+    jednoho taktu, ne kumulativně (naměřeno dřív: jinak −37 s u zpěvu).
 
-    Dřív se `time_s` počítal jako běžící součet délek beatů TÉ KTERÉ stopy
-    napříč celým rozbaleným pořadím. To je křehké: když stopa v „tichém"
-    taktu nemá notovanou plnou pauzu (typicky vokální stopa přes
-    instrumentální mezihru — jedna čtvrťová nota místo taktu 2/4 nebo 4/4),
-    chyba se od té chvíle KUMULUJE přes všechny další takty. Naměřeno na
-    reálném souboru: na tomtéž taktu (autoritativně 50,000 s) vyšly bicí
-    (plně notované) přesně, ale zpěv byl mimo o 37 sekund — o tolik se
-    ztratilo v „tichých" taktech před ním.
-
-    S resetem na každé taktové čáře se špatná notace utrhne maximálně
-    uvnitř JEDNOHO taktu, ne kumulativně přes celou píseň."""
+    `all_voices=True` — i 2.–4. hlas (bicí v GP5 mívají kopák ve 2. hlase)."""
     TICKS_PER_BEAT = 960
     order = expand_measure_order(track.measures)
     if not order:
         return
     meter_map = meter_map_from_measures(track.measures, order)
     beats_per_bar = meter_map[0]["num"] if meter_map else 4
-    grid = TimeGrid([{"tick": t, "bpm": b} for t, b in tempo_map],
+    grid = TimeGrid([{"tick": t, "bpm": b}
+                     for t, b in play_tempo_map(track.measures, order, tempo_map)],
                     beats_per_bar, meter_map=meter_map)
     for play_idx, m_idx in enumerate(order):
         m = track.measures[m_idx]
-        bar_start_s = grid.bar_start_seconds(play_idx + 1)
+        bar_beat0 = grid.beats_before_bar(play_idx + 1)
         bar_start_tick = m.header.start
         for v_idx, v in enumerate(m.voices):
-            if v_idx > 0:
+            if v_idx > 0 and not all_voices:
                 continue
             for b in v.beats:
-                dur_ticks = TICKS_PER_BEAT * 4 // b.duration.value
-                if b.duration.isDotted:
-                    dur_ticks = int(dur_ticks * 1.5)
-                bpm = tempo_at_tick(b.start, tempo_map)
-                duration_s = round(dur_ticks / TICKS_PER_BEAT * (60.0 / bpm), 4)
-                offset_s = (b.start - bar_start_tick) / TICKS_PER_BEAT * (60.0 / bpm)
-                yield m_idx, b, round(bar_start_s + offset_s, 4), duration_s
+                g0 = bar_beat0 + (b.start - bar_start_tick) / TICKS_PER_BEAT
+                g1 = g0 + b.duration.time / TICKS_PER_BEAT
+                t0 = grid.seconds(g0)
+                yield m_idx, b, round(t0, 4), round(grid.seconds(g1) - t0, 4)
+
+
+_BASS_NAME_RE = re.compile(r"bass|bas[ay]?|baskytar", re.I)
+
+
+def pick_bass_track(song, exclude: int | None = None) -> int | None:
+    """Index (0-based) JEDNÉ basové stopy, nebo `None`. ESP32 hraje jednu
+    basovou linku — víc 4strunných stop (Let It Be: „Piano Bass" + „Bass")
+    by se slilo a noty zdvojily. Pořadí: GM basový nástroj (program 32–39),
+    pak jméno s „bass"/„basa" (ne „piano"), pak první v souboru.
+    `exclude` = 0-based index stopy, která basou být nemůže (zpěv)."""
+    cands = [i for i, t in enumerate(song.tracks)
+             if not t.isPercussionTrack and len(t.strings) == 4 and i != exclude]
+    if not cands:
+        return None
+
+    def score(i):
+        t = song.tracks[i]
+        prog = t.channel.instrument if t.channel else -1
+        name = t.name or ""
+        return (32 <= prog <= 39,
+                bool(_BASS_NAME_RE.search(name)) and "piano" not in name.lower(),
+                -i)
+    return max(cands, key=score)
+
+
+def gp_drum_events(song, tempo_map) -> tuple[list[dict], dict | None]:
+    """Údery bicích ze VŠECH bicích stop (GP6/GP7 je často dělí — Kabát
+    Bára: 2× Drumkit, Šaman: Drumkit + Tamburína), všechny hlasy, repetice
+    rozbalené. Vynechané: svázané noty (tie = doznívání), neznějící výšky
+    (<27) a duplicity — týž buben ve stejný okamžik jen jednou (příraz
+    „na dobu" ve stejném bubnu, dvě stopy hrající totéž). Všechny údery
+    nesou index PRVNÍ bicí stopy — ESP32 má jednu bicí linku."""
+    perc = [(i, t) for i, t in enumerate(song.tracks) if t.isPercussionTrack]
+    if not perc:
+        return [], None
+    first_idx, first = perc[0]
+    ti = first_idx + 1
+    info = {"index": ti, "name": first.name, "type": "drums", "is_drums": True,
+            "instrument_midi": first.channel.instrument if first.channel else 0}
+    out: list[dict] = []
+    seen: set[tuple[float, int]] = set()
+    for _i, track in perc:
+        for _m, b, time_s, duration_s in walk_track_beats(track, tempo_map, all_voices=True):
+            for n in b.notes:
+                if n.type == gpm.NoteType.tie:
+                    continue
+                midi = note_to_midi(n, track)
+                if midi < 27:
+                    # Pod GM/GS perkusemi (27–87) nic nezní — typicky výška 0,
+                    # pozůstatek převodu tabu (Run To the Hills: 2184 not).
+                    # Exportovaly by se jako sample „?" a firmware je nenajde.
+                    continue
+                key = (round(time_s, 3), midi)
+                if key in seen:
+                    continue
+                seen.add(key)
+                out.append({"time_s": time_s, "duration_s": duration_s,
+                            "drum": drum_name(midi), "midi": midi,
+                            "track_index": ti,
+                            # `source` = odkud událost je: "gp" (z Guitar Pro),
+                            # "manual" (napsal člověk), "generated" (dopočítal
+                            # program). Editor podle toho pozná, co má uživatel
+                            # ještě zkontrolovat sluchem.
+                            "source": "gp"})
+    out.sort(key=lambda e: e["time_s"])
+    return out, info
+
+
+def gp_bass_events(song, tempo_map, exclude: int | None = None) -> tuple[list[dict], dict | None]:
+    """Noty basy z `pick_bass_track`: všechny hlasy, repetice rozbalené.
+    Svázaná nota (tie) NEní nový úder — prodlouží předchozí notu na téže
+    struně (jinak by basa na ESP32 zahrála tón znovu)."""
+    bi = pick_bass_track(song, exclude)
+    if bi is None:
+        return [], None
+    track = song.tracks[bi]
+    ti = bi + 1
+    info = {"index": ti, "name": track.name, "type": "bass", "is_drums": False,
+            "instrument_midi": track.channel.instrument if track.channel else 0}
+    out: list[dict] = []
+    last_on_string: dict[int, dict] = {}
+    for _m, b, time_s, duration_s in walk_track_beats(track, tempo_map, all_voices=True):
+        for n in b.notes:
+            if n.type == gpm.NoteType.tie:
+                prev = last_on_string.get(n.string)
+                if prev is not None:
+                    prev["duration_s"] = round(max(prev["duration_s"],
+                                                   time_s + duration_s - prev["time_s"]), 4)
+                continue
+            midi = note_to_midi(n, track)
+            ev = {"time_s": time_s, "duration_s": duration_s,
+                  "note_name": midi_to_name(midi), "midi": midi,
+                  "string": n.string, "fret": n.value,
+                  "track_index": ti, "source": "gp"}
+            out.append(ev)
+            last_on_string[n.string] = ev
+    out.sort(key=lambda e: e["time_s"])
+    return out, info
 
 
 def note_to_midi(note, track) -> int:
@@ -516,29 +694,6 @@ def _track_type_label(kind: str) -> str:
 # Worker vlákno pro načítání (aby UI nezmrzlo)
 # ---------------------------------------------------------------------------
 
-def _unsupported_gp_format(path: str) -> str:
-    """Vrátí jméno formátu, když soubor Guitar Pro číst NEUMÍME, jinak "".
-
-    `pyguitarpro` zvládá jen GP3, GP4 a GP5 — ty začínají délkou textu a
-    řetězcem "FICHIER GUITAR PRO". Novější formáty jsou úplně jiné
-    kontejnery: GP6 (`.gpx`) je komprimovaný BCFZ/BCFS, GP7 a novější
-    (`.gp`) je ZIP s XML uvnitř. Ani jeden nejde otevřít a jediná cesta je
-    uložit soubor v Guitar Pro znovu jako GP5.
-    """
-    try:
-        with open(path, "rb") as f:
-            head = f.read(8)
-    except OSError:
-        return ""
-    if head[:4] in (b"BCFZ", b"BCFS"):
-        return "Guitar Pro 6 (.gpx)"
-    if head[:2] == b"PK":
-        return "Guitar Pro 7 a novější (.gp)"
-    if b"FICHIER" not in head[:8]:
-        return ""      # není to GP soubor — ať se o to postará parser
-    return ""
-
-
 class LoadWorker(QThread):
     done = Signal(object)   # Song
     error = Signal(str)
@@ -549,16 +704,13 @@ class LoadWorker(QThread):
         self.encoding = encoding
 
     def run(self):
+        # GP3–GP5 přes pyguitarpro (s náhradním utf-8), GP6 .gpx a GP7+ .gp
+        # přes gpif_reader — formát se pozná z hlavičky souboru, ne z přípony.
+        from gpif_reader import load_any
         try:
-            song = guitarpro.parse(self.path, encoding=self.encoding)
-            self.done.emit(song)
+            self.done.emit(load_any(self.path, encoding=self.encoding))
         except Exception as ex:
-            # Záložní pokus s utf-8 (pro soubory z jiných nástrojů)
-            try:
-                song = guitarpro.parse(self.path, encoding='utf-8')
-                self.done.emit(song)
-            except Exception:
-                self.error.emit(str(ex))
+            self.error.emit(str(ex))
 
 
 # ---------------------------------------------------------------------------
@@ -996,10 +1148,6 @@ class GuitarProViewer(QMainWindow):
         self.track_tree.setColumnWidth(0, 150)
         self.track_tree.itemClicked.connect(self._on_track_selected)
         left_layout.addWidget(self.track_tree)
-        self.chk_export_all = QCheckBox()
-        tr_label(self.chk_export_all, "left.export_all_tracks")
-        self.chk_export_all.setChecked(True)
-        left_layout.addWidget(self.chk_export_all)
         export_btn = QPushButton()
         tr_label(export_btn, "left.export_button")
         export_btn.setStyleSheet(
@@ -1150,11 +1298,11 @@ class GuitarProViewer(QMainWindow):
         file_menu.addAction(act_open_json)
         act_import_gp = tr_action(self, "file.import_gp", tooltip_key="file.import_gp.tooltip",
                                    shortcut="Ctrl+I", slot=self.open_file,
-                                   icon=std_icon(self, QStyle.StandardPixmap.SP_ArrowDown))
+                                   icon=icon("import_gp"))
         file_menu.addAction(act_import_gp)
         act_import_midi = tr_action(self, "file.import_midi", tooltip_key="file.import_midi.tooltip",
                                      shortcut="Ctrl+Shift+I", slot=self.open_midi,
-                                     icon=std_icon(self, QStyle.StandardPixmap.SP_ArrowDown))
+                                     icon=icon("import_midi"))
         file_menu.addAction(act_import_midi)
         file_menu.addSeparator()
         act_save = tr_action(self, "file.save", tooltip_key="file.save.tooltip",
@@ -1250,6 +1398,12 @@ class GuitarProViewer(QMainWindow):
         act_count_in = tr_action(self, "timeline.count_in", tooltip_key="timeline.count_in.tooltip",
                                   slot=lambda: self.timeline.count_in_dialog(), icon=icon("count_in"))
         timeline_menu.addAction(act_count_in)
+        act_repeats = tr_action(self, "timeline.repeats", tooltip_key="timeline.repeats.tooltip",
+                                 slot=self.edit_repeats)
+        timeline_menu.addAction(act_repeats)
+        act_fit_tempo = tr_action(self, "timeline.fit_tempo", tooltip_key="timeline.fit_tempo.tooltip",
+                                   slot=lambda: self.timeline.fit_tempo_to_audio())
+        timeline_menu.addAction(act_fit_tempo)
 
         # Přichytit k mřížce ▸ — radio podmenu, obousměrně zrcadlí
         # snap_combo AKTIVNÍ karty. Combobox samotný je PER KARTA (viz
@@ -1286,6 +1440,10 @@ class GuitarProViewer(QMainWindow):
         register_tr(act_tracks.setText, "view.tracks_panel")
         act_previews = self.dock_previews.toggleViewAction()
         register_tr(act_previews.setText, "view.previews_panel")
+        # v toolbaru jen ikona (dlouhý text „Panel náhledů (Chord Chart, JSON…)"
+        # mezi ikonami rozbíjel lištu), text zůstává v menu a tooltipu
+        act_previews.setIcon(icon("previews"))
+        register_tr(act_previews.setToolTip, "view.previews_panel")
         view_menu.addAction(act_tracks)
         view_menu.addAction(act_previews)
         view_menu.addSeparator()
@@ -1479,16 +1637,6 @@ class GuitarProViewer(QMainWindow):
         s více souběžnými načítáními/kartami mohlo přiřadit výsledek
         špatné kartě). `self._workers` drží VŠECHNY běžící načítání
         najednou (dřív jen jedno, `self._worker`, přepisované)."""
-        # Formát se pozná z hlavičky DŘÍV, než se pustí parser. Jinak
-        # `pyguitarpro` u GP6/GP7 přečte první bajt jako délku textu a
-        # vrátí "unsupported version" s kusem binárních dat, ze kterého
-        # uživatel nepozná vůbec nic.
-        unsupported = _unsupported_gp_format(path)
-        if unsupported:
-            QMessageBox.warning(self, tr("load.unsupported_title"),
-                                tr("load.unsupported_body", fmt=unsupported))
-            self.status.showMessage(tr("status.load_error"))
-            return
         self.status.showMessage(tr("status.loading", path=path))
         worker = LoadWorker(path)
         self._workers.append(worker)
@@ -1540,8 +1688,7 @@ class GuitarProViewer(QMainWindow):
         aktuální — MIDI nemá GP `Song` objekt, se kterým by šlo cokoliv
         sloučit, takže sloučení do rozpracované karty nedává smysl).
         Typický zdroj: placený export ze Songsterr Plus (MIDI/Guitar Pro/
-        MP3/WAV) pro soubory, které `pyguitarpro` neumí přečíst (GP6/GP7+,
-        viz `_unsupported_gp_format`)."""
+        MP3/WAV)."""
         path, _ = QFileDialog.getOpenFileName(
             self, tr("file.import_midi.dialog_title"), "",
             tr("file.import_midi.dialog_filter")
@@ -1649,37 +1796,11 @@ class GuitarProViewer(QMainWindow):
         url = dlg.url_input.text().strip()
         self.status.showMessage(tr("status.merging"))
         try:
-            import web_import as W
-            gp_words = self._gp_vocal_words()
-            drums, drum_track = self._gp_drums_for_merge()
-            bass, bass_track = self._gp_bass_for_merge()
-
-            web = dlg.result_json
-            n_lines = len(web.get("karaoke_lines") or [])
-            # Dvě cesty podle toho, co GP skutečně nese. Zpěvní text v tabu
-            # spíš NEBÝVÁ (ze čtyř tabů v repu ho má použitelný jediný),
-            # takže tichý fallback na mřížku by byl past — text by zase
-            # skončil dávno před koncem písně.
-            if len(gp_words) >= max(4, n_lines // 2):
-                W.retime_web_to_gp(web, gp_words)
-                merge_notes = ["Řádky napasované na zpěvní stopu z GP (%d slov)."
-                               % len(gp_words)]
-            else:
-                from music_grid import TimeGrid, meter_map_from_measures, markers_from_measures
-                plan, _lin_warn = expand_measure_plan(self.song.tracks[0].measures)
-                order = [src for src, _p in plan]
-                meter_map = meter_map_from_measures(self.song.tracks[0].measures, order)
-                grid = TimeGrid([{"tick": t, "bpm": b} for t, b in self.tempo_map],
-                                meter_map[0]["num"] if meter_map else 4,
-                                meter_map=meter_map)
-                markers = markers_from_measures(self.song.tracks[0].measures, order)
-                web, merge_notes = W.place_lines_on_structure(web, grid, markers, len(order))
-                merge_notes.insert(0, "GP nemá použitelný zpěvní text (%d slov) — "
-                                      "text rozložen na skutečnou taktovou strukturu."
-                                   % len(gp_words))
-                web.setdefault("meta", {})["meter_map"] = meter_map
-            W.attach_drums(web, drums, drum_track)
-            W.attach_bass(web, bass, bass_track)
+            # Text z dialogu (s jeho odpočtem a mřížkou) → reálná nula,
+            # pak stejné napasování na GP jako při otevření GP po textu.
+            from format_migrate import migrate, to_editor_model
+            web, merge_notes = self._gp_timing_onto_text(
+                to_editor_model(migrate(dlg.result_json)[0]))
             web.setdefault("meta", {})
             web["meta"]["source_file"] = Path(self.current_gp_file).name if self.current_gp_file else ""
             web["meta"]["merged_web_gp"] = True
@@ -1692,7 +1813,10 @@ class GuitarProViewer(QMainWindow):
         # Text nemusel přijít z webu (šlo ho i vložit), tak popisek zdroje
         # nesmí hlásit prázdnou URL — pak je zdrojem prostě ten GP soubor.
         origin = url or (Path(self.current_gp_file).name if self.current_gp_file else "GP")
+        song, gp_file, raw_tm = self.song, self.current_gp_file, self.tempo_map
         self._present_karaoke_data(web, source_desc=tr("source.gp_web", url=origin))
+        # GP zůstává kartě k dispozici (další Ctrl+M, náhledy)
+        self.song, self.current_gp_file, self.tempo_map = song, gp_file, raw_tm
         # Jak se text načasoval NENÍ vedlejší detail — rozhoduje o tom, jestli
         # sedí na nahrávku. Musí to být vidět, ne jen v konzoli.
         QMessageBox.information(
@@ -1728,49 +1852,197 @@ class GuitarProViewer(QMainWindow):
             target._pending_gp_populate = True
 
     def _merge_gp_tracks_into_current(self, song, path: str, target: TimelineEditor) -> None:
-        """GP importovaný AŽ PO existujících karaoke datech (web/JSON) na
-        tuhle kartu — text a akordy zůstávají beze změny, z GP se přidají
-        bicí a basa (jediné dva typy stopy, které tento merge z GP bere —
-        viz `_gp_drums_for_merge`/`_gp_bass_for_merge`).
+        """GP otevřený AŽ PO textu (web/vlastní/JSON) na téhle kartě. GP je
+        pán časování (stejně jako Ctrl+M `merge_with_web`): tempo, metrum
+        a repetice z GP, řádky textu se napasují na GP (zpěvní stopa, jinak
+        taktová struktura), přidají se bicí a basa. Obsah textu a akordů
+        (co je napsané) zůstává, mění se jen KDY.
 
-        POZOR: `_gp_drums_for_merge`/`_gp_bass_for_merge` čtou `self.song`
-        (= AKTIVNÍ karta) — pokud `target` mezitím přestala být aktivní,
-        krátce na ni přepneme (vzácný okrajový případ: pozadí dokončí GP
-        parse zrovna ve chvíli, kdy uživatel přepnul jinam; výsledek musí
-        jít na SPRÁVNOU kartu, i za cenu toho viditelného přepnutí)."""
+        Dřív se jen přilepily bicí v sekundách z GP k textu na mřížce
+        z dialogu (výchozích 120 BPM): tempo nesedělo (58 % úderů mimo
+        mřížku), text ležel na umělých `bars_per_line` taktech a odpočet
+        z dialogu při uložení zahodil první údery bicích."""
         target.song = song
         target.tempo_map = build_tempo_map(song)
         if target is not self.timeline:
             self.doc_tabs.setCurrentWidget(target)
-        drums, drum_track = self._gp_drums_for_merge()
-        bass, bass_track = self._gp_bass_for_merge()
-
-        import web_import as W
-        data = target.data if target.data else target._loaded_json
-        if drum_track:
-            W.attach_drums(data, drums, drum_track)
-        if bass_track:
-            W.attach_bass(data, bass, bass_track)
+        # Aktuální stav editoru (i s ručními úpravami), převedený na reálnou
+        # nulu bez odpočtu — přes stejný převod jako uložení/otevření souboru.
+        from format_migrate import to_editor_model
+        flat = to_editor_model(target.to_json())
+        data, notes = self._gp_timing_onto_text(flat)
         meta = data.setdefault("meta", {})
         meta["source_file"] = Path(path).name
         meta["merged_web_gp"] = True
-        target.current_gp_file = path   # jen import — current_json_file (cíl "Uložit") se NEMĚNÍ
 
         gp_name = Path(path).name
+        keep_json = target.current_json_file
         self._present_karaoke_data(data, source_desc=tr("source.web_gp_drums_bass", gp_name=gp_name))
+        # _present_karaoke_data nuluje GP song — tady ho karta potřebuje dál
+        # (Ctrl+M, náhledy), a cíl „Uložit" se otevřením GP nemění.
+        target.song = song
+        target.tempo_map = build_tempo_map(song)
+        target.current_gp_file = path
+        target.current_json_file = keep_json
+        # sloučení = neuložená změna (load_data dirty vynuloval)
+        target._dirty = True
+        target.dirty_changed.emit(True)
         added = []
-        if drum_track:
-            added.append(tr("merge.added_hits", n=len(drums)))
-        if bass_track:
-            added.append(tr("merge.added_bass", n=len(bass)))
+        if data.get("drums_timeline"):
+            added.append(tr("merge.added_hits", n=len(data["drums_timeline"])))
+        if data.get("bass_timeline"):
+            added.append(tr("merge.added_bass", n=len(data["bass_timeline"])))
         if added:
             QMessageBox.information(
                 self, tr("merge.added_title"),
-                tr("merge.added_body", gp_name=gp_name, added=", ".join(added)))
+                tr("merge.added_body", gp_name=gp_name, added=", ".join(added))
+                + "\n\n" + "\n".join("• " + n for n in notes))
         else:
             QMessageBox.information(
                 self, tr("merge.no_drums_bass_title"),
                 tr("merge.no_drums_bass_body", gp_name=gp_name))
+
+    def _gp_timing_onto_text(self, flat: dict) -> tuple[dict, list[str]]:
+        """Společné jádro obou cest „text + GP" (Ctrl+M i otevření GP po
+        textu). `flat` = plochý sekundový tvar editoru s časy od reálné nuly
+        (bez odpočtu) — `to_editor_model(...)`. Vrací (data, poznámky).
+
+        1. Mřížka z GP: tempo (i změny, v tickách přehrávání), metrum,
+           repetice.
+        2. Řádky na GP: zpěvní stopa má text → slova se spárují
+           (`retime_web_to_gp`); jinak rozložení na takty podle značek sekcí
+           (`place_lines_on_structure`). Akordy mimo řádky (intro, mezihry)
+           se posunou stejně jako nejbližší předchozí řádek.
+        3. Bicí a basa z GP (nahradí, co v textu bylo — např. klikací stopu)."""
+        import web_import as W
+        from music_grid import markers_from_measures
+        song = self.song
+        ms = song.tracks[0].measures
+        plan, _lin_warn = expand_measure_plan(ms)
+        order = [src for src, _p in plan]
+        meter_map = meter_map_from_measures(ms, order)
+        play_tm = [{"tick": t, "bpm": b} for t, b in play_tempo_map(ms, order, self.tempo_map)]
+        grid = TimeGrid(play_tm, meter_map[0]["num"] if meter_map else 4, meter_map=meter_map)
+
+        lines = flat.get("karaoke_lines") or []
+        old_start = {kl.get("line"): float(kl.get("start_s", 0.0)) for kl in lines}
+        loose = [c for c in flat.get("chords_timeline", []) if c.get("line") is None]
+        loose_old = [float(c["time_s"]) for c in loose]
+
+        gp_words = self._gp_vocal_words()
+        if len(gp_words) >= max(4, len(lines) // 2):
+            W.retime_web_to_gp(flat, gp_words)
+            notes = ["Řádky napasované na zpěvní stopu z GP (%d slov)." % len(gp_words)]
+        else:
+            markers = markers_from_measures(ms, order)
+            flat, notes = W.place_lines_on_structure(flat, grid, markers, len(order))
+            notes.insert(0, "GP nemá použitelný zpěvní text (%d slov) — text rozložen "
+                            "na taktovou strukturu GP." % len(gp_words))
+
+        new_start = {kl.get("line"): float(kl.get("start_s", 0.0))
+                     for kl in flat.get("karaoke_lines") or []}
+        anchors = sorted((old_start[li], new_start[li] - old_start[li])
+                         for li in old_start if li in new_start)
+        for c, t_old in zip(loose, loose_old):
+            prev = [d for t0, d in anchors if t0 <= t_old]
+            delta = prev[-1] if prev else (anchors[0][1] if anchors else 0.0)
+            c["time_s"] = round(max(0.0, t_old + delta), 3)
+        flat.get("chords_timeline", []).sort(key=lambda e: e["time_s"])
+
+        drums, drum_track = self._gp_drums_for_merge()
+        bass, bass_track = self._gp_bass_for_merge()
+        for key, evs, info, is_drums in (("drums_timeline", drums, drum_track, True),
+                                         ("bass_timeline", bass, bass_track, False)):
+            flat[key] = evs
+            if not info:
+                continue
+            tracks = flat.setdefault("tracks", [])
+            own = next((t for t in tracks if bool(t.get("is_drums")) == is_drums
+                        and t.get("type") == info["type"]), None)
+            if own is None:
+                own = dict(info)
+                own["index"] = max([t.get("index", 0) for t in tracks] + [0]) + 1
+                tracks.append(own)
+            else:
+                own["name"] = info["name"]
+            for ev in evs:
+                ev["track_index"] = own["index"]
+
+        last_end = grid.bar_start_seconds(len(order) + 1) if order else 0.0
+        meta = flat.setdefault("meta", {})
+        meta.update({
+            "tempo_bpm": play_tm[0]["bpm"],
+            "beats_per_measure": meter_map[0]["num"] if meter_map else 4,
+            "time_signature": "%d/%d" % ((meter_map[0]["num"], meter_map[0]["den"])
+                                         if meter_map else (4, 4)),
+            "count_in_s": 0.0,
+            "duration_seconds": round(last_end, 3),
+        })
+        flat["tempo_map"] = play_tm
+        flat["meter_map"] = meter_map
+        flat["linear_map"] = [{"bar": i + 1, "source_measure": src + 1, "pass": p}
+                              for i, (src, p) in enumerate(plan)]
+        return flat, notes
+
+    def edit_repeats(self) -> None:
+        """Časová osa ▸ Repetice… — počet zaznění každého bloku repetice
+        z GP. Opravuje přepisy, které neodpovídají nahrávce (Jasná zpráva:
+        druhé sólo zapsané 2×, kapela ho hraje jednou). Po změně se píseň
+        znovu poskládá z GP: samotný GP import od nuly (ruční úpravy se
+        ztratí — zeptá se), text z webu/vlastní se znovu napasuje na GP
+        (`_merge_gp_tracks_into_current`). Mění se jen načtená píseň v paměti,
+        GP soubor na disku zůstává beze změny."""
+        song = self.song
+        target = self.timeline
+        if not song or not song.tracks:
+            QMessageBox.information(self, tr("repeats.title"), tr("repeats.need_gp"))
+            return
+        measures = song.tracks[0].measures
+        blocks = repeat_blocks(measures)
+        if not blocks:
+            QMessageBox.information(self, tr("repeats.title"), tr("repeats.none"))
+            return
+        dlg = QDialog(self)
+        dlg.setWindowTitle(tr("repeats.title"))
+        form = QFormLayout(dlg)
+        info = QLabel(tr("repeats.info"))
+        info.setWordWrap(True)
+        form.addRow(info)
+        spins = []
+        for a, b, plays in blocks:
+            mk = next((measures[k].header.marker.title for k in range(a, b + 1)
+                       if measures[k].header.marker is not None), "")
+            sp = QSpinBox()
+            sp.setRange(1, 8)
+            sp.setValue(plays)
+            sp.setSuffix("×")
+            form.addRow(tr("repeats.block", a=a + 1, b=b + 1,
+                           name=(" — " + mk) if mk else ""), sp)
+            spins.append((b, plays, sp))
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        form.addRow(bb)
+        if not dlg.exec():
+            return
+        changes = [(b, sp.value()) for b, plays, sp in spins if sp.value() != plays]
+        if not changes:
+            return
+        pure_gp = target._loaded_json is None
+        if pure_gp and target._dirty:
+            ans = QMessageBox.question(self, tr("repeats.title"), tr("repeats.discard_edits"),
+                                       QMessageBox.Yes | QMessageBox.No)
+            if ans != QMessageBox.Yes:
+                return
+        for b, plays in changes:
+            set_repeat_plays(measures, b, plays)
+        if pure_gp:
+            self._finish_gp_import(target)
+            target._dirty = True
+            target.dirty_changed.emit(True)
+        else:
+            self._merge_gp_tracks_into_current(song, self.current_gp_file or "", target)
+        self.status.showMessage(tr("repeats.done", n=len(changes)))
 
     def _on_load_error(self, msg: str):
         QMessageBox.critical(self, tr("load.error_title"), tr("load.error_body", msg=msg))
@@ -1803,11 +2075,15 @@ class GuitarProViewer(QMainWindow):
 
         # Track tree
         self.track_tree.clear()
+        # Stejné rozpoznání jako export (_build_karaoke_json): zpěv, jedna basa.
+        vocal_ti = self._detect_vocal_track_index(song)
+        bass_idx = pick_bass_track(song, exclude=(vocal_ti - 1) if vocal_ti else None)
         for i, t in enumerate(song.tracks):
             is_solo = is_solo_like(t)
             kind = ("drums" if t.isPercussionTrack else
+                    "vocal" if i + 1 == vocal_ti else
+                    "bass" if i == bass_idx else
                     "solo_guitar" if is_solo else
-                    "bass" if len(t.strings) == 4 else
                     "guitar")
             item = QTreeWidgetItem([f"{i+1}. {t.name}", _track_type_label(kind)])
             item.setData(0, Qt.UserRole, i)
@@ -2156,9 +2432,20 @@ class GuitarProViewer(QMainWindow):
         measure_plan, self.last_linearize_warnings = (
             expand_measure_plan(song.tracks[0].measures) if song.tracks else ([], []))
 
+        ms0 = song.tracks[0].measures if song.tracks else []
+        order = [src for src, _p in measure_plan]
+        play_tm = (play_tempo_map(ms0, order, self.tempo_map) if ms0 else list(self.tempo_map))
+        meter_map = meter_map_from_measures(ms0, order) if ms0 else []
+        grid = TimeGrid([{"tick": t, "bpm": v} for t, v in play_tm],
+                        meter_map[0]["num"] if meter_map else 4, meter_map=meter_map)
+
         result = {
             "meta": {
                 "format_version": 2,
+                # Konec posledního přehraného taktu — jinak se délka písně
+                # odvodí z poslední noty a doznívající poslední takt se usekne.
+                "duration_seconds": round(grid.bar_start_seconds(len(order) + 1), 3) if order else 0.0,
+                "beats_per_measure": meter_map[0]["num"] if meter_map else 4,
                 "title": song.title or "",
                 "artist": song.artist or "",
                 "album": song.album or "",
@@ -2169,14 +2456,11 @@ class GuitarProViewer(QMainWindow):
                 "source_file": Path(self.current_gp_file).name if self.current_gp_file else "",
                 "has_line_structure": True,
             },
-            "tempo_map": [{"tick": t, "bpm": v} for t, v in self.tempo_map],
-            # Metrum se v GP může měnit (Jasná zpráva: takt 1 je 2/4, zbytek
-            # 4/4). Bez téhle mapy se všechny takty počítají jako plné a
-            # čísla taktů se rozejdou s notami. Bere se ROZBALENÉ pořadí —
-            # s repeticemi se číslování v přehrávání a v partituře liší.
-            "meter_map": meter_map_from_measures(
-                song.tracks[0].measures, [src for src, _p in measure_plan]
-            ) if song.tracks else [],
+            # Ticky PŘEHRÁVÁNÍ (repetice rozbalené) — stejné číslování taktů
+            # jako meter_map a linear_map. Metrum se v GP může měnit (Jasná
+            # zpráva: takt 1 je 2/4, zbytek 4/4).
+            "tempo_map": [{"tick": t, "bpm": v} for t, v in play_tm],
+            "meter_map": meter_map,
             "linear_map": [
                 {"bar": play_idx + 1, "source_measure": src_idx + 1, "pass": pass_no}
                 for play_idx, (src_idx, pass_no) in enumerate(measure_plan)
@@ -2197,12 +2481,16 @@ class GuitarProViewer(QMainWindow):
         vocal_beats: list[dict] = []   # {time_s, duration_s, text} ze zpěvní stopy
         contributes: dict[int, bool] = {}
 
+        bass_idx = pick_bass_track(song, exclude=(vocal_ti - 1) if vocal_ti else None)
+        # Bicí ze všech bicích stop jdou do JEDNÉ stopy (gp_drum_events, index
+        # první bicí stopy) — další bicí stopy by v editoru byly prázdné.
+        first_perc = next((i for i, t in enumerate(song.tracks) if t.isPercussionTrack), None)
         for t_idx, track in enumerate(song.tracks):
             ti = t_idx + 1
             track_type = (
                 "drums" if track.isPercussionTrack else
                 "vocal" if ti == vocal_ti else
-                "bass" if len(track.strings) == 4 else
+                "bass" if t_idx == bass_idx else
                 "solo_guitar" if is_solo_like(track) else
                 "guitar"
             )
@@ -2213,40 +2501,16 @@ class GuitarProViewer(QMainWindow):
                 "is_drums": track.isPercussionTrack,
                 "instrument_midi": track.channel.instrument if track.channel else 0,
             }
-            contributes[ti] = (track.isPercussionTrack or (ti == vocal_ti)
-                              or track_type in ("bass", "solo_guitar"))
+            contributes[ti] = ((track.isPercussionTrack and t_idx == first_perc)
+                               or (ti == vocal_ti) or track_type in ("bass", "solo_guitar"))
             track_solo_notes: list[tuple[float, int, int, str, float]] = []
 
             # walk_track_beats = repetice rozbalené (viz jeho docstring) —
             # naivní `for m in track.measures` dělalo časovou osu kratší
             # než reálná nahrávka u písní s repeat značkami.
             for m_idx, b, time_s, duration_s in walk_track_beats(track, self.tempo_map):
-                if track.isPercussionTrack:
-                    for n in b.notes:
-                        midi = note_to_midi(n, track)
-                        all_drum_events.append({
-                            "time_s": time_s, "duration_s": duration_s,
-                            "drum": drum_name(midi), "midi": midi,
-                            "track_index": ti,
-                            # `source` = odkud událost je: "gp" (z Guitar Pro),
-                            # "manual" (napsal člověk), "generated" (dopočítal
-                            # program — klikací stopa, groove šablona, basová
-                            # linka z akordů). Editor podle toho pozná, co má
-                            # uživatel ještě zkontrolovat sluchem.
-                            "source": "gp",
-                        })
-                    continue
-
-                if track_type == "bass":
-                    for n in b.notes:
-                        midi = note_to_midi(n, track)
-                        all_bass_events.append({
-                            "time_s": time_s, "duration_s": duration_s,
-                            "note_name": midi_to_name(midi), "midi": midi,
-                            "string": n.string, "fret": n.value,
-                            "track_index": ti, "source": "gp",
-                        })
-                    continue
+                if track.isPercussionTrack or track_type == "bass":
+                    continue   # bicí a basa: gp_drum_events / gp_bass_events níž
 
                 if track_type == "solo_guitar":
                     bpm = tempo_at_tick(b.start, self.tempo_map)
@@ -2281,6 +2545,9 @@ class GuitarProViewer(QMainWindow):
             if contributes[ti]:
                 result["tracks"].append(track_data)
 
+        all_drum_events, _dt = gp_drum_events(song, self.tempo_map)
+        all_bass_events, _bt = gp_bass_events(
+            song, self.tempo_map, exclude=(vocal_ti - 1) if vocal_ti else None)
         all_chord_events.sort(key=lambda e: e["time_s"])
         all_drum_events.sort(key=lambda e: e["time_s"])
         all_tab_events.sort(key=lambda e: e["time_s"])
@@ -2406,7 +2673,7 @@ class GuitarProViewer(QMainWindow):
                 t0 = g[0]["time_s"]
                 end = g[-1]["time_s"] + g[-1]["duration_s"]
                 events.append({"time_s": round(t0, 3), "duration_s": round(max(0.3, end - t0), 3),
-                               "text": " ".join(b["text"] for b in g),
+                               "text": join_syllables(b["text"] for b in g),
                                "line": li, "track_index": vocal_ti,
                                "source": "gp"})
                 line_ranges.append((round(t0, 3), round(end, 3), li))
@@ -2429,6 +2696,17 @@ class GuitarProViewer(QMainWindow):
             if txt and txt.strip():
                 beats.append((time_s, txt.strip()))
         beats.sort()
+        # slabiky po notách („la-", „dy") -> celé slovo na čase PRVNÍ slabiky,
+        # jinak se slova z webu („lady") se zpěvem z GP nespárují
+        merged: list[tuple[float, str]] = []
+        for t0, txt in beats:
+            if txt == "-":
+                continue
+            if merged and merged[-1][1].endswith("-") and len(txt.split()) == 1:
+                merged[-1] = (merged[-1][0], merged[-1][1][:-1] + txt)
+            else:
+                merged.append((t0, txt))
+        beats = [(t0, txt.rstrip("-")) for t0, txt in merged if txt.rstrip("-")]
         words: list[dict] = []
         for bi, (t0, txt) in enumerate(beats):
             parts = txt.split()
@@ -2442,59 +2720,17 @@ class GuitarProViewer(QMainWindow):
         return words
 
     def _gp_drums_for_merge(self):
-        """Vrátí (drums_timeline, drum_track_dict) z aktuálního GP songu.
-        `walk_track_beats` = repetice rozbalené — jinak bicí u písní s
-        repeat značkami (1./2. zakončení apod.) skončí uprostřed písně."""
-        song = self.song
-        if not song:
+        """(drums_timeline, drum_track_dict) z aktuálního GP songu — viz `gp_drum_events`."""
+        if not self.song:
             return [], None
-        drums: list[dict] = []
-        drum_track = None
-        for t_idx, track in enumerate(song.tracks):
-            if not track.isPercussionTrack:
-                continue
-            ti = t_idx + 1
-            drum_track = {"index": ti, "name": track.name, "type": "drums",
-                          "is_drums": True,
-                          "instrument_midi": track.channel.instrument if track.channel else 0}
-            for _m_idx, b, time_s, duration_s in walk_track_beats(track, self.tempo_map):
-                for n in b.notes:
-                    midi = note_to_midi(n, track)
-                    drums.append({"time_s": time_s, "duration_s": duration_s,
-                                  "drum": drum_name(midi), "midi": midi,
-                                  "track_index": ti, "source": "gp"})
-            break
-        drums.sort(key=lambda e: e["time_s"])
-        return drums, drum_track
+        return gp_drum_events(self.song, self.tempo_map)
 
     def _gp_bass_for_merge(self):
-        """Vrátí (bass_timeline, bass_track_dict) z aktuálního GP songu —
-        basová stopa (4 struny), noty s výškou (midi/note_name), ne bicí.
-        `walk_track_beats` = repetice rozbalené (viz `_gp_drums_for_merge`)."""
-        song = self.song
-        if not song:
+        """(bass_timeline, bass_track_dict) z aktuálního GP songu — viz `gp_bass_events`."""
+        if not self.song:
             return [], None
-        bass_notes: list[dict] = []
-        bass_track = None
-        for t_idx, track in enumerate(song.tracks):
-            if track.isPercussionTrack or len(track.strings) != 4:
-                continue
-            ti = t_idx + 1
-            bass_track = {"index": ti, "name": track.name, "type": "bass",
-                         "is_drums": False,
-                         "instrument_midi": track.channel.instrument if track.channel else 0}
-            for _m_idx, b, time_s, duration_s in walk_track_beats(track, self.tempo_map):
-                if not b.notes:
-                    continue
-                for n in b.notes:
-                    midi = note_to_midi(n, track)
-                    bass_notes.append({"time_s": time_s, "duration_s": duration_s,
-                                       "note_name": midi_to_name(midi), "midi": midi,
-                                       "string": n.string, "fret": n.value,
-                                       "track_index": ti, "source": "gp"})
-            break
-        bass_notes.sort(key=lambda e: e["time_s"])
-        return bass_notes, bass_track
+        vi = self._detect_vocal_track_index(self.song)
+        return gp_bass_events(self.song, self.tempo_map, exclude=(vi - 1) if vi else None)
 
     # ------------------------------------------------------------------
     # Export

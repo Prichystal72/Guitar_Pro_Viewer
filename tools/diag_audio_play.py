@@ -6,7 +6,7 @@ Stop. Pokud i TOHLE cuká, není to v timeline_editor.py — je to něco níž
 (Qt multimedia backend / zvukové zařízení / Voicemeeter).
 
 Použití:
-    python _diag_audio_play.py "cesta\\k\\souboru.wav"
+    python tools/diag_audio_play.py "cesta\\k\\souboru.wav"
 """
 import sys
 
@@ -15,7 +15,7 @@ from PySide6.QtMultimedia import QAudioOutput, QMediaDevices, QMediaPlayer
 from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget
 
 if len(sys.argv) < 2:
-    print("Použití: python _diag_audio_play.py \"cesta\\k\\souboru.wav\"")
+    print("Použití: python tools/diag_audio_play.py \"cesta\\k\\souboru.wav\"")
     sys.exit(1)
 
 path = sys.argv[1]

@@ -1,0 +1,15 @@
+Texty a akordy k písni „Olympic – Jasná zpráva“ (staženo 2026-10-31).
+Soubor | web | adresa | co v něm je / proč chybí
+
+karaoketexty.html | karaoketexty | https://www.karaoketexty.cz/texty-pisni/olympic/jasna-zprava-361 | HTML — čistý text (bez akordů), řádky <br>
+ultimate-guitar.html | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/1483105 | HTML — obsah v JSONu js-store
+ultimate-guitar.ug.txt | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/1483105 | TXT — značkování UG: [ch]akord[/ch] nad textem, [tab]…[/tab], [Verse]
+genius.html | genius | https://genius.com/Olympic-jasna-zprava-lyrics | HTML — text v <div data-lyrics-container>, sekce [Verse 1]/[Chorus], bez akordů
+—  | lyrics.ovh | https://api.lyrics.ovh/v1/Olympic/Jasn%C3%A1%20zpr%C3%A1va | NESTAŽENO: HTTP 404 — stránka neexistuje
+—  | lrclib | https://lrclib.net/api/get?artist_name=Olympic&track_name=Jasn%C3%A1%20zpr%C3%A1va | NESTAŽENO: HTTP 502 — web nedostupný
+—  | guitaretab | https://www.guitaretab.com/fetch/?type=tab&query=Jasn%C3%A1+zpr%C3%A1va | NESTAŽENO: žádné akordy ve výsledcích
+—  | chordie | https://www.chordie.com/results.php?q=Jasn%C3%A1+zpr%C3%A1va+Olympic | NESTAŽENO: nenalezeno ve výsledcích
+—  | musixmatch | https://www.musixmatch.com/lyrics/Olympic/Jasná-zpráva | NESTAŽENO: HTTP 404 — stránka neexistuje
+—  | pisnicky-akordy | https://pisnicky-akordy.cz/olympic/jasna-zprava | NESTAŽENO: HTTP 403 — ochrana proti robotům
+—  | supermusic | https://www.supermusic.cz/piesen.php?id=462 | NESTAŽENO: JS výzva proti robotům (supermusic)
+—  | velkyzpevnik | https://www.velkyzpevnik.cz/olympic/jasna-zprava | NESTAŽENO: HTTP 503 — web nedostupný

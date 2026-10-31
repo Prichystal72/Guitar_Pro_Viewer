@@ -46,19 +46,25 @@ class TimeGrid:
             span = segs[i][0] - segs[i - 1][0]
             self._seg_start_s.append(self._seg_start_s[-1] + span * 60.0 / segs[i - 1][1])
 
-        # --- metrum: (počáteční takt, dob v taktu) ---
-        meters: list[tuple[int, int]] = []
+        # --- metrum: (počáteční takt, dob v taktu, délka taktu ve ČTVRTKÁCH) ---
+        # Tempo je vždy ve čtvrťových dobách (GP i MIDI), takže délka taktu
+        # se počítá ve čtvrtkách: 6/8 = 3, 12/8 = 6, 2/2 = 4. „Doba"
+        # (`beat` v exportu) je proto vždy čtvrťová doba, i v x/8.
+        meters: list[tuple[int, int, float]] = []
         for entry in sorted(meter_map or [], key=lambda e: e.get("bar", 1)):
             num = int(entry.get("num") or beats_per_bar or DEFAULT_BEATS_PER_BAR)
-            meters.append((max(1, int(entry.get("bar", 1))), max(1, num)))
+            den = int(entry.get("den") or 4)
+            meters.append((max(1, int(entry.get("bar", 1))), max(1, num),
+                           max(1, num) * 4.0 / max(1, den)))
         if not meters or meters[0][0] > 1:
-            meters.insert(0, (1, max(1, int(beats_per_bar or DEFAULT_BEATS_PER_BAR))))
+            n = max(1, int(beats_per_bar or DEFAULT_BEATS_PER_BAR))
+            meters.insert(0, (1, n, float(n)))
         self.meters = meters
         # globální doba na začátku prvního taktu každého úseku metra
         self._meter_beat0 = [0.0]
         for i in range(1, len(meters)):
             span_bars = meters[i][0] - meters[i - 1][0]
-            self._meter_beat0.append(self._meter_beat0[-1] + span_bars * meters[i - 1][1])
+            self._meter_beat0.append(self._meter_beat0[-1] + span_bars * meters[i - 1][2])
 
         # Zpětná kompatibilita: kód, který zná jen jedno číslo, dostane
         # metrum PRVNÍHO taktu. Pro proměnné metrum jsou metody níž.
@@ -97,30 +103,33 @@ class TimeGrid:
         return self.segments[i][1]
 
     # --- metrum --------------------------------------------------------
-    def beats_in_bar(self, bar: int) -> int:
-        """Kolik dob má daný (1-based) takt."""
-        num = self.meters[0][1]
-        for start_bar, n in self.meters:
-            if bar >= start_bar:
-                num = n
-            else:
-                break
-        return num
-
-    def beats_before_bar(self, bar: int) -> float:
-        """Globální doba, na které daný takt začíná."""
-        bar = max(1, int(bar))
+    def _meter_index(self, bar: int) -> int:
         i = 0
-        for j, (start_bar, _n) in enumerate(self.meters):
-            if bar >= start_bar:
+        for j, m in enumerate(self.meters):
+            if bar >= m[0]:
                 i = j
             else:
                 break
-        start_bar, num = self.meters[i]
-        return self._meter_beat0[i] + (bar - start_bar) * num
+        return i
+
+    def beats_in_bar(self, bar: int) -> int:
+        """Kolik NOTOVANÝCH dob má daný (1-based) takt (čitatel metra) — pro
+        kreslení čar dob. Délku taktu ve čtvrtkách dává `quarters_in_bar`."""
+        return self.meters[self._meter_index(bar)][1]
+
+    def quarters_in_bar(self, bar: int) -> float:
+        """Délka taktu ve čtvrťových dobách (6/8 = 3, 2/2 = 4)."""
+        return self.meters[self._meter_index(bar)][2]
+
+    def beats_before_bar(self, bar: int) -> float:
+        """Globální doba (čtvrtky), na které daný takt začíná."""
+        bar = max(1, int(bar))
+        i = self._meter_index(bar)
+        start_bar, _num, q = self.meters[i]
+        return self._meter_beat0[i] + (bar - start_bar) * q
 
     def bar_beat(self, beat: float) -> tuple[int, float]:
-        """(takt 1-based, doba v taktu 1-based) z globální doby."""
+        """(takt 1-based, doba v taktu 1-based, ve čtvrtkách) z globální doby."""
         beat = max(0.0, beat)
         i = 0
         for j, b0 in enumerate(self._meter_beat0):
@@ -128,20 +137,13 @@ class TimeGrid:
                 i = j
             else:
                 break
-        start_bar, num = self.meters[i]
-        offset = beat - self._meter_beat0[i]
-        bars_in = int(offset // num)
-        bar = start_bar + bars_in
-        # Úsek metra mohl mezitím skončit — pak pokračuj v tom následujícím.
-        if i + 1 < len(self.meters) and bar >= self.meters[i + 1][0]:
-            return self.bar_beat_from(self.meters[i + 1][0], beat, i + 1)
-        return bar, beat - self._meter_beat0[i] - bars_in * num + 1.0
+        return self.bar_beat_from(self.meters[i][0], beat, i)
 
     def bar_beat_from(self, start_bar: int, beat: float, i: int) -> tuple[int, float]:
-        start_bar_i, num = self.meters[i]
+        start_bar_i, _num, q = self.meters[i]
         offset = beat - self._meter_beat0[i]
-        bars_in = int(offset // num)
-        return start_bar_i + bars_in, offset - bars_in * num + 1.0
+        bars_in = int((offset + 1e-9) // q)
+        return start_bar_i + bars_in, max(0.0, offset - bars_in * q) + 1.0
 
     def bar_start_seconds(self, bar: int) -> float:
         """Čas v sekundách, kdy daný takt začíná."""

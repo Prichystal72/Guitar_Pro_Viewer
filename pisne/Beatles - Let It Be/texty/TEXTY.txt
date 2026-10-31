@@ -1,0 +1,15 @@
+Texty a akordy k písni „The Beatles – Let It Be“ (staženo 2026-10-31).
+Soubor | web | adresa | co v něm je / proč chybí
+
+karaoketexty.html | karaoketexty | https://www.karaoketexty.cz/texty-pisni/beatles-the/let-it-be-125 | HTML — čistý text (bez akordů), řádky <br>
+ultimate-guitar.html | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/the-beatles/let-it-be-chords-17427 | HTML — obsah v JSONu js-store
+ultimate-guitar.ug.txt | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/the-beatles/let-it-be-chords-17427 | TXT — značkování UG: [ch]akord[/ch] nad textem, [tab]…[/tab], [Verse]
+genius.html | genius | https://genius.com/The-beatles-let-it-be-lyrics | HTML — text v <div data-lyrics-container>, sekce [Verse 1]/[Chorus], bez akordů
+lyrics-ovh.json | lyrics-ovh | https://api.lyrics.ovh/v1/Beatles/Let%20It%20Be | JSON — {lyrics: prostý text, \r\n/\n}
+—  | lrclib | https://lrclib.net/api/get?artist_name=The%20Beatles&track_name=Let%20It%20Be | NESTAŽENO: HTTP 502 — web nedostupný
+guitaretab.html | guitaretab | https://www.guitaretab.com/b/beatles/290738.html | HTML — akordy nad textem v <pre>, Let It Be chords (ver 6)
+—  | chordie | https://www.chordie.com/results.php?q=Let+It+Be+The+Beatles | NESTAŽENO: nenalezeno ve výsledcích
+musixmatch.html | musixmatch | https://www.musixmatch.com/lyrics/The-Beatles/Let-It-Be-Remastered-2015 | HTML — text v JSONu __NEXT_DATA__
+—  | pisnicky-akordy | https://pisnicky-akordy.cz/the-beatles/let-it-be | NESTAŽENO: HTTP 403 — ochrana proti robotům
+—  | supermusic | https://www.supermusic.cz/piesen.php?id=108412 | NESTAŽENO: JS výzva proti robotům (supermusic)
+—  | velkyzpevnik | https://www.velkyzpevnik.cz/the-beatles/let-it-be | NESTAŽENO: HTTP 503 — web nedostupný

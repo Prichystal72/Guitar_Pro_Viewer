@@ -17,7 +17,7 @@ na ESP32 (nebo jinde).
 > kompatibilita).
 
 > **Referenční testovací soubor:**
-> [`schema_v1_reference_iron_maiden.json`](schema_v1_reference_iron_maiden.json)
+> [`schema_v1_reference_iron_maiden.json`](pisne/Iron%20Maiden%20-%20Run%20To%20the%20Hills/schema_v1_reference_iron_maiden.json)
 > — reálný export z `Iron Maiden - Run To the Hills (2).gp3` (GP import,
 > žádný web import), obsahuje **bicí (5168 úderů)**, **basu (1511 not)** a
 > count-in (`countInBars: 2`). Použij ho k testování parseru — je bohatší na
@@ -33,6 +33,12 @@ na ESP32 (nebo jinde).
   — např. `4.5` = půl doby za 4. dobou). Přesný čas v milisekundách se
   dopočítá z `tempoMap`/`meterMap` (viz §3). Firmware si ho spočítá jednou při
   načtení a dál pracuje s milisekundami/sekundami, jak potřebuje.
+- **`beat` je vždy ČTVRŤOVÁ doba** (tempo v `tempoMap` je ve čtvrtkách, stejně
+  jako v GP/MIDI), i v metru x/8 nebo x/2: takt 6/8 má 3 čtvrtky (`beat`
+  1.0–3.999), 12/8 = 6, 2/2 = 4. Délka taktu ve čtvrtkách = `num * 4 / den`.
+  Hodnoty můžou být jemné — 32iny (`2.125`), trioly (`2.3333`, `2.6667`),
+  kvintoly (`2.2`), septoly, devítiholy (`2.2222`); i to je „na mřížce" a nenese
+  `tMsOverride`. `beat` je zaokrouhlený na 4 desetinná místa (chyba < 0,1 ms).
 - **Výjimka — `tMsOverride`.** Nahrávky, které nehrají přesně na klik (volná
   interpretace, mírné tempové výkyvy), mají u události navíc `tMsOverride`
   (int, milisekundy od začátku skladby) — **má přednost** před dopočtem
@@ -81,7 +87,10 @@ jako string — metrum je v `meterMap` (§2.3).
 ### 2.2 `tempoMap[]`
 
 Změny tempa, seřazené podle pozice. Minimálně jeden záznam (na `bar: 1,
-beat: 1.0`).
+beat: 1.0`). Z GP se berou i změny tempa uprostřed skladby (mix table) —
+`bar` je číslo taktu v PŘEHRÁVÁNÍ (repetice rozbalené), takže změna za
+repeticí sedí na správném taktu. Po „Napasovat tempo na nahrávku“ (nahrávka bez
+klikačky) má `tempoMap` jeden záznam na KAŽDÝ takt — tempo, jak ho hrála kapela.
 
 ```jsonc
 { "bar": 1, "beat": 1.0, "bpm": 120 }
@@ -191,6 +200,9 @@ je-li poslední).
   `format_migrate.py::_load_drum_samples`). Firmware **nepotřebuje** žádnou
   GM→sample mapu — dostane rovnou jméno vzorku, které má hledat na SD kartě.
   Víc úderů na stejné `bar`/`beat` (kick+hi-hat současně) = víc záznamů.
+- Z GP se berou údery ze **všech hlasů** stopy; **svázané noty** (tie =
+  doznívání) a výšky pod 27 (v GM bicích nic nezní, typicky výška 0
+  z převedených tabů) se neexportují.
 - Když `drum_samples.json` na desktopu nezná dané GM jméno bubnu, `sample`
   obsahuje **původní GM jméno** (např. `"Bongo"`) místo basename — firmware
   takový vzorek nenajde; ber to jako "bez zvuku", nespadni.
@@ -212,6 +224,11 @@ formátu) — viz §7.3. Jeden záznam = jedna nota.
 | `string` | int | 1 (nejtenčí) až 4 (nejtlustší) — nepovinné, jen editor (vizuální řádek) |
 | `fret` | int | pražec — nepovinné, jen editor |
 | `durationBeats` | float | délka noty v dobách (`60/bpm` na jednu dobu) — **skutečná hudební vlastnost**, ne hranice zobrazení. Chybí-li, firmware může použít rozumný default (~0.3 s) |
+
+Basa je vždy z **jedné** stopy GP (`pick_bass_track`: GM basový nástroj
+32–39, pak jméno „bass/basa", pak první 4strunná) — víc stop se neslévá.
+**Svázaná nota** (tie) není nový záznam, prodlouží `durationBeats`
+předchozí noty na téže struně.
 
 **Firmware dnes basu vůbec nezná** (viz §7.3 a `TODO_FORMAT_V2.md` ve
 firmware repu) — tahle sekce popisuje **cílový stav**, ne to, co je

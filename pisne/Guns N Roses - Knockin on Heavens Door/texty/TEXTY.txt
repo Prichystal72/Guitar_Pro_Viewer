@@ -1,0 +1,14 @@
+Texty a akordy k písni „Guns N' Roses – Knockin' on Heaven's Door“ (staženo 2026-10-31).
+Soubor | web | adresa | co v něm je / proč chybí
+
+karaoketexty.html | karaoketexty | https://www.karaoketexty.cz/texty-pisni/guns-n-roses/knockin-on-heaven-s-door-6526 | HTML — čistý text (bez akordů), řádky <br>
+—  | ultimate-guitar | https://www.ultimate-guitar.com/search.php?search_type=title&value=Guns%20N%27%20Roses%20Knockin%27%20on%20Heaven%27s%20Door | NESTAŽENO: žádné akordy (Chords) ve výsledcích
+genius.html | genius | https://genius.com/Guns-n-roses-knockin-on-heavens-door-lyrics | HTML — text v <div data-lyrics-container>, sekce [Verse 1]/[Chorus], bez akordů
+lyrics-ovh.json | lyrics-ovh | https://api.lyrics.ovh/v1/Guns%20N%27%20Roses/Knockin%27%20on%20Heaven%27s%20Door | JSON — {lyrics: prostý text, \r\n/\n}
+—  | lrclib | https://lrclib.net/api/get?artist_name=Guns%20N%27%20Roses&track_name=Knockin%27%20on%20Heaven%27s%20Door | NESTAŽENO: HTTP 502 — web nedostupný
+guitaretab.html | guitaretab | https://www.guitaretab.com/g/guns-n-roses/294031.html | HTML — akordy nad textem v <pre>, Knockin On Heavens Door chords
+—  | chordie | https://www.chordie.com/results.php?q=Knockin%27+on+Heaven%27s+Door+Guns+N%27+Roses | NESTAŽENO: nenalezeno ve výsledcích
+—  | musixmatch | https://www.musixmatch.com/lyrics/Guns-N-Roses/Knockin-on-Heavens-Door | NESTAŽENO: HTTP 404 — stránka neexistuje
+—  | pisnicky-akordy | https://pisnicky-akordy.cz/guns-n-roses/knockin-on-heaven-s-door | NESTAŽENO: HTTP 403 — ochrana proti robotům
+—  | supermusic | https://www.supermusic.cz/piesen.php?id=156597 | NESTAŽENO: JS výzva proti robotům (supermusic)
+—  | velkyzpevnik | https://www.velkyzpevnik.cz/guns-n-roses/knockin-on-heaven-s-door | NESTAŽENO: HTTP 503 — web nedostupný

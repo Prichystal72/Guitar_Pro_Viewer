@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path d="M5 2.5h9l5 5v14H5z" fill="#fbf0e0" stroke="#b56b1e" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M14 2.5v5h5" fill="none" stroke="#b56b1e" stroke-width="1.4" stroke-linejoin="round"/>
+  <text x="12" y="18" font-family="Segoe UI, Arial" font-size="8" font-weight="bold" text-anchor="middle" fill="#b56b1e">GP</text>
+</svg>

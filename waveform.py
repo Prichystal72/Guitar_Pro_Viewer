@@ -17,7 +17,10 @@ import array
 import math
 from typing import Optional
 
+import numpy as np
 from PySide6.QtCore import QObject, QUrl, Signal
+
+from drum_align import OnsetAccumulator, pick_onsets
 from PySide6.QtMultimedia import QAudioDecoder, QAudioFormat
 
 BUCKETS_PER_SECOND = 400      # rozlišení vlnovky (2,5 ms/kbelík — odpovídá
@@ -34,6 +37,8 @@ _SAMPLE_TYPECODES = {
     QAudioFormat.SampleFormat.Int32: ("i", 4, 0.0, 2147483648.0),
     QAudioFormat.SampleFormat.Float: ("f", 4, 0.0, 1.0),
 }
+_NP_DTYPES = {"B": np.uint8, "h": np.int16, "i": np.int32, "f": np.float32}
+DISPLAY_THRESHOLDS = {"kick": 0.7, "snare": 0.7, "cymbal": 0.5}
 
 
 class WaveformData:
@@ -46,6 +51,14 @@ class WaveformData:
         self.maxs = array.array("f")
         self.duration_s: float = 0.0
         self.display_gain: float = 1.0   # auto-zesílení JEN pro zobrazení, ne zvuk
+        # obálka úderů po pásmech (kopák/virbl/činely, krok drum_align.HOP_S)
+        # pro zarovnání na bicí z GP, a z ní vybrané údery pro zobrazení
+        self.onset_env: dict = {}
+        self.drum_onsets: dict = {}
+        # dekódovaný zvuk (mono int16) — pro „nahrávka vlevo, GP vpravo"
+        # (TimelineEditor.set_split_ears); ~23 MB na 4,5 min
+        self.pcm: Optional[np.ndarray] = None
+        self.sample_rate: int = 44100
 
     def __len__(self) -> int:
         return len(self.mins)
@@ -224,21 +237,21 @@ class WaveformLoader(QObject):
         super().__init__(parent)
         self._decoder: Optional[QAudioDecoder] = None
         self._data: Optional[WaveformData] = None
-        self._acc_min = 0.0
-        self._acc_max = 0.0
-        self._acc_n = 0
         self._bucket_idx = 0
         self._samples_done = 0
         self._sample_rate = 44100
+        self._carry = np.zeros(0, dtype=np.float32)
+        self._onsets: Optional[OnsetAccumulator] = None
+        self._pcm_parts: list = []
 
     def load(self, path: str) -> None:
         self.cancel()
         self._data = WaveformData()
-        self._acc_min = 0.0
-        self._acc_max = 0.0
-        self._acc_n = 0
         self._bucket_idx = 0
         self._samples_done = 0
+        self._carry = np.zeros(0, dtype=np.float32)
+        self._onsets = None
+        self._pcm_parts = []
 
         dec = QAudioDecoder(self)
         # ZÁMĚRNĚ se NEVOLÁ setAudioFormat() — vyžádané převzorkování/downmix
@@ -300,35 +313,29 @@ class WaveformLoader(QObject):
         usable = (len(raw) // frame_bytes) * frame_bytes
         if usable <= 0:
             return
-        try:
-            arr = array.array(typecode)
-            arr.frombytes(raw[:usable])
-        except (ValueError, TypeError):
-            return
+        # numpy: normalizace na float −1..1 a downmix na mono (průměr kanálů).
+        # Dřív to byly Pythonové smyčky po jednotlivých vzorcích — 4min
+        # skladba = ~11 mil. vzorků, načítání trvalo zbytečně dlouho.
+        arr = np.frombuffer(raw[:usable], dtype=_NP_DTYPES[typecode]).astype(np.float32)
+        mono = ((arr - zero_off) / scale).reshape(-1, channels).mean(axis=1)
 
-        # normalizuj na float −1..1, pak downmixuj na mono (průměr kanálů —
-        # hlasitost jednotlivých kanálů zvlášť nás nezajímá, jde jen o
-        # obálku signálu). `array` podporuje krokované řezy (arr[c::channels])
-        # rychle na úrovni C, takže se vyhneme ruční indexaci po vzorcích.
-        norm = array.array("f", ((v - zero_off) / scale for v in arr))
-        if channels == 1:
-            mono = norm
-        else:
-            chans = [norm[c::channels] for c in range(channels)]
-            mono = array.array("f", (sum(vals) / channels for vals in zip(*chans)))
+        # min/max kbelíky po `samples_per_bucket` vzorcích; nedoplněný konec
+        # se přenáší do dalšího bufferu. Každý kbelík obsahuje i nulu (min ≤ 0
+        # ≤ max) — stejně jako dřívější výpočet.
+        data = np.concatenate([self._carry, mono])
+        full = (len(data) // samples_per_bucket) * samples_per_bucket
+        if full:
+            blocks = data[:full].reshape(-1, samples_per_bucket)
+            self._data.mins.extend(np.minimum(blocks.min(axis=1), 0.0).tolist())
+            self._data.maxs.extend(np.maximum(blocks.max(axis=1), 0.0).tolist())
+        self._carry = data[full:]
 
-        for v in mono:
-            if v < self._acc_min:
-                self._acc_min = v
-            if v > self._acc_max:
-                self._acc_max = v
-            self._acc_n += 1
-            if self._acc_n >= samples_per_bucket:
-                self._data.mins.append(self._acc_min)
-                self._data.maxs.append(self._acc_max)
-                self._acc_min = 0.0
-                self._acc_max = 0.0
-                self._acc_n = 0
+        # obálka úderů po pásmech pro zarovnání na bicí z GP (drum_align)
+        if self._onsets is None:
+            self._onsets = OnsetAccumulator(rate)
+        self._onsets.feed(mono)
+        self._pcm_parts.append((np.clip(mono, -1.0, 1.0) * 32767).astype(np.int16))
+
         self._samples_done += len(mono)
         self._data.duration_s = self._samples_done / float(rate)
 
@@ -339,9 +346,22 @@ class WaveformLoader(QObject):
     def _on_finished(self) -> None:
         if self._data is None:
             return
-        if self._acc_n:          # doklepni poslední nedoplněný kbelík
-            self._data.mins.append(self._acc_min)
-            self._data.maxs.append(self._acc_max)
+        if len(self._carry):     # doklepni poslední nedoplněný kbelík
+            self._data.mins.append(min(0.0, float(self._carry.min())))
+            self._data.maxs.append(max(0.0, float(self._carry.max())))
+            self._carry = np.zeros(0, dtype=np.float32)
+        if self._onsets is not None:
+            self._data.onset_env = self._onsets.finish()
+            # prahy pro ZOBRAZENÍ (čárky na vlnovce): nejlepší shoda s GP
+            # naměřená na Jasné zprávě (kopák/virbl 0,7, činely 0,5) — nižší
+            # práh u kopáku chytal hlavně basovou kytaru
+            self._data.drum_onsets = {b: pick_onsets(e, threshold=DISPLAY_THRESHOLDS.get(b, 0.7))
+                                      for b, e in self._data.onset_env.items()}
+            self._onsets = None
+        if self._pcm_parts:
+            self._data.pcm = np.concatenate(self._pcm_parts)
+            self._data.sample_rate = self._sample_rate
+            self._pcm_parts = []
         data, self._data = self._data, None
         data.compute_display_gain()
         self.cancel()

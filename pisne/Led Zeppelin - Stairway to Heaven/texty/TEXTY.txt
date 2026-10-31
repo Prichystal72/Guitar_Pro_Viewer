@@ -1,0 +1,15 @@
+Texty a akordy k písni „Led Zeppelin – Stairway to Heaven“ (staženo 2026-10-31).
+Soubor | web | adresa | co v něm je / proč chybí
+
+karaoketexty.html | karaoketexty | https://www.karaoketexty.cz/texty-pisni/led-zeppelin/stairway-to-heaven-4065 | HTML — čistý text (bez akordů), řádky <br>
+ultimate-guitar.html | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/led-zeppelin/stairway-to-heaven-chords-91487 | HTML — obsah v JSONu js-store
+ultimate-guitar.ug.txt | ultimate-guitar | https://tabs.ultimate-guitar.com/tab/led-zeppelin/stairway-to-heaven-chords-91487 | TXT — značkování UG: [ch]akord[/ch] nad textem, [tab]…[/tab], [Verse]
+genius.html | genius | https://genius.com/Led-zeppelin-stairway-to-heaven-lyrics | HTML — text v <div data-lyrics-container>, sekce [Verse 1]/[Chorus], bez akordů
+lyrics-ovh.json | lyrics-ovh | https://api.lyrics.ovh/v1/Led%20Zeppelin/Stairway%20to%20Heaven | JSON — {lyrics: prostý text, \r\n/\n}
+—  | lrclib | https://lrclib.net/api/get?artist_name=Led%20Zeppelin&track_name=Stairway%20to%20Heaven | NESTAŽENO: HTTP 502 — web nedostupný
+guitaretab.html | guitaretab | https://www.guitaretab.com/l/led-zeppelin/289507.html | HTML — akordy nad textem v <pre>, Stairway To Heaven Acoustic chords
+—  | chordie | https://www.chordie.com/results.php?q=Stairway+to+Heaven+Led+Zeppelin | NESTAŽENO: nenalezeno ve výsledcích
+musixmatch.html | musixmatch | https://www.musixmatch.com/lyrics/Led-Zeppelin/Stairway-to-Heaven | HTML — text v JSONu __NEXT_DATA__
+—  | pisnicky-akordy | https://pisnicky-akordy.cz/led-zeppelin/stairway-to-heaven | NESTAŽENO: HTTP 403 — ochrana proti robotům
+—  | supermusic | https://www.supermusic.cz/piesen.php?id=8208 | NESTAŽENO: JS výzva proti robotům (supermusic)
+—  | velkyzpevnik | https://www.velkyzpevnik.cz/led-zeppelin/stairway-to-heaven | NESTAŽENO: HTTP 503 — web nedostupný
