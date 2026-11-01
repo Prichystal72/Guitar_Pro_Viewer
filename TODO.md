@@ -678,3 +678,98 @@ platný je `schemaVersion 1` podle `JSON_FORMAT.md`.
   celou aplikaci → přehrávače dostanou stereo soubory s jedním kanálem (`side_wav`); nahrávka
   z dekódovaného zvuku (`WaveformData.pcm`), GP mix bicích/basy vpravo. Účel (uživatel): srovnat
   rytmus poslechem, pak přesněji posouvat texty pro karaoke.
+
+### Rozpoznání bicích v nahrávce — neuronová síť ADTOF (2026-10-31)
+- Uživatel: bicí z GP se liší od nahrávky („otázka GP" — přepis), potřeba lépe rozeznat bicí ve zvuku.
+- **Měření bez GP** (GP je nespolehlivé jako pravda): skutečná studiovka Jasné zprávy rozdělená Demucsem,
+  ze zbytku (basa+kytary+zpěv, bez bicích) + bicí ze `assets/drums/rock` se známými časy (932 úderů,
+  vlastní rytmus s ghost notes, tomy, plovoucí tempo). F-skóre do 30 ms, kopák / virbl+tomy / činely:
+  | metoda | bicí 0 dB | bicí −8 dB |
+  |---|---|---|
+  | nárůst spektra po pásmech (dosavadní) | 0,68 / 0,68 / 0,86 | 0,45 / 0,64 / 0,71 |
+  | totéž na stopě bicích z Demucs | 0,82 / 0,61 / 0,93 | — |
+  | NMF (šablony kopák/virbl/hi-hat) na Demucs | nestabilní 0,04–0,89 podle nastavení — slepá ulička |
+  | **ADTOF na mixu** (3 s / 4 min) | **0,91 / 0,89 / 0,86** | **0,86 / 0,84 / 0,80** |
+  | ADTOF na stopě Demucs (+75 s CPU) | 0,92 / 0,91 / 0,92 | 0,93 / 0,87 / 0,92 |
+- Časová chyba ADTOF medián < 1 ms (žádná korekce). Studiovka: „kopáků" 1428 → 393 (basa už ne),
+  virbly na virblech z GP 17 % → 56 %, činely přesnost 72 → 86 %. Cesta taktů `fit_bars` stejná (medián 10 ms).
+- Model: `assets/models/adtof_frame_rnn.onnx` (2 MB, z huggingface.co/thebluescreen/adtof-drums-onnx,
+  **CC BY-NC-SA 4.0 = jen nekomerčně**, `ADTOF_NOTICE.md`). Závislost `onnxruntime`. Vstup mono 44,1 kHz,
+  výstup 100 snímků/s × 5 tříd (kopák, virbl, tomy, hi-hat, činely).
+- `waveform.py`: po dekódování ADTOF ve vlákně; nárůst spektra se počítá dál jako záloha — síť na umělém
+  signálu z testů (stálý pilovitý akord + bílý šum) nenajde nic, pak zůstane nárůst spektra (`onset_source`).
+- Demucs (`pip install demucs`, torch CPU) je nainstalovaný, do aplikace NEZAPOJEN — zlepší hlavně tiché
+  bicí, stojí 75 s/píseň (GPU torch by to zrychlil, nainstalovaný je CPU build).
+- Další krok (nezadáno): porovnání nahrávka × GP po taktech („takt 12: GP 2 kopáky, nahrávka 5").
+
+### Přepis bicích z nahrávky (2026-11-01) — Časová osa ▸ Přepsat bicí z nahrávky…
+- `drum_align.transcribe` (5 tříd ADTOF, peak picking jako autoři: prahy 0,22/0,24/0,32/0,22/0,30)
+  → `quantize_hits` (čas na osu přes zarovnání nahrávky, šestnáctiny nebo osminové trioly, když je
+  triola o polovinu blíž; činel se sousedem do půl doby = ride 51, jinak crash 49) → nahradit bicí
+  stopu (`replace_drums`, `source: "generated"`, Ctrl+Z) nebo `save_drums_midi` (kanál 10, tempo+metrum osy).
+- Umělá nahrávka (F, 30 ms): kopák 0,91, virbl 0,97, hi-hat 0,73 (navíc údery), tomy 0,12, crash 0,00 —
+  tomy a crash ze soupravy `assets/drums/rock` síť nebere (crash jako hi-hat); na skutečné studiovce
+  crash z GP nalezen v 97 %, virbl v 98 %. Tomy se nerozliší podle výšky (vše 47).
+- Studiovka Jasné zprávy: bez napasování tempa odchylka od mřížky 36 ms a 180 falešných triol (dialog
+  varuje při > 1/5 šestnáctiny), po napasování 7,6 ms a 18 triol. 1343 úderů. Nahrávka × GP v taktu 9:
+  bubeník hraje osminy na ride (GP hi-hat), virbl na 2 a 4 (GP v těch taktech nic), kopák jinak.
+- Basa z nahrávky (Demucs + Basic Pitch) — nezačato.
+
+### Opraveno 2026-11-01 — cukání zvuku a posun nahrávky
+- Cukání: `.venv` (vzniklo 31.10. 21:14) mělo PySide6 6.11.1, dřív aplikace běžela z globálního Pythonu
+  s 6.10.0. Hlavní vlákno při přehrávání měřeno ~1 ms/tik (nebrzdí). `.venv` vráceno na 6.10.0,
+  `requirements.txt` zamčeno `PySide6==6.10.0` — uživatel potvrdil, že zvuk zase běží hezky.
+- Posun nahrávky: kladný `audio_offset_s` (po „Napasovat tempo" takt 1 v −1,42 s → posun +1,42 s)
+  `_seek_audio` ořízl na 0 → nahrávka hrála o celý posun dřív než GP mix. Teď počká (`_rec_delay_timer`).
+  Posun/roztažení změněné za běhu se hned projeví i ve zvuku (dřív jen na obrazovce; tažení vlnovky
+  přesynchronizuje po puštění myši). Po napasování tempa a přepisu bicích se přegeneruje už načtený
+  GP mix (dřív hrál starý mix s původním tempem). Ověřeno na tiché nahrávce (offscreen, bez zvuku).
+
+### Krok 1 vyladěn (2026-11-01) — rozpoznání bicích z nahrávky
+- Test: 8 umělých mixů (doprovod bez bicích z Jasné zprávy a z „Gramofon" × souprava rock / Street-Symphony
+  × 0/−8 dB), F do 30 ms, celkem: ADTOF na mixu kopák 0,77, virbl 0,82, hi-hat 0,69 → s Demucsem 0,89 / 0,87 / 0,84.
+- Prahy (`ADTOF_CLASS_THRESHOLDS` / `ADTOF_STEM_THRESHOLDS`): hi-hat 0,50 (mix) / 0,45 (Demucs), virbl s Demucsem 0,10,
+  činely 0,50. Ověřeno na studiovce proti GP (hi-hat 417 → 267 úderů, shoda 64 → 86 %).
+- Demucs oslabuje činely (crash z GP 97 → 74 %) → v režimu Demucs činely z celé nahrávky (`combine_stem`).
+- Dialog přepisu: „Přesněji (Demucs)…" (~75 s, výsledek v `%LOCALAPPDATA%\Guitar_Pro_Viewer\cache`, podruhé hned).
+  `.venv`: torch 2.6.0+cpu, demucs 4.1.0 (volitelné, v requirements jako komentář).
+- Tomy a crash ze zkušebních vzorků síť nepozná (F≈0) — na reálné nahrávce chybí pravda k ověření.
+- Chybí: ověření na dalších SKUTEČNÝCH nahrávkách (v pisne/ je jen Jasná zpráva) a průvodce „Karaoke z nahrávky".
+
+### Průvodce „Karaoke z nahrávky" (2026-11-01) — Soubor ▸ Karaoke z nahrávky…
+- Rozhodnutí uživatele: hlavní cesta = nahrávka (GP jen volitelně). `recording_wizard.py` (nemodální QWizard):
+  nahrávka → doby a takty (`beat_grid.py`, Beat This!) → bicí (dialog přepisu) → text+akordy (WebImportDialog,
+  `place_text_on_grid`: stejná doba od taktu 1+úvodní takty) → doladit tažením. `set_recording_grid` = tempo+metrum
+  po taktech, posun −(takt 1), roztažení 1.
+- Beat This vs takty podle GP (7 stažených písní + Jasná): Knockin' 91 %, Bára/Pohoda 100 %, Zimní královna 96 %,
+  Jasná 97 % (medián 10 ms). Iron Maiden 2 % a Let It Be 39 % — chybné bylo napasování podle GP (virbl na 2 a 4:
+  Beat This 91/94 %, GP 25/84 %). Falešné krátké takty → pevné metrum (výchozí, podle převládajícího počtu dob;
+  virbl na 2/4 0,93–1,00), takty o 1 době se slepí vždy, ruční posun fáze ±3 doby, varování při virblu na 2/4 < 50 %.
+- Bicí na mřížce z nahrávky: odchylka 12,6 ms (s GP 7,6 ms); tempo po dobách místo po taktech nepomůže (10 vs 10 ms).
+- Nahrávky staženy přes yt-dlp do `pisne/*/` (zapsáno v ZDROJE.txt), nesmí do gitu bez rozhodnutí uživatele.
+- Text v dialogu je na mřížce 4/4 — u písní ve 3/4 řádky nesednou na takty (neřešeno).
+
+### Průvodce: bicí z GP na takty nahrávky + Přeskočit krok (2026-11-01)
+- Uživatel: takty z nahrávky sedí, odhad bubnů (ADTOF) je „nesmysl" → krok 3 má i „Bicí z GP souboru…":
+  skutečné údery GP na takty nahrávky (`place_gp_drums_on_grid`), tempo GP se nepoužije.
+- `drum_align.align_gp_bars`: DP přes takty nahrávky — pokračovat dalším taktem GP zdarma, skok v GP 0,8,
+  takt bez bicích 0,08, bez bicích → GP takt 1 zdarma (delší úvod), posun 0–3 doby. Shoda kopáku/virblu
+  s nahrávkou (jeden posun → DP): Iron Maiden 52 → 83 % (GP o 3 doby vedle), Stairway 45 → 68 %,
+  Knockin' 91 → 91 % (6 taktů úvodu navíc), Bára 83 → 87 %, Pohoda 94, Zimní královna 91 → 92, Let It Be 86 → 84,
+  Jasná 64 → 63 % (pevné 4/4) / 74 % (takty podle nahrávky). Cena skoku 0,8–4 skoro nemění výsledek.
+- ZNÁMÉ OMEZENÍ: u písní s takty 2/4 (Jasná) je pevné 4/4 za nimi o půl taktu vedle a virbl na 2/4 to neodhalí;
+  DP pak u podobných slok přiřazuje takty GP divně (Jasná: GP takt 1 nikde, skok 74 → 3).
+- „Přeskočit krok" (vlastní tlačítko QWizard) u všech kroků; bez nahrávky jdou kroky dál v nové kartě
+  (bicí z GP takt po taktu).
+
+### Projekt .kproj, importy v průvodci (2026-11-01)
+- Bug: hláška „Export hotov" počítala staré ploché klíče → samé nuly; data v souboru byla v pořádku
+  (Zimní královna: 21 řádků, 63 akordů, 709 úderů). Teď počítá ze `sections`.
+- Rozhodnutí uživatele: projekt = vlastní přípona `.kproj` (uvnitř JSON podle JSON_FORMAT.md + blok `project`
+  s relativními cestami: audio, gp, source_url). Uložit/Uložit jako → .kproj (dříve otevřený .json se dál přepisuje
+  jako .json), Otevřít umí obojí, nové „Soubor ▸ Exportovat pro ESP32 / tablety (.json)" = čistý JSON bez `project`.
+- Průvodce, krok Bicí: „Bicí ze souboru (GP / MIDI)…" — GP3/4/5/GPX/GP i MIDI (`midi_import.midi_drum_bars`,
+  takty podle time_signature) → `place_drum_bars_on_grid` (stejné přiřazení taktů jako u GP).
+- Dialog textu: „Ze souboru…" — uložená HTML stránka (stejný parser jako stažená), ChordPro (`chordpro_to_chart`),
+  prostý text (utf-8 / cp1250).
+- Zbývá: basa (Demucs + Basic Pitch, nebo z GP/MIDI na takty nahrávky stejně jako bicí).

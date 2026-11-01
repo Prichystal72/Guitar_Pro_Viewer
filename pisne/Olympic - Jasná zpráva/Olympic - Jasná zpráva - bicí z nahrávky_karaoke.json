@@ -1,0 +1,8521 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "title": "",
+    "artist": "",
+    "durationMs": 258943,
+    "countInBars": 0,
+    "sampleSet": "kit_default_v1",
+    "audioFile": "C:/Users/prich/Documents/Arduino/Guitar_Pro_Viewer/pisne/Olympic - Jasná zpráva/10. Olympic - Jasná zpráva.wav",
+    "audioOffsetMs": 1394,
+    "audioStretch": 1.0044,
+    "migrationNotes": [
+      "Žádné karaoke řádky — vznikla jediná sekce přes celou píseň.",
+      "originalKey se ve format_version 2 nevyskytuje — doplň tóninu ručně."
+    ]
+  },
+  "tempoMap": [
+    {
+      "bar": 1,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 2,
+      "beat": 1.0,
+      "bpm": 62.0
+    },
+    {
+      "bar": 3,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 8,
+      "beat": 1.0,
+      "bpm": 63.0
+    },
+    {
+      "bar": 11,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 14,
+      "beat": 1.0,
+      "bpm": 63.0
+    },
+    {
+      "bar": 15,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 16,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 21,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 22,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 24,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 26,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 27,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 30,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 31,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 34,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 35,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 36,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 40,
+      "beat": 1.0,
+      "bpm": 63.0
+    },
+    {
+      "bar": 41,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 44,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 46,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 47,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 53,
+      "beat": 1.0,
+      "bpm": 66.0
+    },
+    {
+      "bar": 54,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 58,
+      "beat": 1.0,
+      "bpm": 66.0
+    },
+    {
+      "bar": 59,
+      "beat": 1.0,
+      "bpm": 64.0
+    },
+    {
+      "bar": 60,
+      "beat": 1.0,
+      "bpm": 65.0
+    },
+    {
+      "bar": 69,
+      "beat": 1.0,
+      "bpm": 63.0
+    },
+    {
+      "bar": 70,
+      "beat": 1.0,
+      "bpm": 65.0
+    }
+  ],
+  "meterMap": [
+    {
+      "bar": 1,
+      "num": 2,
+      "den": 4
+    },
+    {
+      "bar": 2,
+      "num": 4,
+      "den": 4
+    }
+  ],
+  "pickupBeats": 0,
+  "sections": [
+    {
+      "name": "Píseň",
+      "startBar": 1,
+      "source": "generated",
+      "lyrics": [],
+      "chords": [],
+      "drums": [
+        {
+          "bar": 2,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 2,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 3,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 4,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 5,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 6,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 7,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 8,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 9,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 10,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 11,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 12,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 13,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 14,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 15,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 16,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 17,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 18,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 19,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 20,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.5,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 21,
+          "beat": 4.75,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 22,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 23,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 24,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 25,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 26,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 27,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 28,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 29,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 30,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 31,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 32,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 33,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 34,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 35,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 36,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 37,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.75,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 38,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 39,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 40,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 41,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 42,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 43,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 44,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 45,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 46,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 47,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 48,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 49,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 50,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 51,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 52,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 3.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 3.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 53,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 54,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 55,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 56,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 3.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.25,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 57,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 1.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 1.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 2.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 2.5,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.5,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.0,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 58,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 59,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 60,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.5,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 61,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 62,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.0,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 63,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 64,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.25,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 65,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 66,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 67,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 3.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 68,
+          "beat": 4.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 1.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 1.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 1.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 2.75,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 3.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 3.0,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 3.5,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 3.5,
+          "sample": "kick",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.0,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.0,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.25,
+          "sample": "snare",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 69,
+          "beat": 4.75,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 1.25,
+          "sample": "tom_mid",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 1.75,
+          "sample": "crash",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 1.75,
+          "sample": "hihat_closed",
+          "source": "gp"
+        },
+        {
+          "bar": 70,
+          "beat": 1.75,
+          "sample": "kick",
+          "source": "gp"
+        }
+      ],
+      "bass": [],
+      "tab": []
+    }
+  ],
+  "linearMap": [
+    {
+      "bar": 1,
+      "sourceMeasure": 1,
+      "pass": 1
+    },
+    {
+      "bar": 2,
+      "sourceMeasure": 2,
+      "pass": 1
+    },
+    {
+      "bar": 3,
+      "sourceMeasure": 3,
+      "pass": 1
+    },
+    {
+      "bar": 4,
+      "sourceMeasure": 4,
+      "pass": 1
+    },
+    {
+      "bar": 5,
+      "sourceMeasure": 5,
+      "pass": 1
+    },
+    {
+      "bar": 6,
+      "sourceMeasure": 6,
+      "pass": 1
+    },
+    {
+      "bar": 7,
+      "sourceMeasure": 7,
+      "pass": 1
+    },
+    {
+      "bar": 8,
+      "sourceMeasure": 8,
+      "pass": 1
+    },
+    {
+      "bar": 9,
+      "sourceMeasure": 9,
+      "pass": 1
+    },
+    {
+      "bar": 10,
+      "sourceMeasure": 10,
+      "pass": 1
+    },
+    {
+      "bar": 11,
+      "sourceMeasure": 11,
+      "pass": 1
+    },
+    {
+      "bar": 12,
+      "sourceMeasure": 12,
+      "pass": 1
+    },
+    {
+      "bar": 13,
+      "sourceMeasure": 13,
+      "pass": 1
+    },
+    {
+      "bar": 14,
+      "sourceMeasure": 14,
+      "pass": 1
+    },
+    {
+      "bar": 15,
+      "sourceMeasure": 15,
+      "pass": 1
+    },
+    {
+      "bar": 16,
+      "sourceMeasure": 16,
+      "pass": 1
+    },
+    {
+      "bar": 17,
+      "sourceMeasure": 17,
+      "pass": 1
+    },
+    {
+      "bar": 18,
+      "sourceMeasure": 18,
+      "pass": 1
+    },
+    {
+      "bar": 19,
+      "sourceMeasure": 19,
+      "pass": 1
+    },
+    {
+      "bar": 20,
+      "sourceMeasure": 20,
+      "pass": 1
+    },
+    {
+      "bar": 21,
+      "sourceMeasure": 21,
+      "pass": 1
+    },
+    {
+      "bar": 22,
+      "sourceMeasure": 22,
+      "pass": 1
+    },
+    {
+      "bar": 23,
+      "sourceMeasure": 23,
+      "pass": 1
+    },
+    {
+      "bar": 24,
+      "sourceMeasure": 24,
+      "pass": 1
+    },
+    {
+      "bar": 25,
+      "sourceMeasure": 25,
+      "pass": 1
+    },
+    {
+      "bar": 26,
+      "sourceMeasure": 26,
+      "pass": 1
+    },
+    {
+      "bar": 27,
+      "sourceMeasure": 27,
+      "pass": 1
+    },
+    {
+      "bar": 28,
+      "sourceMeasure": 28,
+      "pass": 1
+    },
+    {
+      "bar": 29,
+      "sourceMeasure": 29,
+      "pass": 1
+    },
+    {
+      "bar": 30,
+      "sourceMeasure": 30,
+      "pass": 1
+    },
+    {
+      "bar": 31,
+      "sourceMeasure": 31,
+      "pass": 1
+    },
+    {
+      "bar": 32,
+      "sourceMeasure": 32,
+      "pass": 1
+    },
+    {
+      "bar": 33,
+      "sourceMeasure": 33,
+      "pass": 1
+    },
+    {
+      "bar": 34,
+      "sourceMeasure": 34,
+      "pass": 1
+    },
+    {
+      "bar": 35,
+      "sourceMeasure": 35,
+      "pass": 1
+    },
+    {
+      "bar": 36,
+      "sourceMeasure": 36,
+      "pass": 1
+    },
+    {
+      "bar": 37,
+      "sourceMeasure": 37,
+      "pass": 1
+    },
+    {
+      "bar": 38,
+      "sourceMeasure": 38,
+      "pass": 1
+    },
+    {
+      "bar": 39,
+      "sourceMeasure": 39,
+      "pass": 1
+    },
+    {
+      "bar": 40,
+      "sourceMeasure": 40,
+      "pass": 1
+    },
+    {
+      "bar": 41,
+      "sourceMeasure": 41,
+      "pass": 1
+    },
+    {
+      "bar": 42,
+      "sourceMeasure": 42,
+      "pass": 1
+    },
+    {
+      "bar": 43,
+      "sourceMeasure": 43,
+      "pass": 1
+    },
+    {
+      "bar": 44,
+      "sourceMeasure": 44,
+      "pass": 1
+    },
+    {
+      "bar": 45,
+      "sourceMeasure": 45,
+      "pass": 1
+    },
+    {
+      "bar": 46,
+      "sourceMeasure": 46,
+      "pass": 1
+    },
+    {
+      "bar": 47,
+      "sourceMeasure": 47,
+      "pass": 1
+    },
+    {
+      "bar": 48,
+      "sourceMeasure": 48,
+      "pass": 1
+    },
+    {
+      "bar": 49,
+      "sourceMeasure": 49,
+      "pass": 1
+    },
+    {
+      "bar": 50,
+      "sourceMeasure": 50,
+      "pass": 1
+    },
+    {
+      "bar": 51,
+      "sourceMeasure": 51,
+      "pass": 1
+    },
+    {
+      "bar": 52,
+      "sourceMeasure": 52,
+      "pass": 1
+    },
+    {
+      "bar": 53,
+      "sourceMeasure": 53,
+      "pass": 1
+    },
+    {
+      "bar": 54,
+      "sourceMeasure": 54,
+      "pass": 1
+    },
+    {
+      "bar": 55,
+      "sourceMeasure": 55,
+      "pass": 1
+    },
+    {
+      "bar": 56,
+      "sourceMeasure": 56,
+      "pass": 1
+    },
+    {
+      "bar": 57,
+      "sourceMeasure": 57,
+      "pass": 1
+    },
+    {
+      "bar": 58,
+      "sourceMeasure": 58,
+      "pass": 1
+    },
+    {
+      "bar": 59,
+      "sourceMeasure": 59,
+      "pass": 1
+    },
+    {
+      "bar": 60,
+      "sourceMeasure": 60,
+      "pass": 1
+    },
+    {
+      "bar": 61,
+      "sourceMeasure": 61,
+      "pass": 1
+    },
+    {
+      "bar": 62,
+      "sourceMeasure": 62,
+      "pass": 1
+    },
+    {
+      "bar": 63,
+      "sourceMeasure": 63,
+      "pass": 1
+    },
+    {
+      "bar": 64,
+      "sourceMeasure": 64,
+      "pass": 1
+    },
+    {
+      "bar": 65,
+      "sourceMeasure": 65,
+      "pass": 1
+    },
+    {
+      "bar": 66,
+      "sourceMeasure": 66,
+      "pass": 1
+    },
+    {
+      "bar": 67,
+      "sourceMeasure": 67,
+      "pass": 1
+    },
+    {
+      "bar": 68,
+      "sourceMeasure": 68,
+      "pass": 1
+    },
+    {
+      "bar": 69,
+      "sourceMeasure": 69,
+      "pass": 1
+    },
+    {
+      "bar": 70,
+      "sourceMeasure": 70,
+      "pass": 1
+    }
+  ]
+}

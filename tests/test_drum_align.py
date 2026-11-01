@@ -317,6 +317,37 @@ def test_studiovka_jasna_zprava_po_taktech():
     assert A.bar_match(envs, bar_hits, np.diff(starts), path) >= 0.8
 
 
+def test_adtof_studiovka_basa_neni_kopak():
+    """Neuronová síť ADTOF na studiovce Jasné zprávy: basová kytara se
+    nesmí brát jako kopák (nárůst spektra: 1428 „kopáků", ADTOF ~390)
+    a nalezené virbly mají ležet na virblech z GP (po napasování po taktech:
+    nárůst spektra 17 %, ADTOF 56 %)."""
+    import drum_align as A
+    if not A.adtof_available():
+        pytest.skip("chybí onnxruntime nebo model ADTOF")
+    wav = SONGS / "Olympic - Jasná zpráva" / "10. Olympic - Jasná zpráva.wav"
+    if not wav.exists():
+        pytest.skip("chybí studiová nahrávka")
+    mono, rate = _load_wav(wav)
+    envs = A.adtof_envs(mono, rate)
+    on = {b: A.pick_onsets(e, A.ADTOF_THRESHOLDS[b]) for b, e in envs.items()}
+    assert 250 < on["kick"].size < 600, on["kick"].size
+    starts, ev = _warped_song()
+    bar_hits = [[] for _ in range(len(starts) - 1)]
+    for e in ev:
+        grp = A.drum_group(e["midi"])
+        if grp:
+            b = min(len(bar_hits) - 1, int(np.searchsorted(starts, e["time_s"] + 1e-6) - 1))
+            bar_hits[b].append((e["time_s"] - starts[b], grp))
+    bl = np.diff(starts)
+    g = A.align_to_drums(envs, A.gp_hits(ev))
+    path = A.fit_bars(envs, bar_hits, bl, -g["offset"] / g["stretch"], g["stretch"])
+    gp_snare = np.array([path[b] + off * (path[b + 1] - path[b]) / bl[b]
+                         for b, hb in enumerate(bar_hits) for off, grp in hb if grp == "snare"])
+    near = np.min(np.abs(on["snare"][:, None] - gp_snare[None, :]), axis=1) <= 0.04
+    assert near.mean() >= 0.45, near.mean()
+
+
 # ------------------------------------------- repetice a výměna bubnu ---
 
 def test_repetice_blok_zustane_v_seznamu_i_po_nastaveni_na_1():
@@ -407,3 +438,270 @@ def test_stop_vrati_kurzor_na_start(window, qapp, tmp_path):
     ed.set_playhead(9.5, seek_audio=False)
     ed.stop_audio()
     assert ed.playhead_s == pytest.approx(8.0)
+
+
+# ------------------------------------------- přepis bicích z nahrávky ---
+
+def test_prichyceni_uderu_na_sestnactiny_a_trioly(tmp_path):
+    """Údery s chybou hráče ±12 ms padnou na správnou šestnáctinu / triolu,
+    stejný buben na stejném místě jen jednou; MIDI má stejné tempo i údery."""
+    import mido
+    import drum_align as A
+    from music_grid import TimeGrid
+    grid = TimeGrid([{"tick": 960, "bpm": 100.0}], 4)          # doba = 0,6 s
+    rng = np.random.default_rng(1)
+    want = [(0.0, 0), (0.25, 3), (0.5, 3), (1.0, 1), (1.75, 0), (2 + 1 / 3, 3), (2 + 2 / 3, 3), (3.0, 1)]
+    hits = [(grid.seconds(b) + rng.uniform(-0.012, 0.012), k, 0.8) for b, k in want]
+    hits.append((grid.seconds(1.0) + 0.005, 1, 0.5))           # dvojitá detekce téhož virblu
+    ev, st = A.quantize_hits(hits, grid)
+    assert [(round(e["beat"], 3), e["cls"]) for e in ev] == [(round(b, 3), k) for b, k in want]
+    assert st["triplets"] == 2 and st["median_dev_ms"] < 12
+    path = tmp_path / "bici.mid"
+    A.save_drums_midi(ev, grid, str(path))
+    mid = mido.MidiFile(str(path))
+    tempos = [m.tempo for m in mid.tracks[0] if m.type == "set_tempo"]
+    assert tempos == [mido.bpm2tempo(100.0)]
+    t, ons = 0, []
+    for m in mid.tracks[1]:
+        t += m.time
+        if m.type == "note_on" and m.velocity > 0:
+            ons.append((round(t / mid.ticks_per_beat, 3), m.note, m.channel))
+    assert ons == [(round(b, 3), A.ADTOF_MIDI[k], 9) for b, k in want]
+
+
+def test_aplikace_prepise_bici_ze_studiovky(window, qapp, monkeypatch):
+    """Celá cesta na skutečné studiovce: GP import, Napasovat tempo,
+    Přepsat bicí z nahrávky -> údery leží na mřížce (osa sedí na nahrávku),
+    virbl na dobách 2 a 4 jako v GP; Ctrl+Z vrátí bicí z GP."""
+    import drum_align as A
+    import guitar_pro_viewer as G
+    from PySide6.QtWidgets import QDialog
+    if not A.adtof_available():
+        pytest.skip("chybí onnxruntime nebo model ADTOF")
+    wav = SONGS / "Olympic - Jasná zpráva" / "10. Olympic - Jasná zpráva.wav"
+    if not wav.exists():
+        pytest.skip("chybí studiová nahrávka")
+    gp_import(window, JASNA_GP)
+    ed = window.timeline
+    G.set_repeat_plays(window.song.tracks[0].measures, 37, 1)
+    window._finish_gp_import(ed)
+    ed.load_audio(str(wav))
+    _wait_waveform(qapp, ed)
+    assert ed.waveform.onset_source == "adtof" and ed.waveform.drum_act.shape[1] == 5
+    monkeypatch.setattr(QDialog, "exec", lambda self: 1)
+    ed.fit_tempo_to_audio()
+    gp_drums = [dict(e) for e in ed.data["drums_timeline"]]
+    ed.transcribe_drums_from_audio()
+    st = ed.last_transcription["stats"]
+    assert st["median_dev_ms"] < 20, st
+    assert st["triplets"] < 0.05 * st["n"], st                 # píseň je ve čtyřčtvrťovém rovném rytmu
+    drums = ed.data["drums_timeline"]
+    assert all(e["source"] == "generated" for e in drums)
+    grid = ed._music_grid()
+    snares = [e for e in drums if e["midi"] == 38]
+    on_backbeat = [e for e in snares if round(grid.beat(e["time_s"]) % 2, 2) == 1.0]
+    assert len(snares) > 100 and len(on_backbeat) >= 0.6 * len(snares)
+    ed.undo()
+    assert [(e["time_s"], e["midi"]) for e in ed.data["drums_timeline"]] == \
+        [(e["time_s"], e["midi"]) for e in gp_drums]
+
+
+def test_prepis_s_demucsem_studiovka(window, qapp, monkeypatch):
+    """„Přesněji (Demucs)" v dialogu přepisu: bicí oddělené z nahrávky,
+    výsledek v mezipaměti (podruhé hned), virbl dál na dobách 2 a 4."""
+    import drum_align as A
+    import guitar_pro_viewer as G
+    from PySide6.QtWidgets import QDialog
+    if not (A.adtof_available() and A.demucs_available()):
+        pytest.skip("chybí onnxruntime/ADTOF nebo demucs")
+    wav = SONGS / "Olympic - Jasná zpráva" / "10. Olympic - Jasná zpráva.wav"
+    if not wav.exists():
+        pytest.skip("chybí studiová nahrávka")
+    gp_import(window, JASNA_GP)
+    ed = window.timeline
+    G.set_repeat_plays(window.song.tracks[0].measures, 37, 1)
+    window._finish_gp_import(ed)
+    ed.load_audio(str(wav))
+    _wait_waveform(qapp, ed)
+    monkeypatch.setattr(QDialog, "exec", lambda self: 1)
+    ed.fit_tempo_to_audio()
+    monkeypatch.setattr(QDialog, "exec", lambda self: 0)
+    ed.transcribe_drums_from_audio()
+    if not ed.last_transcription["stem"]:
+        ed._transcribe_demucs()                      # poprvé ~1–2 min, pak z mezipaměti
+    lt = ed.last_transcription
+    assert lt["stem"] and A.cache_path(str(wav), "adtof_demucs").exists()
+    st = lt["stats"]
+    assert st["median_dev_ms"] < 20 and st["per_class"]["snare"] > 100, st
+    grid = lt["grid"]
+    snares = [e for e in lt["events"] if e["cls"] == 1]
+    assert sum(round(grid.beat(e["time_s"]) % 2, 2) == 1.0 for e in snares) >= 0.6 * len(snares)
+    ed.transcribe_drums_from_audio()                 # podruhé rovnou z mezipaměti
+    assert ed.last_transcription["stem"]
+
+
+# ------------------------------------------- průvodce „Karaoke z nahrávky" ---
+
+def test_pruvodce_karaoke_z_nahravky(window, qapp, monkeypatch):
+    """Bez GP: nahrávka → doby a takty (Beat This) → bicí → text na takty.
+    Studiovka Jasné zprávy: 4/4, ~65 BPM, virbl na 2 a 4, bicí na mřížce
+    z nahrávky do ~13 ms (s GP 7,6 ms), každý řádek textu (2 takty) začíná na taktu."""
+    import beat_grid as BG
+    import drum_align as A
+    import web_import as W
+    from format_migrate import migrate, to_editor_model
+    from PySide6.QtCore import QEventLoop, QTimer
+    from PySide6.QtWidgets import QDialog
+    from recording_wizard import RecordingWizard
+    if not (A.adtof_available() and BG.available()):
+        pytest.skip("chybí ADTOF nebo beat-this")
+    wav = SONGS / "Olympic - Jasná zpráva" / "10. Olympic - Jasná zpráva.wav"
+    if not wav.exists():
+        pytest.skip("chybí studiová nahrávka")
+    wiz = RecordingWizard(window)
+    wiz.audio_page.path.setText(str(wav))
+    assert wiz.audio_page.isComplete() and wiz.audio_page.validatePage()
+    ed = wiz.ed
+    page = wiz.grid_page
+    page.initializePage()
+    loop = QEventLoop()
+    poll = QTimer()
+    poll.timeout.connect(lambda: page.isComplete() and loop.quit())
+    poll.start(200)
+    QTimer.singleShot(180000, loop.quit)
+    loop.exec()
+    poll.stop()
+    assert page.isComplete(), page.status.text()
+    assert page.meter.currentData() == 4
+    assert page.validatePage()
+    grid = ed._music_grid()
+    assert 62 <= ed.data["meta"]["tempo_bpm"] <= 67
+    assert abs(ed.audio_offset_s + page.starts[0]) < 1e-3 and ed.audio_stretch == 1.0
+    sn = A.peak_pick(ed.waveform.drum_act[:, 1], A.ADTOF_CLASS_THRESHOLDS[1]) * A.HOP_S
+    assert BG.snare_on_backbeat(sn, page.beats, page.starts) >= 0.9
+    # bicí na mřížce z nahrávky
+    monkeypatch.setattr(QDialog, "exec", lambda self: 1)
+    ed.transcribe_drums_from_audio()
+    assert ed.last_transcription["stats"]["median_dev_ms"] < 15, ed.last_transcription["stats"]   # změřeno 12,6 ms
+    assert sum(1 for e in ed.data["drums_timeline"] if e["source"] == "generated") > 800
+    # text a akordy: 2 takty na řádek, 1 úvodní takt
+    lines = (SONGS / "Olympic - Jasná zpráva" / "Jasná Zpráva.txt").read_text(encoding="utf-8").splitlines()
+    web = W.build_karaoke_json(W.apply_chord_templates(W.detect_chord_chart(lines)), "Jasná zpráva", "Olympic",
+                               120, "", bars_per_line=2, count_in_bars=1)
+    flat = to_editor_model(migrate(web)[0])
+    ed.place_text_on_grid(flat, first_bar=2)
+    kls = ed.data["karaoke_lines"]
+    assert len(kls) == len(flat["karaoke_lines"]) > 10
+    bar_starts = [grid.bar_start_seconds(b) for b in range(1, 200)]
+    assert all(min(abs(kl["start_s"] - b) for b in bar_starts) < 0.002 for kl in kls)
+    assert len({e["track_index"] for e in ed.data["lyrics_timeline"]}
+               & {e["track_index"] for e in ed.data["drums_timeline"]}) == 0
+    assert len(ed.data["drums_timeline"]) > 800          # bicí zůstaly
+    ed.undo()
+    assert not ed.data.get("karaoke_lines")
+
+
+def test_pruvodce_bici_z_gp_a_preskoceni(window, qapp):
+    """Průvodce: nahrávka přeskočena → kroky jdou dál v nové kartě; bicí z GP
+    na takty nahrávky opraví strukturu GP (Jasná zpráva: GP s druhým sólem
+    dvakrát vs. studiovka, kde je jednou)."""
+    import beat_grid as BG
+    import drum_align as A
+    from PySide6.QtCore import QEventLoop, QTimer
+    from recording_wizard import RecordingWizard
+    wiz = RecordingWizard(window)
+    wiz.restart()
+    wiz._skip()                                      # 1. nahrávka přeskočena
+    assert wiz.currentPage() is wiz.grid_page and wiz.ed is None
+    wiz._skip()                                      # 2. takty přeskočeny
+    st = wiz.drums_page.place_gp(parse_gp(JASNA_GP))  # bez nahrávky: takt GP i = takt i
+    assert wiz.ed is not None and st["n"] > 900 and st["jumps"] == []          # všech 934 úderů GP
+    if not (A.adtof_available() and BG.available()):
+        pytest.skip("chybí ADTOF nebo beat-this")
+    wav = SONGS / "Olympic - Jasná zpráva" / "10. Olympic - Jasná zpráva.wav"
+    if not wav.exists():
+        pytest.skip("chybí studiová nahrávka")
+    wiz = RecordingWizard(window)
+    wiz.audio_page.path.setText(str(wav))
+    wiz.audio_page.validatePage()
+    page = wiz.grid_page
+    page.initializePage()
+    loop = QEventLoop()
+    poll = QTimer()
+    poll.timeout.connect(lambda: page.isComplete() and loop.quit())
+    poll.start(200)
+    QTimer.singleShot(180000, loop.quit)
+    loop.exec()
+    poll.stop()
+    page.validatePage()
+    st = wiz.drums_page.place_gp(parse_gp(JASNA_GP))
+    # pevné 4/4 u Jasné zprávy (má takty 2/4) je za nimi o půl taktu vedle: změřeno 63 %,
+    # s „takty podle nahrávky" 74 %; jeden společný posun dával 64 %
+    assert st["match"] >= 0.6, st
+    assert all(e["source"] == "gp" for e in wiz.ed.data["drums_timeline"])
+
+
+def test_pruvodce_bici_z_midi_bez_nahravky(window):
+    """Průvodce bez nahrávky: bicí z MIDI (Stairway, export z GP) takt po
+    taktu — stejný počet úderů a taktů jako GP."""
+    import midi_import as MI
+    from recording_wizard import RecordingWizard
+    mid = SONGS / "Led Zeppelin - Stairway to Heaven" / "Led Zeppelin-Stairway to Heaven-08-13-2026.mid"
+    if not mid.exists():
+        pytest.skip("chybí MIDI")
+    items = MI.midi_drum_bars(str(mid))
+    assert len(items) == 1272 and max(b for b, _f, _m in items) == 163
+    wiz = RecordingWizard(window)
+    st = wiz.drums_page.show_stats(wiz.editor().place_midi_drums_on_grid(str(mid)))
+    assert st["n"] == 1272 and st["jumps"] == []
+    assert "1272" in wiz.drums_page.result.text()
+
+
+def test_projekt_kproj_relativni_cesty(window, tmp_path, monkeypatch):
+    """Uložit = projekt .kproj s relativními cestami; Otevřít ho načte
+    i po přesunu složky; export pro ESP32 je čistý JSON bez `project`."""
+    import json
+    import shutil
+    from PySide6.QtWidgets import QFileDialog
+    song_dir = tmp_path / "pisen"
+    song_dir.mkdir()
+    gp_import(window, JASNA_GP)
+    ed = window.timeline
+    wav = song_dir / "nahravka.wav"
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes(np.zeros(SR, np.int16).tobytes())
+    ed.audio_path = str(wav)
+    ed.data.setdefault("meta", {})["audio_file"] = str(wav)
+    proj = song_dir / "Jasná zpráva.kproj"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", staticmethod(lambda *a, **k: (str(proj), "")))
+    window.save_json_as()
+    d = json.loads(proj.read_text(encoding="utf-8"))
+    assert d["schemaVersion"] == 1 and d["project"]["audio"] == "nahravka.wav"
+    assert sum(len(s.get("drums") or []) for s in d["sections"]) > 800
+    out = song_dir / "esp32.json"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", staticmethod(lambda *a, **k: (str(out), "")))
+    window.export_esp32_json()
+    e = json.loads(out.read_text(encoding="utf-8"))
+    assert "project" not in e and e["schemaVersion"] == 1
+    moved = tmp_path / "jinde"
+    shutil.move(str(song_dir), str(moved))
+    window._tab_for_new_document()
+    window._load_karaoke_json(str(moved / "Jasná zpráva.kproj"))
+    assert window.timeline.data["meta"]["audio_file"] == str((moved / "nahravka.wav").resolve())
+
+
+def test_text_ze_souboru_chordpro_a_html(window):
+    """Dialog textu ▸ Ze souboru: ChordPro i uložená webová stránka projdou
+    stejně jako text vložený / stažený z webu."""
+    from web_import import WebImportDialog
+    dlg = WebImportDialog(window)
+    dlg.load_text_file(str(ROOT / "tests" / "data" / "formaty_textu" / "swinglow.cho"))
+    assert dlg.title_input.text() == "Swing Low Sweet Chariot"
+    assert "Swing low, sweet chariot" in dlg.raw_text.toPlainText()
+    assert len(dlg._detected) > 10
+    page = SONGS / "Beatles - Let It Be" / "texty" / "guitaretab.html"
+    if page.exists():
+        dlg2 = WebImportDialog(window)
+        dlg2.load_text_file(str(page))
+        assert len(dlg2._detected) > 10 and "Let it be" in dlg2.raw_text.toPlainText()

@@ -2,3 +2,4 @@ Zdroje k písni „Kabát - Bára“ — odkud soubory pocházejí.
 
 zdroje/Kabát - Bára.gpx  <- C:\Users\prich\Music\Guitar Pro Tabs\___czech\Kabát - Bára.gpx
 zdroje/Kab_t - B_ra.gp4  <- C:\Users\prich\Music\Guitar Pro Tabs\K\Kabát, V pekle sudy válej\Kab_t - B_ra.gp4
+KABÁT - Bára (official video).mp3  <- nahrávka pro test (2026-11-01, yt-dlp → MP3, jako mp3_z_ytb): YouTube „KABÁT - Bára [official video]“ (188 s)

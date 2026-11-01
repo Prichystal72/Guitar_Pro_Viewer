@@ -1223,6 +1223,10 @@ class WebImportDialog(QDialog):
         self.fetch_btn.clicked.connect(self._fetch)
         url_row.addWidget(self.url_input, 1)
         url_row.addWidget(self.fetch_btn)
+        self.file_btn = QPushButton(tr("web_import.file_btn"))
+        self.file_btn.setToolTip(tr("web_import.file_btn.tooltip"))
+        self.file_btn.clicked.connect(self._open_file)
+        url_row.addWidget(self.file_btn)
         root.addLayout(url_row)
 
         # Meta
@@ -1370,6 +1374,38 @@ class WebImportDialog(QDialog):
         self._worker.done.connect(self._on_fetched)
         self._worker.error.connect(self._on_error)
         self._worker.start()
+
+    def _open_file(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+        path, _ = QFileDialog.getOpenFileName(self, tr("web_import.file_btn"), "",
+                                              tr("web_import.file_filter"))
+        if path:
+            self.load_text_file(path)
+
+    def load_text_file(self, path: str) -> None:
+        """Text a akordy ze souboru: uložená HTML stránka (stejný parser jako
+        stažená — weby s ochranou proti robotům se ukládají ručně), ChordPro
+        (`[G]` v textu → akordy nad textem) nebo prostý text."""
+        raw = open(path, "rb").read()
+        for enc in ("utf-8-sig", "cp1250", "latin-1"):
+            try:
+                text = raw.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        low = path.lower()
+        if low.endswith((".htm", ".html")):
+            url = "https://pisnicky-akordy.cz/" if "pisnicky-akordy" in text else "file:" + path
+            self._on_fetched(url, text)
+            return
+        if low.endswith((".cho", ".chopro", ".chordpro", ".crd")) or re.search(r"\{(title|t):", text):
+            title, artist, text = chordpro_to_chart(text)
+            if title and not self.title_input.text():
+                self.title_input.setText(title[:80])
+            if artist and not self.artist_input.text():
+                self.artist_input.setText(artist[:60])
+        self.raw_text.setPlainText(text)
+        self._parse()
 
     def _on_error(self, msg: str) -> None:
         self.status_lbl.setText(tr("web_import.status_error", msg=msg))
@@ -1698,3 +1734,53 @@ class WebImportDialog(QDialog):
         self._artist_worker = None
 
 
+
+
+def chordpro_to_chart(text: str) -> tuple[str, str, str]:
+    """ChordPro → (název, interpret, text s akordy NAD řádky textu), jak ho
+    čte `detect_chord_chart`. Direktivy {…} se zahodí (kromě názvu,
+    interpreta a označení sloky/refrénu), bloky {start_of_abc}/{start_of_tab}
+    taky."""
+    title = artist = ""
+    out: list[str] = []
+    skip = False
+    for line in text.splitlines():
+        st = line.strip()
+        if st.startswith("#"):
+            continue
+        m = re.match(r"^\{\s*([a-z_]+)\s*(?::\s*(.*?))?\s*\}$", st, re.I)
+        if m:
+            key, val = m.group(1).lower(), (m.group(2) or "").strip()
+            if key in ("title", "t"):
+                title = val
+            elif key in ("artist", "subtitle", "st") and not artist:
+                artist = val
+            elif key.startswith("start_of_") and key not in ("start_of_chorus", "start_of_verse"):
+                skip = True
+            elif key.startswith("end_of_"):
+                skip = False
+            elif key in ("start_of_chorus", "soc", "chorus", "c", "comment") and val:
+                out.append(f"[{val}]")
+            elif key in ("start_of_chorus", "soc"):
+                out.append("[Refrén]")
+            continue
+        if skip:
+            continue
+        if "[" not in line:
+            out.append(line.rstrip())
+            continue
+        chords, lyric, pos = [], "", 0
+        for part in re.split(r"(\[[^\]]+\])", line):
+            if part.startswith("[") and part.endswith("]"):
+                chords.append((len(lyric), part[1:-1]))
+            else:
+                lyric += part
+        cl = ""
+        for col, ch in chords:
+            if col < len(cl):
+                col = len(cl) + 1
+            cl = cl.ljust(col) + ch
+        out.append(cl.rstrip())
+        if lyric.strip():
+            out.append(lyric.rstrip())
+    return title, artist, "\n".join(out)

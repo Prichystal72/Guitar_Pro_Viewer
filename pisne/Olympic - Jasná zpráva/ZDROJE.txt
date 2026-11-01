@@ -4,3 +4,5 @@ Olympic - Jasná Zpráva (1).gp5  = C:\Users\prich\Music\Guitar Pro Tabs\___czec
 zdroje/Olympic - Jasná Zpráva (ver 2 by Brousitch).gp5  <- C:\Users\prich\Music\Guitar Pro Tabs\___czech\Olympic - Jasná Zpráva (ver 2 by Brousitch).gp5
 Olympic - Jasná Zpráva (1).gp5  = C:\Users\prich\Music\Guitar Pro Tabs\___czech\Olympic - Jasná Zpráva.gp5 (shodný soubor už je u písně)
 zdroje/jasná zpráva chords.pdf  <- C:\Users\prich\Music\Guitar Pro Tabs\___czech\jasná zpráva chords.pdf
+zdroje/Olympic - Jasná zpráva - bicí z nahrávky.mid  <- přepis bicích ze studiovky „10. Olympic - Jasná zpráva.wav“ (2026-11-01, Časová osa ▸ Napasovat tempo + Přepsat bicí z nahrávky, neuronová síť ADTOF; GP s druhým sólem jednou). Návrh ke kontrole poslechem.
+zdroje/Olympic - Jasná zpráva - bicí z nahrávky (poslech L nahrávka, P přepis).wav  <- kontrola poslechem: vlevo studiovka, vpravo přepis bicích vyrenderovaný vzorky assets/drums/rock (ride zní jako hi-hat).

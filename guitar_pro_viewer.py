@@ -7,6 +7,7 @@ PySide6 aplikace pro procházení .gp3/.gp4/.gp5 souborů a export do JSON pro k
 import re
 import sys
 import json
+import os
 from html import escape as html_escape
 from pathlib import Path
 from typing import Optional
@@ -1283,6 +1284,9 @@ class GuitarProViewer(QMainWindow):
         act_web = tr_action(self, "file.new_from_web", tooltip_key="file.new_from_web.tooltip",
                              shortcut="Ctrl+Shift+N", slot=self._open_web_import, icon=icon("new_song"))
         file_menu.addAction(act_web)
+        act_wizard = tr_action(self, "file.recording_wizard", tooltip_key="file.recording_wizard.tooltip",
+                               slot=self._open_recording_wizard, icon=icon("new_song"))
+        file_menu.addAction(act_wizard)
         act_merge = tr_action(self, "file.merge_web", tooltip_key="file.merge_web.tooltip",
                                shortcut="Ctrl+M", slot=self.merge_with_web, icon=icon("merge"))
         file_menu.addAction(act_merge)
@@ -1313,6 +1317,9 @@ class GuitarProViewer(QMainWindow):
                                  shortcut="Ctrl+Shift+S", slot=self.save_json_as,
                                  icon=icon("save_as"))
         file_menu.addAction(act_save_as)
+        act_export_json = tr_action(self, "file.export_esp32", tooltip_key="file.export_esp32.tooltip",
+                                    slot=self.export_esp32_json)
+        file_menu.addAction(act_export_json)
         file_menu.addSeparator()
         act_close_tab = tr_action(self, "file.close", tooltip_key="file.close.tooltip",
                                    shortcut="Ctrl+W", slot=self._close_current_tab,
@@ -1404,6 +1411,10 @@ class GuitarProViewer(QMainWindow):
         act_fit_tempo = tr_action(self, "timeline.fit_tempo", tooltip_key="timeline.fit_tempo.tooltip",
                                    slot=lambda: self.timeline.fit_tempo_to_audio())
         timeline_menu.addAction(act_fit_tempo)
+        act_transcribe = tr_action(self, "timeline.transcribe_drums",
+                                   tooltip_key="timeline.transcribe_drums.tooltip",
+                                   slot=lambda: self.timeline.transcribe_drums_from_audio())
+        timeline_menu.addAction(act_transcribe)
 
         # Přichytit k mřížce ▸ — radio podmenu, obousměrně zrcadlí
         # snap_combo AKTIVNÍ karty. Combobox samotný je PER KARTA (viz
@@ -1484,21 +1495,20 @@ class GuitarProViewer(QMainWindow):
             icon=std_icon(self, QStyle.StandardPixmap.SP_DialogHelpButton))
         help_menu.addAction(act_about)
 
-        # --- Toolbar "Hlavní panel" — stejné akce jako dřív, teď s ikonami
-        # (viz fáze 4) místo emoji-in-textu; sada beze změny. ---
+        # --- Toolbar "Hlavní panel" — zjednodušený (rozhodnutí uživatele
+        # 2026-11-01, návrh A): hlavní cesta je průvodce „Karaoke z nahrávky";
+        # nová píseň z webu, Ctrl+M, import GP/MIDI a Uložit jako jsou dál
+        # v menu Soubor a na zkratkách. ---
         tb = QToolBar()
         register_tr(tb.setWindowTitle, "toolbar.main")
         tb.setMovable(False)
         self.addToolBar(tb)
-        tb.addAction(act_web)
-        tb.addAction(act_merge)
-        tb.addSeparator()
+        tb.addAction(act_wizard)
+        wiz_btn = tb.widgetForAction(act_wizard)
+        if wiz_btn is not None:
+            wiz_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         tb.addAction(act_open_json)
-        tb.addAction(act_import_gp)
-        tb.addAction(act_import_midi)
-        tb.addSeparator()
         tb.addAction(act_save)
-        tb.addAction(act_save_as)
         tb.addSeparator()
         tb.addAction(act_previews)
 
@@ -1524,22 +1534,10 @@ class GuitarProViewer(QMainWindow):
         tb_timeline.addAction(act_undo)
         tb_timeline.addAction(act_redo)
         tb_timeline.addSeparator()
-        tb_timeline.addAction(act_select_all)
-        tb_timeline.addAction(act_copy)
-        tb_timeline.addAction(act_cut)
-        tb_timeline.addAction(act_paste)
-        tb_timeline.addAction(act_paste_at)
-        tb_timeline.addSeparator()
-        tb_timeline.addAction(act_autotime)
-        tb_timeline.addAction(act_tempo)
-        tb_timeline.addAction(act_count_in)
+        # kopírovat/vložit, tempo, odpočet, na mřížku, sólo, mazání, posun
+        # a přepis textu jsou v menu Úpravy/Časová osa a na zkratkách
         tb_timeline.addAction(act_add_lyric)
         tb_timeline.addAction(act_add_chord)
-        tb_timeline.addAction(act_add_tab)
-        tb_timeline.addAction(act_delete)
-        tb_timeline.addAction(act_shift_sel)
-        tb_timeline.addSeparator()
-        tb_timeline.addAction(act_rewrite_text)
 
     def _swap_toolbar_widgets(self, active: TimelineEditor) -> None:
         """Vymění snap_combo/time_lbl v toolbaru „Časová osa“ za widgety
@@ -1574,6 +1572,12 @@ class GuitarProViewer(QMainWindow):
         Zahodit/Zrušit, pokud má neuložené změny; viz `_close_tab`).
         Stejné jako kliknutí na ✕ na kartě, jen dostupné i z menu/klávesou."""
         self._close_tab(self.doc_tabs.currentIndex())
+
+    def _open_recording_wizard(self) -> None:
+        """Soubor ▸ Karaoke z nahrávky… — průvodce bez GP (`recording_wizard`)."""
+        from recording_wizard import RecordingWizard
+        self._recording_wizard = RecordingWizard(self)
+        self._recording_wizard.show()
 
     def _open_web_import(self) -> None:
         """Kompletní postup pro novou píseň: web/vlastní text → úprava v dialogu
@@ -1677,10 +1681,23 @@ class GuitarProViewer(QMainWindow):
             self.status.showMessage(tr("status.json_load_error"))
             return
 
+        # Projekt (.kproj): cesty k nahrávce/GP jsou relativní ke složce
+        # projektu — složka písně jde přesunout celá
+        project = data.pop("project", None) if isinstance(data, dict) else None
+        if project:
+            base = Path(path).parent
+            audio = project.get("audio")
+            if audio:
+                data.setdefault("meta", {})["audioFile"] = str((base / audio).resolve())
         # JSON nemá GP song (tabulatury/detaily), pracujeme jen s karaoke daty
         self.current_gp_file = None
         self.current_json_file = path
         self._present_karaoke_data(data, source_desc=tr("source.json", path=path))
+        if project:
+            gp = project.get("gp")
+            self.timeline.project_info = {
+                "gp": str((Path(path).parent / gp).resolve()) if gp else None,
+                "source_url": project.get("source_url")}
 
     def open_midi(self) -> None:
         """Import ze standardního .mid/.midi souboru (`midi_import.py`) —
@@ -2769,21 +2786,69 @@ class GuitarProViewer(QMainWindow):
             return
         self.timeline._do_export(None, silent=False)
 
-    def _export_timeline_json(self, data: dict, path: str | None = None, silent: bool = False) -> None:
-        """Uloží JSON upravený v časové ose (volá se z `save_json`/
-        `save_json_as` — JEDNA sdílená cesta). `path=None` → dialog
-        (Uložit jako…); jinak zapíše rovnou (Uložit)."""
+    def export_esp32_json(self) -> None:
+        """Soubor ▸ Exportovat pro ESP32 / tablety (.json) — čistý JSON podle
+        JSON_FORMAT.md, bez bloku `project`. Projekt (.kproj) zůstává tím, co
+        se otevírá a ukládá; export nemění, kam míří Ctrl+S."""
+        if not self.timeline.data:
+            QMessageBox.warning(self, tr("common.warning_title"), tr("export.warn_nothing_loaded"))
+            return
+        base = self.current_json_file or self.timeline.audio_path or self.current_gp_file or "pisen"
+        default_name = str(Path(base).with_suffix(".json"))
+        path, _ = QFileDialog.getSaveFileName(self, tr("file.export_esp32"), default_name,
+                                              tr("export.json_filter"))
         if not path:
-            default_name = ""
+            return
+        self.timeline._push_undo()
+        data = self.timeline.to_json()
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as ex:
+            QMessageBox.critical(self, tr("export.error_title"), str(ex))
+            return
+        self.status.showMessage(tr("export.status_done", path=path))
+
+    def _project_block(self, path: str) -> dict:
+        """Blok `project` do .kproj: relativní cesty k nahrávce, GP a zdroj textu."""
+        base = Path(path).parent
+        info = getattr(self.timeline, "project_info", None) or {}
+
+        def rel(p):
+            if not p:
+                return None
+            try:
+                return os.path.relpath(p, base).replace("\\", "/")
+            except ValueError:           # jiný disk — necháme absolutní
+                return str(p)
+
+        meta = self.timeline.data.get("meta", {}) or {}
+        return {"version": 1, "audio": rel(self.timeline.audio_path),
+                "gp": rel(self.current_gp_file or info.get("gp")),
+                "source_url": meta.get("source_url") or info.get("source_url")}
+
+    def _export_timeline_json(self, data: dict, path: str | None = None, silent: bool = False) -> None:
+        """Uloží projekt z časové osy (volá se z `save_json`/`save_json_as`
+        — JEDNA sdílená cesta). `path=None` → dialog (Uložit jako…); jinak
+        zapíše rovnou (Uložit). Nový soubor = projekt `.kproj` (JSON podle
+        JSON_FORMAT.md + blok `project` s relativními cestami); dříve otevřený
+        `.json` se dál přepisuje jako čistý JSON."""
+        if not path:
             if self.current_json_file:
-                default_name = self.current_json_file
-            elif self.current_gp_file:
-                default_name = Path(self.current_gp_file).stem + "_karaoke.json"
+                default_name = str(Path(self.current_json_file).with_suffix(".kproj"))
+            else:
+                src = self.timeline.audio_path or self.current_gp_file
+                title = (self.timeline.data.get("meta", {}) or {}).get("title") or ""
+                stem = Path(src).stem if src else (title or "pisen")
+                default_name = str(Path(src).parent / (stem + ".kproj")) if src else stem + ".kproj"
             path, _ = QFileDialog.getSaveFileName(
                 self, tr("export.save_dialog_title"), default_name,
                 tr("export.save_dialog_filter"))
             if not path:
                 return
+        if path.lower().endswith(".kproj"):
+            data = dict(data)
+            data["project"] = self._project_block(path)
         if not silent:
             self.status.showMessage(tr("export.status_exporting"))
         try:
@@ -2795,11 +2860,21 @@ class GuitarProViewer(QMainWindow):
             if silent:
                 self.status.showMessage(tr("export.status_done", path=path))
             else:
-                n_tracks = len(data.get("tracks", []))
-                n_lyrics = len(data.get("lyrics_timeline", []))
-                n_chords = len(data.get("chords_timeline", []))
-                n_drums = len(data.get("drums_timeline", []))
-                n_lines = len(data.get("karaoke_lines", []))
+                if data.get("schemaVersion"):
+                    # nový formát (JSON_FORMAT.md): vše po sekcích — dřív se tu
+                    # počítaly staré ploché klíče a hláška ukazovala samé nuly
+                    secs = data.get("sections", []) or []
+                    cnt = {k: sum(len(sc.get(k) or []) for sc in secs)
+                           for k in ("lyrics", "chords", "drums", "bass", "tab")}
+                    n_tracks = sum(1 for v in cnt.values() if v)
+                    n_lyrics, n_chords, n_drums = cnt["lyrics"], cnt["chords"], cnt["drums"]
+                    n_lines = cnt["lyrics"]          # jeden řádek = jedna jednotka textu
+                else:
+                    n_tracks = len(data.get("tracks", []))
+                    n_lyrics = len(data.get("lyrics_timeline", []))
+                    n_chords = len(data.get("chords_timeline", []))
+                    n_drums = len(data.get("drums_timeline", []))
+                    n_lines = len(data.get("karaoke_lines", []))
                 body = tr("export.done_body", path=path, n_tracks=n_tracks,
                           n_lyrics=n_lyrics, n_chords=n_chords, n_drums=n_drums, n_lines=n_lines)
                 QMessageBox.information(self, tr("export.done_title"), body)

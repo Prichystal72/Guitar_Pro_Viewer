@@ -19,8 +19,21 @@ Jak to funguje (žádné odhady z textu, jen porovnání úderů):
 
 Model posunu je stejný jako v editoru (`TimelineEditor._timeline_to_audio_t`):
     čas_v_nahrávce = (čas_na_ose − posun) / roztažení
+
+**Rozpoznání bicích v nahrávce** (bod 1) — přednostně neuronová síť ADTOF
+(`adtof_envs`, `assets/models/adtof_frame_rnn.onnx`, CC BY-NC-SA 4.0, viz
+`assets/models/ADTOF_NOTICE.md`): natrénovaná na 359 h skutečné hudby, vrací
+pravděpodobnost úderu kopáku/virblu/tomů/hi-hatu/činelů po 10 ms. Změřeno
+(umělá nahrávka = skutečná hudba bez bicích + bicí se známými časy, F-skóre):
+nárůst spektra po pásmech kopák 0,68 / virbl 0,68 / činely 0,86, ADTOF
+0,91 / 0,89 / 0,86; časová chyba medián < 1 ms. Basa už nedělá falešné kopáky
+(studiovka Jasné zprávy: 1428 → 393 „kopáků"). Bez `onnxruntime` nebo modelu
+se použije `OnsetAccumulator` (nárůst spektra).
 """
 from __future__ import annotations
+
+import bisect
+from pathlib import Path
 
 import numpy as np
 
@@ -99,6 +112,235 @@ class OnsetAccumulator:
             env = np.concatenate([np.zeros(lead, dtype=np.float32), env])
             out[b] = _normalize(env)
         return out
+
+
+ADTOF_MODEL = Path(__file__).resolve().parent / "assets" / "models" / "adtof_frame_rnn.onnx"
+ADTOF_SR = 44100                  # model chce mono 44,1 kHz, výstup 100 snímků/s (= HOP_S)
+# prahy pro čárky na vlnovce (nejlepší F na umělé nahrávce)
+ADTOF_THRESHOLDS = {"kick": 0.3, "snare": 0.2, "cymbal": 0.5}
+_adtof_session = None
+
+
+def adtof_available() -> bool:
+    if not ADTOF_MODEL.exists():
+        return False
+    try:
+        import onnxruntime  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def adtof_activations(mono: np.ndarray, sample_rate: int) -> np.ndarray:
+    """Výstup sítě ADTOF: pole (snímky × 5) — pravděpodobnost úderu
+    kopáku, virblu, tomů, hi-hatu a činelů (crash+ride) po HOP_S.
+    Na 4min písni ~3 s (CPU), uvolňuje GIL, takže smí běžet ve vlákně."""
+    global _adtof_session
+    import onnxruntime as ort
+    if _adtof_session is None:
+        _adtof_session = ort.InferenceSession(str(ADTOF_MODEL), providers=["CPUExecutionProvider"])
+    x = np.asarray(mono, dtype=np.float32)
+    if int(sample_rate) != ADTOF_SR and x.size:
+        n = int(round(x.size * ADTOF_SR / float(sample_rate)))
+        x = np.interp(np.arange(n) * (float(sample_rate) / ADTOF_SR),
+                      np.arange(x.size), x).astype(np.float32)
+    if x.size < ADTOF_SR // 10:
+        return np.zeros((0, len(ADTOF_CLASSES)), dtype=np.float32)
+    return _adtof_session.run(None, {"waveform": np.clip(x, -1.0, 1.0)[None, :]})[0][0].astype(np.float32)
+
+
+def group_envs(act: np.ndarray) -> dict[str, np.ndarray]:
+    """5 tříd ADTOF -> 3 skupiny pro zarovnání: tomy patří k virblu
+    a hi-hat k činelům stejně jako v `drum_group`."""
+    return {"kick": act[:, 0].copy(),
+            "snare": np.maximum(act[:, 1], act[:, 2]),
+            "cymbal": np.maximum(act[:, 3], act[:, 4])}
+
+
+def demucs_available() -> bool:
+    from importlib.util import find_spec
+    return find_spec("demucs") is not None and find_spec("torch") is not None
+
+
+def demucs_drums(mono: np.ndarray, sample_rate: int) -> np.ndarray:
+    """Oddělí bicí z nahrávky (Demucs htdemucs, CPU; 4min píseň ~75 s,
+    poprvé se stáhne model ~80 MB). Vrací mono stopu bicích 44,1 kHz.
+    Změřeno (8 umělých mixů): kopák F 0,77 → 0,89, hi-hat 0,69 → 0,84,
+    nejvíc u tichých bicích. Smí běžet ve vlákně."""
+    import torch
+    from demucs.apply import apply_model
+    from demucs.pretrained import get_model
+    model = get_model("htdemucs")
+    model.eval()
+    x = np.asarray(mono, dtype=np.float32)
+    if int(sample_rate) != model.samplerate and x.size:
+        n = int(round(x.size * model.samplerate / float(sample_rate)))
+        x = np.interp(np.arange(n) * (float(sample_rate) / model.samplerate),
+                      np.arange(x.size), x).astype(np.float32)
+    wav = torch.from_numpy(np.vstack([x, x]))
+    mu, sd = wav.mean(), wav.std() + 1e-8
+    with torch.no_grad():
+        out = apply_model(model, ((wav - mu) / sd)[None], device="cpu", shifts=0,
+                          split=True, overlap=0.25, progress=False)[0] * sd + mu
+    return out[model.sources.index("drums")].mean(0).numpy().astype(np.float32)
+
+
+def cache_path(audio_path: str, kind: str) -> Path:
+    """Mezipaměť výsledků k nahrávce (podle cesty, velikosti a času změny)
+    — Demucs se pro jednu nahrávku počítá jen jednou."""
+    import hashlib
+    import os
+    st = os.stat(audio_path)
+    key = hashlib.sha1(f"{os.path.abspath(audio_path)}|{st.st_size}|{st.st_mtime_ns}|{kind}".encode()).hexdigest()[:16]
+    base = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "Guitar_Pro_Viewer" / "cache"
+    base.mkdir(parents=True, exist_ok=True)
+    return base / f"{Path(audio_path).stem[:40]}_{key}_{kind}.npy"
+
+
+def adtof_envs(mono: np.ndarray, sample_rate: int) -> dict[str, np.ndarray]:
+    """Pravděpodobnost úderu po skupinách (krok HOP_S) z ADTOF."""
+    return group_envs(adtof_activations(mono, sample_rate))
+
+
+# ---------------------------------------------------------------------------
+# přepis bicích z nahrávky (ADTOF -> údery na mřížce taktů)
+# ---------------------------------------------------------------------------
+
+ADTOF_CLASSES = ("kick", "snare", "tom", "hihat", "cymbal")
+ADTOF_MIDI = (36, 38, 47, 42, 49)            # GM: Bass Drum 1, Snare, Low-Mid Tom, Closed HH, Crash 1
+RIDE_MIDI = 51                               # činel v souvislé řadě (viz quantize_hits)
+# Prahy kopák, virbl, tomy, hi-hat, činely. Výchozí od autorů ADTOF (0,22/0,24/0,32/0,22/0,30),
+# hi-hat a virbl doladěné na 8 umělých mixech (2 doprovody bez bicích × 2 soupravy × 0/−8 dB,
+# F do 30 ms) a ověřené na studiovce Jasné zprávy proti GP: hi-hat 0,22 → 0,50 na mixu
+# (F 0,69 → 0,78; studiovka 417 → 267 úderů, shoda s GP 64 → 86 %, ze skutečných ubude 7 %).
+# Tomy a crash z testovacích vzorků síť nepozná vůbec (F≈0) — tomy zůstávají na prahu autorů.
+# Činely: na doprovodu bez bicích (Demucs) síť při 0,30 našla 212 „činelů", při 0,50 78;
+# crash z GP ve studiovce nalezen pořád v 97 % → 0,50.
+ADTOF_CLASS_THRESHOLDS = (0.22, 0.24, 0.32, 0.50, 0.50)    # nahrávka (mix)
+ADTOF_STEM_THRESHOLDS = (0.22, 0.10, 0.32, 0.45, 0.50)     # oddělené bicí (Demucs): virbl F 0,79 → 0,87
+
+
+def combine_stem(stem_act: np.ndarray, mix_act: np.ndarray) -> np.ndarray:
+    """Aktivace pro režim Demucs: kopák, virbl, tomy a hi-hat z oddělených
+    bicích, ČINELY z celé nahrávky — Demucs je oslabí (studiovka: crash z GP
+    nalezen 74 % místo 97 %, činelů 98 místo 264)."""
+    n = min(len(stem_act), len(mix_act))
+    out = stem_act[:n].copy()
+    out[:, 4] = mix_act[:n, 4]
+    return out
+
+
+def peak_pick(a: np.ndarray, threshold: float) -> np.ndarray:
+    """Indexy úderů v aktivaci jedné třídy — jako madmom
+    `NotePeakPickingProcessor` u autorů ADTOF (pre_max 20 ms, post_max
+    10 ms, pre_avg 100 ms, combine 20 ms)."""
+    n = a.size
+    if n < 3:
+        return np.zeros(0, dtype=np.int64)
+    pad = np.concatenate([np.full(2, -1.0, np.float32), a, np.full(1, -1.0, np.float32)])
+    loc = np.max(np.stack([pad[k:k + n] for k in range(4)]), axis=0)        # okno [i-2, i+1]
+    c = np.concatenate([[0.0], np.cumsum(a, dtype=np.float64)])
+    lo = np.maximum(0, np.arange(n) - 10)
+    hi = np.minimum(n, np.arange(n) + 2)
+    avg = (c[hi] - c[lo]) / (hi - lo)
+    cand = np.where((a >= threshold) & (a >= loc) & (a >= avg))[0]
+    keep: list[int] = []
+    for i in cand:
+        if keep and i - keep[-1] <= 2:
+            continue
+        keep.append(int(i))
+    return np.asarray(keep, dtype=np.int64)
+
+
+def transcribe(act: np.ndarray, thresholds=ADTOF_CLASS_THRESHOLDS) -> list[tuple[float, int, float]]:
+    """Údery z aktivací ADTOF: [(čas v nahrávce s, třída 0–4, síla 0–1)]."""
+    out: list[tuple[float, int, float]] = []
+    for k in range(min(act.shape[1] if act.ndim == 2 else 0, len(ADTOF_CLASSES))):
+        for i in peak_pick(act[:, k], thresholds[k]):
+            out.append((i * HOP_S, k, float(act[i, k])))
+    out.sort()
+    return out
+
+
+def quantize_hits(hits_t: list[tuple[float, int, float]], grid) -> tuple[list[dict], dict]:
+    """Údery (čas na časové ose, třída, síla) přichytí na mřížku `grid`
+    (`music_grid.TimeGrid`): šestnáctiny, nebo osminové trioly, když úder
+    leží na triole o polovinu blíž. Týž buben na stejném místě jen jednou.
+    Vrací (údery {beat, time_s, cls, velocity}, statistiky) — medián
+    odchylky od mřížky v ms ukáže, jestli osa sedí na nahrávku."""
+    out: dict[tuple[float, int], dict] = {}
+    dev_ms: list[float] = []
+    n_trip = 0
+    for t, k, strength in hits_t:
+        if t < 0:
+            continue
+        b = grid.beat(t)
+        q16 = round(b * 4) / 4
+        q12 = round(b * 3) / 3
+        e16, e12 = abs(b - q16), abs(b - q12)
+        trip = e12 < 0.5 * e16
+        n_trip += trip
+        snapped = round(q12 if trip else q16, 4)
+        ts = grid.seconds(snapped)
+        dev_ms.append(abs(ts - t) * 1000.0)
+        vel = int(np.clip(round(30 + 97 * strength), 1, 127))
+        key = (snapped, k)
+        if key not in out or out[key]["velocity"] < vel:
+            out[key] = {"beat": snapped, "time_s": round(ts, 4), "cls": k, "velocity": vel}
+    events = sorted(out.values(), key=lambda e: (e["time_s"], e["cls"]))
+    # ADTOF nerozliší crash a ride. Ride se hraje v řadě (osminy na
+    # činel místo hi-hatu — Jasná zpráva), crash osamoceně: činel se
+    # sousedním činelem do půl doby = ride, jinak crash.
+    cym = [e["beat"] for e in events if e["cls"] == 4]
+    for e in events:
+        e["midi"] = ADTOF_MIDI[e["cls"]]
+        if e["cls"] == 4:
+            i = bisect.bisect_left(cym, e["beat"])
+            near = [cym[j] for j in (i - 1, i + 1) if 0 <= j < len(cym)]
+            if any(abs(b - e["beat"]) <= 0.5 + 1e-6 for b in near):
+                e["midi"] = RIDE_MIDI
+    stats = {"n": len(events), "triplets": n_trip,
+             "median_dev_ms": float(np.median(dev_ms)) if dev_ms else 0.0,
+             "per_class": {ADTOF_CLASSES[k]: sum(1 for e in events if e["cls"] == k)
+                           for k in range(len(ADTOF_CLASSES))},
+             "ride": sum(1 for e in events if e["midi"] == RIDE_MIDI)}
+    return events, stats
+
+
+def save_drums_midi(events: list[dict], grid, path: str, ppq: int = 480) -> None:
+    """Údery z `quantize_hits` jako MIDI soubor (kanál 10, GM bicí) se
+    stejnou mapou tempa a metra jako časová osa."""
+    import mido
+    mid = mido.MidiFile(ticks_per_beat=ppq)
+    meta = mido.MidiTrack()
+    mid.tracks.append(meta)
+    marks: list[tuple[int, int, mido.MetaMessage]] = []
+    for beat, bpm in grid.segments:
+        marks.append((int(round(beat * ppq)), 0, mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(bpm))))
+    for bar, num, quarters in grid.meters:
+        den = max(1, int(round(num * 4 / quarters)))
+        marks.append((int(round(grid.beats_before_bar(bar) * ppq)), 1,
+                      mido.MetaMessage("time_signature", numerator=num, denominator=den)))
+    _write_abs(meta, marks)
+    drums = mido.MidiTrack()
+    mid.tracks.append(drums)
+    drums.append(mido.MetaMessage("track_name", name="Drums (recording)", time=0))
+    notes: list[tuple[int, int, mido.Message]] = []
+    for e in events:
+        tick = int(round(e["beat"] * ppq))
+        note = e["midi"]
+        notes.append((tick, 1, mido.Message("note_on", channel=9, note=note, velocity=e["velocity"])))
+        notes.append((tick + ppq // 4, 0, mido.Message("note_off", channel=9, note=note, velocity=0)))
+    _write_abs(drums, notes)
+    mid.save(path)
+
+
+def _write_abs(track, items) -> None:
+    """(absolutní tick, pořadí, zpráva) -> zprávy s relativním časem."""
+    last = 0
+    for tick, _o, msg in sorted(items, key=lambda x: (x[0], x[1])):
+        track.append(msg.copy(time=tick - last))
+        last = tick
 
 
 def _normalize(env: np.ndarray) -> np.ndarray:
@@ -349,6 +591,80 @@ def fit_bars(envs: dict[str, np.ndarray], bar_hits: list[list[tuple[float, str]]
     n_f = min(e.size for e in fine.values()) - 1
     return _bar_dp(fine, n_f, HOP_S, bar_hits, bar_len, stretch, p1,
                    int(round(0.4 / HOP_S)), ratio_tol, reg)
+
+
+def align_gp_bars(envs: dict[str, np.ndarray], gp_bars: list[list[tuple[float, str]]],
+                  rec_starts: np.ndarray, quarters: np.ndarray, jump: float = 0.8,
+                  empty: float = 0.08) -> dict:
+    """Přiřazení taktů GP taktům NAHRÁVKY (oprava struktury GP podle
+    nahrávky — GP mívá repetici navíc/míň, jiný úvod).
+
+    gp_bars[i]   údery GP taktu i: (poměrná pozice v taktu 0..1, skupina)
+    rec_starts   začátky taktů nahrávky v čase NAHRÁVKY (n+1 hodnot)
+    quarters     čtvrtek v taktu nahrávky (n) — kvůli posunu o dobu
+
+    Skóre S[i, j] = průměrná aktivace „svého" bubnu v místech úderů GP taktu i
+    posazeného na takt nahrávky j. Dynamické programování po taktech nahrávky:
+    pokračovat dalším taktem GP zdarma, skok kamkoli v GP za `jump`, takt
+    nahrávky bez bicích z GP = `empty`. Zkouší se i posun o 0–3 doby (GP
+    zapsané o dobu vedle). Vrací {"assign": [index taktu GP nebo −1 pro každý
+    takt nahrávky], "shift": doby, "jumps": [(takt nahrávky, z GP taktu, na GP takt)]}."""
+    n_rec = len(rec_starts) - 1
+    n_gp = len(gp_bars)
+    if n_rec < 1 or n_gp < 1:
+        return {"assign": [-1] * max(0, n_rec), "shift": 0, "jumps": []}
+    starts = np.asarray(rec_starts[:-1], dtype=float)
+    lens = np.diff(np.asarray(rec_starts, dtype=float))
+    q = np.asarray(quarters[:n_rec], dtype=float)
+    wide = {g: np.append(_widen(e, 2), 0.0) for g, e in envs.items()}
+    best = None
+    for shift in range(4):
+        S = np.full((n_gp, n_rec), empty)
+        for i, hb in enumerate(gp_bars):
+            hb = [(f, g) for f, g in hb if g in wide]
+            if not hb:
+                continue
+            fr = np.array([f for f, _ in hb]) + shift / np.maximum(q, 1)[:, None]          # [j, h]
+            t = starts[:, None] + fr * lens[:, None]
+            idx = np.round(t / HOP_S).astype(np.int64)
+            tot = np.zeros(n_rec)
+            wsum = 0.0
+            for h, (_f, g) in enumerate(hb):
+                w = wide[g]
+                ii = np.where((idx[:, h] >= 0) & (idx[:, h] < w.size - 1), idx[:, h], w.size - 1)
+                tot += WEIGHTS[g] * w[ii]
+                wsum += WEIGHTS[g]
+            S[i] = np.clip(tot / wsum, 0.0, 1.0)
+        # DP: stavy 0..n_gp-1 = takt GP, n_gp = bez bicích
+        V = np.concatenate([S[:, 0] - jump, [empty]])
+        V[0] += jump                                    # začít taktem 1 GP zdarma
+        back = []
+        for j in range(1, n_rec):
+            k = int(np.argmax(V))
+            jump_v = V[k] - jump
+            cont = np.full(n_gp + 1, -np.inf)
+            cont[0] = V[n_gp]                           # bez bicích → takt GP 1 (delší úvod nahrávky)
+            cont[1:n_gp] = V[:n_gp - 1]                 # takt GP i-1 → i
+            cont[n_gp] = V[n_gp]                        # bez bicích → zůstat bez bicích
+            src = np.where(cont >= jump_v, np.r_[n_gp, np.arange(0, n_gp - 1), n_gp], k)
+            nv = np.maximum(cont, jump_v)
+            nv[:n_gp] += S[:, j]
+            nv[n_gp] += empty
+            back.append(src)
+            V = nv
+        total = float(V.max())
+        if best is None or total > best[0]:
+            st = int(np.argmax(V))
+            path = [st]
+            for src in reversed(back):
+                st = int(src[st])
+                path.append(st)
+            best = (total, shift, path[::-1])
+    _total, shift, path = best
+    assign = [p if p < n_gp else -1 for p in path]
+    jumps = [(j + 1, assign[j - 1] + 1, assign[j] + 1) for j in range(1, n_rec)
+             if assign[j] != -1 and assign[j - 1] != -1 and assign[j] != assign[j - 1] + 1]
+    return {"assign": assign, "shift": shift, "jumps": jumps}
 
 
 def bar_match(envs: dict[str, np.ndarray], bar_hits: list[list[tuple[float, str]]],

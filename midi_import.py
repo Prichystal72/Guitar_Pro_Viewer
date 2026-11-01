@@ -307,3 +307,48 @@ def build_karaoke_json_from_midi(path: str) -> tuple[dict, list[str]]:
         "karaoke_lines": [],
     }
     return result, warnings
+
+
+def midi_drum_bars(path: str) -> list[tuple[int, float, int]]:
+    """Bicí z MIDI po taktech zdroje: [(takt 1-based, poměrná pozice v taktu
+    0..1, GM číslo bubnu)] — pro průvodce „Karaoke z nahrávky", který údery
+    posadí na takty NAHRÁVKY (tempo MIDI se nepoužije). Takty podle
+    `time_signature` (bez něj 4/4); bicí = stopy, které `_classify_track`
+    pozná jako bicí, a vůbec všechny noty na kanálu 10."""
+    mid = mido.MidiFile(path)
+    tpb = mid.ticks_per_beat or 480
+    sigs: dict[int, tuple[int, int]] = {}
+    for track in mid.tracks:
+        t = 0
+        for msg in track:
+            t += msg.time
+            if msg.type == "time_signature":
+                sigs[t] = (msg.numerator, msg.denominator)
+    sigs.setdefault(0, sigs[min(sigs)] if sigs else (4, 4))
+    marks = sorted(sigs.items())
+    # začátky taktů v tickách (úseky metra)
+    bars: list[tuple[int, int]] = []          # (tick začátku, délka taktu v tickách)
+    end = max((sum(m.time for m in tr) for tr in mid.tracks), default=0)
+    for i, (tick, (num, den)) in enumerate(marks):
+        stop = marks[i + 1][0] if i + 1 < len(marks) else end + 1
+        length = max(1, int(round(num * tpb * 4 / den)))
+        t = tick
+        while t < stop:
+            bars.append((t, length))
+            t += length
+    starts = [b[0] for b in bars]
+    import bisect
+    out: list[tuple[int, float, int]] = []
+    seen: set[tuple[int, int]] = set()
+    for track in mid.tracks:
+        drums_track = _classify_track(track) == "drums"
+        for start, _end, ch, pitch in _track_notes(track):
+            if not (ch == _DRUM_CHANNEL or drums_track) or pitch < 27:
+                continue
+            if (start, pitch) in seen:
+                continue
+            seen.add((start, pitch))
+            b = max(0, bisect.bisect_right(starts, start) - 1)
+            out.append((b + 1, (start - bars[b][0]) / bars[b][1], pitch))
+    out.sort()
+    return out

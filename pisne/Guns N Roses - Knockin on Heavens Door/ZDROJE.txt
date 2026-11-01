@@ -6,3 +6,4 @@ zdroje/Guns N' Roses - Knockin_' On Heaven_'s Door (5).gp4  <- C:\Users\prich\Mu
 zdroje/Guns N' Roses - Knockin_' On Heaven_'s Door.gp3  <- C:\Users\prich\Music\Guitar Pro Tabs\G\Guns N' Roses\Guns N' Roses - Knockin_' On Heaven_'s Door.gp3
 guns-n-roses-knockin_on_heaven_s_door_5.gp3  = C:\Users\prich\Music\Guitar Pro Tabs\G\Guns N' Roses\Guns N' Roses - Knockin_' on Heaven_'s Door (3).gp3 (shodný soubor už je u písně)
 zdroje/Guns N' Roses - Knocking on Heaven's Door.gp3  <- C:\Users\prich\Music\Guitar Pro Tabs\G\Guns N' Roses\Guns N' Roses - Knocking on Heaven's Door.gp3
+Guns N' Roses - Knockin' On Heaven's Door.mp3  <- nahrávka pro test (2026-11-01, yt-dlp → MP3, jako mp3_z_ytb): YouTube „Guns N' Roses - Knockin' On Heaven's Door (Visualizer)“ (335 s)

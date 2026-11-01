@@ -11,3 +11,4 @@ zdroje/Beatles (The) - Let It Be (4).gp3  = C:\Users\prich\Music\Guitar Pro Tabs
 zdroje/Beatles (The) - Let It Be (5).gp4  = C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles\Beatles (The) - Let It Be (5).gp4 (shodný soubor už je u písně)
 Beatles (The) - Let It Be.gp4  = C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles\Beatles (The) - Let It Be.gp4 (shodný soubor už je u písně)
 zdroje/Beatles (The) - Let it be (2).gp3  = C:\Users\prich\Music\Guitar Pro Tabs\B\Beatles\Beatles (The) - Let it be (2).gp3 (shodný soubor už je u písně)
+The Beatles - Let It Be (Remastered 2015).mp3  <- nahrávka pro test (2026-11-01, yt-dlp → MP3, jako mp3_z_ytb): YouTube „The Beatles - Let It Be (Official Music Video) [Remastered 2015]“ (243 s)

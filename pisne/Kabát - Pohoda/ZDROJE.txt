@@ -1,3 +1,4 @@
 Zdroje k písni „Kabát - Pohoda“ — odkud soubory pocházejí.
 
 zdroje/Kabát - Pohoda.gpx  <- C:\Users\prich\Music\Guitar Pro Tabs\___czech\Kabát - Pohoda.gpx
+KABÁT - Pohoda.mp3  <- nahrávka pro test (2026-11-01, yt-dlp → MP3, jako mp3_z_ytb): YouTube „KABÁT - Pohoda“ (230 s)

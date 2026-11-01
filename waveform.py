@@ -15,12 +15,14 @@ from __future__ import annotations
 
 import array
 import math
+import threading
 from typing import Optional
 
 import numpy as np
 from PySide6.QtCore import QObject, QUrl, Signal
 
-from drum_align import OnsetAccumulator, pick_onsets
+from drum_align import (ADTOF_THRESHOLDS, OnsetAccumulator, adtof_activations, adtof_available,
+                        group_envs, pick_onsets)
 from PySide6.QtMultimedia import QAudioDecoder, QAudioFormat
 
 BUCKETS_PER_SECOND = 400      # rozlišení vlnovky (2,5 ms/kbelík — odpovídá
@@ -55,6 +57,8 @@ class WaveformData:
         # pro zarovnání na bicí z GP, a z ní vybrané údery pro zobrazení
         self.onset_env: dict = {}
         self.drum_onsets: dict = {}
+        self.onset_source: str = "flux"   # "adtof" = neuronová síť, "flux" = nárůst spektra
+        self.drum_act: Optional[np.ndarray] = None   # ADTOF snímky × 5 (drum_align.ADTOF_CLASSES)
         # dekódovaný zvuk (mono int16) — pro „nahrávka vlevo, GP vpravo"
         # (TimelineEditor.set_split_ears); ~23 MB na 4,5 min
         self.pcm: Optional[np.ndarray] = None
@@ -243,6 +247,7 @@ class WaveformLoader(QObject):
         self._carry = np.zeros(0, dtype=np.float32)
         self._onsets: Optional[OnsetAccumulator] = None
         self._pcm_parts: list = []
+        self._generation = 0      # zvyšuje cancel(); starý výsledek z vlákna se zahodí
 
     def load(self, path: str) -> None:
         self.cancel()
@@ -252,6 +257,9 @@ class WaveformLoader(QObject):
         self._carry = np.zeros(0, dtype=np.float32)
         self._onsets = None
         self._pcm_parts = []
+        # údery v nahrávce: nárůst spektra po pásmech průběžně při dekódování
+        # (levný, záloha) a po dekódování neuronová síť ADTOF ve vlákně
+        self._use_adtof = adtof_available()
 
         dec = QAudioDecoder(self)
         # ZÁMĚRNĚ se NEVOLÁ setAudioFormat() — vyžádané převzorkování/downmix
@@ -274,6 +282,7 @@ class WaveformLoader(QObject):
         # než se vůbec sáhne na stop()/deleteLater(). Jinak by vnořené volání
         # vynulovalo self._decoder dřív, než to venkovní volání stihlo
         # doběhnout, a `self._decoder.deleteLater()` by spadlo na None.
+        self._generation += 1      # běžící ADTOF vlákno výsledek neohlásí
         dec = self._decoder
         self._decoder = None
         if dec is None:
@@ -365,7 +374,32 @@ class WaveformLoader(QObject):
         data, self._data = self._data, None
         data.compute_display_gain()
         self.cancel()
-        self.finished.emit(data)
+        if not self._use_adtof or data.pcm is None:
+            self.finished.emit(data)
+            return
+        # ADTOF ~3 s na 4min píseň — ve vlákně, ať okno nezamrzne; signál
+        # z vlákna Qt doručí do hlavního vlákna (queued)
+        gen = self._generation
+
+        def work():
+            try:
+                act = adtof_activations(data.pcm.astype(np.float32) / 32767.0, data.sample_rate)
+                envs = group_envs(act)
+                onsets = {b: pick_onsets(e, threshold=ADTOF_THRESHOLDS[b]) for b, e in envs.items()}
+                # síť zná jen skutečnou hudbu — na umělém signálu (stálý
+                # pilovitý akord + šum) nenajde nic; pak zůstane nárůst spektra
+                if sum(len(v) for v in onsets.values()) >= max(8, 0.2 * data.duration_s):
+                    data.onset_env, data.drum_onsets, data.onset_source = envs, onsets, "adtof"
+                data.drum_act = act       # 5 tříd pro přepis bicích (i když zarovnání zůstane na nárůstu)
+            except Exception:       # model nejde spustit -> zůstane nárůst spektra
+                pass
+            if gen == self._generation:
+                try:
+                    self.finished.emit(data)
+                except RuntimeError:    # loader mezitím smazán (zavřená karta)
+                    pass
+
+        threading.Thread(target=work, daemon=True).start()
 
     def _on_error(self, *args) -> None:
         msg = "nepodařilo se načíst tvar vlny"

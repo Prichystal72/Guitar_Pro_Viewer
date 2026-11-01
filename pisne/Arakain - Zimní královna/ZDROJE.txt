@@ -1,3 +1,4 @@
 Zdroje k písni „Arakain - Zimní královna“ — odkud soubory pocházejí.
 
 zdroje/Arakain - Zimni Kralovna.gp4  <- C:\Users\prich\Music\Guitar Pro Tabs\___czech\Arakain - Zimni Kralovna.gp4
+Arakain - Zimní královna (feat. Lucie Bílá).mp3  <- nahrávka pro test (2026-11-01, yt-dlp → MP3, jako mp3_z_ytb): YouTube „Zimní královna (feat. Lucie Bílá)“, id _u_pjCzSibc (240 s)
