@@ -13,3 +13,4 @@ genius.html | genius | https://genius.com/Olympic-jasna-zprava-lyrics | HTML —
 —  | pisnicky-akordy | https://pisnicky-akordy.cz/olympic/jasna-zprava | NESTAŽENO: HTTP 403 — ochrana proti robotům
 —  | supermusic | https://www.supermusic.cz/piesen.php?id=462 | NESTAŽENO: JS výzva proti robotům (supermusic)
 —  | velkyzpevnik | https://www.velkyzpevnik.cz/olympic/jasna-zprava | NESTAŽENO: HTTP 503 — web nedostupný
+lrclib.lrc | lrclib.net | https://lrclib.net/api/get/23436796 | LRC — text s časem každého řádku („Olympic – Jasná Zpráva“, 260 s), staženo 2026-11-01

@@ -374,6 +374,86 @@ def chart_to_gp_song(detected: list[dict], title: str, artist: str, tempo: int) 
 # Karaoke JSON builder
 # ---------------------------------------------------------------------------
 
+_SEC_PREFIX = re.compile(
+    r'^\s*(?:(\d+)\s*[.)]|(R|Ref|Refr|Refrén|Refren|Chorus|Verse\s*\d*|Sloka\s*\d*|Sloha\s*\d*'
+    r'|Intro|Outro|Bridge|Solo|Sólo|Mezihra|Předehra|Predehra|Dohra|Coda|Interlude)\s*[:.]?)\s+',
+    re.IGNORECASE)
+_SEC_ONLY_WORDS = {"intro", "outro", "bridge", "solo", "sólo", "mezihra", "předehra", "predehra",
+                   "dohra", "coda", "interlude"}
+
+
+def split_section_marker(text: str) -> tuple[str | None, str]:
+    """„1. Skončili jsme…" → ('Sloka 1', 'Skončili jsme…'), „Ref: Pánu…" →
+    ('Refrén', 'Pánu…'), „Intro G-G D" → ('Intro', 'G-G D'). Značka sekce do
+    textu na displeji nepatří."""
+    m = _SEC_PREFIX.match(text or "")
+    if not m:
+        return None, text
+    rest = text[m.end():]
+    if m.group(1):
+        return f"Sloka {m.group(1)}", rest
+    word = m.group(2).strip()
+    low = word.lower()
+    punct = any(ch in text[m.start(2) + len(m.group(2)):m.end()] for ch in ":.")
+    if not punct and not (low in _SEC_ONLY_WORDS and _chord_only_tokens(rest)):
+        return None, text                    # „Refrén se nezpívá" je text, ne značka
+    if low.startswith(("r", "chorus")) and not low.startswith("refrén") or low in ("ref", "refr", "refrén", "refren"):
+        return "Refrén", rest
+    if low.startswith(("sloka", "sloha", "verse")):
+        num = re.sub(r"\D", "", word)
+        return (f"Sloka {num}" if num else "Sloka"), rest
+    return word.capitalize(), rest
+
+
+def _chord_only_tokens(text: str) -> list[str] | None:
+    """„G-G G-D-Emi-C G-D-C" → akordy, jinak None (je to text)."""
+    toks = [t for t in re.split(r"[\s,|/-]+", text.strip()) if t and t not in ("x2", "2x", "(2x)", "%")]
+    if toks and all(is_chord(t) for t in toks):
+        return toks
+    return None
+
+
+def _unit_text(unit) -> str:
+    kind, payload = unit
+    return ' '.join(w for w, _ in payload if w.strip()) if kind == 'lyric' else ''
+
+
+def expand_repeats(units: list) -> list:
+    """Zkrácený opakovaný blok („R: Když se u nás chlapi poperou…") rozbalí
+    na celý dřívější blok, který tak začíná. Blok = řádky od řádku se značkou
+    sekce (nebo od začátku textu) po další značku. Zarovnání na zpěv i displej
+    potřebují text tak, jak se zpívá."""
+    norm = lambda t: re.sub(r'[^0-9a-záčďéěíňóřšťúůýž]+', ' ', (t or '').lower()).strip()
+    # bloky podle značek sekcí
+    blocks: list[list] = []
+    cur: list = []
+    for u in units:
+        sec, _rest = split_section_marker(_unit_text(u))
+        if sec and cur:
+            blocks.append(cur)
+            cur = []
+        cur.append(u)
+    if cur:
+        blocks.append(cur)
+    out: list = []
+    seen: list[list] = []
+    for blk in blocks:
+        first = blk[0]
+        txt = _unit_text(first)
+        _sec, rest = split_section_marker(txt)
+        short = rest.rstrip().endswith(('...', '…')) and len(blk) == 1
+        if short:
+            key = norm(rest.rstrip(' .…'))
+            src = next((b for b in seen if key and norm(split_section_marker(_unit_text(b[0]))[1]).startswith(key)
+                        and len(b) > 1), None)
+            if src is not None:
+                out.extend(src)
+                continue
+        out.extend(blk)
+        seen.append(blk)
+    return out
+
+
 def _line_units(items: list[dict]):
     """Projde detekované řádky a vydává jednotky řádků při zachování struktury:
       ('lyric', [(word, chord), …])  — textový řádek (s navázanými akordy)
@@ -398,6 +478,11 @@ def _line_units(items: list[dict]):
                 yield ('chords', chords)
         else:   # samotný text bez akordů
             i += 1
+            sec, rest = split_section_marker(it['text'])
+            chords = _chord_only_tokens(rest) if sec and sec.lower() in _SEC_ONLY_WORDS else None
+            if chords:                       # „Intro G-G D-Emi C" — akordy, ne text
+                yield ('chords', chords)
+                continue
             yield ('lyric', [(w, '') for w in it['text'].split()])
 
 
@@ -450,8 +535,9 @@ def build_karaoke_json(
         return line_tick + beat_idx * TICKS_PER_BEAT
 
     items = [d for d in detected if d['type'] not in ('blank', 'ignore')]
+    karaoke_lines_section: dict[int, str] = {}
 
-    for kind, payload in _line_units(items):
+    for kind, payload in expand_repeats(list(_line_units(items))):
         line_tick = tick
         line_idx = len(karaoke_lines)   # index řádku, který se právě tvoří
 
@@ -459,9 +545,13 @@ def build_karaoke_json(
             chords = payload
             if not chords:
                 continue
+            # řádek jen s akordy (intro, sólo, mezihra): takt na akord, aspoň
+            # bars_per_line — dřív se 8 akordů intra vešlo do 2 taktů
+            n_bars = max(bars_per_line, len(chords))
+            chord_span = n_bars * MEASURE_4_4
             kline_chords: list[str] = []
             for j, chord in enumerate(chords):
-                onset = beat_tick_for_index(line_tick, j, len(chords))
+                onset = line_tick + (j * n_bars // len(chords)) * MEASURE_4_4
                 if chord != active_chord:
                     chords_timeline.append({'time_s': ticks_to_s(onset), 'chord': chord,
                                             'measure': measure_at(onset), 'line': line_idx,
@@ -472,13 +562,13 @@ def build_karaoke_json(
             karaoke_lines.append({
                 'line': line_idx,
                 'start_s': ticks_to_s(line_tick),
-                'end_s': ticks_to_s(line_tick + line_span_ticks),
+                'end_s': ticks_to_s(line_tick + chord_span),
                 'chords': kline_chords,
                 'text': '',
                 'words': [],
                 'track_index': 1,
             })
-            tick = line_tick + line_span_ticks
+            tick = line_tick + chord_span
             continue
 
         # kind == 'lyric'
@@ -487,6 +577,21 @@ def build_karaoke_json(
         if not words and not any(c for _, c in pairs):
             continue
 
+        # značka sekce („1.", „Ref:") do textu na displeji nepatří → název sekce
+        section, _rest = split_section_marker(' '.join(w for w, _ in pairs))
+        if section:
+            first = next((k for k, (w, _) in enumerate(pairs) if w.strip()), None)
+            if first is not None:
+                m = _SEC_PREFIX.match(pairs[first][0] + ' ')
+                if m and m.end() >= len(pairs[first][0]):        # značka = celé první slovo
+                    pairs = list(pairs)
+                    chord0 = pairs[first][1]
+                    pairs.pop(first)
+                    if chord0 and pairs:
+                        pairs[first] = (pairs[first][0], pairs[first][1] or chord0)
+            words = [w for w, _ in pairs if w.strip()]
+            if not words:
+                continue
         # délka řádku = PEVNĚ bars_per_line taktů (regulérní mřížka, ne odhad)
         line_start_s = ticks_to_s(line_tick)
         line_end_s = ticks_to_s(line_tick + line_span_ticks)
@@ -520,6 +625,8 @@ def build_karaoke_json(
             if word.strip():
                 wi += 1
 
+        if section:
+            karaoke_lines_section[line_idx] = section
         karaoke_lines.append({
             'line': line_idx,
             'start_s': line_start_s,
@@ -562,13 +669,20 @@ def build_karaoke_json(
         }],
         'lyrics_timeline': lyrics_timeline,
         'chords_timeline': chords_timeline,
-        'karaoke_lines': tag_sections(karaoke_lines),
+        'karaoke_lines': _apply_sections(tag_sections(karaoke_lines), karaoke_lines_section),
     }
 
 
 # --- označení slok / refrénu z markerů v textu ---
 _SEC_NUM = re.compile(r'^\s*(\d+)\.')
 _SEC_REF = re.compile(r'^\s*(R[:.]|Ref|Refr|Chorus)', re.IGNORECASE)
+
+
+def _apply_sections(karaoke_lines: list[dict], found: dict[int, str]) -> list[dict]:
+    for kl in karaoke_lines:
+        if kl.get('line') in found:
+            kl['section'] = found[kl['line']]
+    return karaoke_lines
 
 
 def tag_sections(karaoke_lines: list[dict]) -> list[dict]:

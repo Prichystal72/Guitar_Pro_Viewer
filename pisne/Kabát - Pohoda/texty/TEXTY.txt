@@ -13,3 +13,4 @@ musixmatch.html | musixmatch | https://www.musixmatch.com/lyrics/Kab%C3%A1t-1/po
 —  | pisnicky-akordy | https://pisnicky-akordy.cz/kabat/pohoda | NESTAŽENO: HTTP 403 — ochrana proti robotům
 —  | supermusic | https://www.supermusic.cz/piesen.php?id=676893 | NESTAŽENO: JS výzva proti robotům (supermusic)
 —  | velkyzpevnik | https://www.velkyzpevnik.cz/kabat/pohoda | NESTAŽENO: HTTP 503 — web nedostupný
+lrclib.lrc | lrclib.net | https://lrclib.net/api/get/31179655 | LRC — text s časem každého řádku („Kabát – Pohoda“, 231 s), staženo 2026-11-01

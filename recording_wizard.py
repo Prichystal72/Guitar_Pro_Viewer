@@ -21,7 +21,7 @@ from collections import Counter
 
 import numpy as np
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit,
                                QPushButton, QSpinBox, QVBoxLayout, QWizard, QWizardPage)
 
 import beat_grid as BG
@@ -70,14 +70,19 @@ class _AudioPage(QWizardPage):
     def validatePage(self) -> bool:
         w = self.wiz
         if w.skipping:
-            return True
+            return True                      # projekt bez nahrávky (vznikne v dalším kroku)
         path = self.path.text().strip()
         if w.ed is not None and getattr(w.ed, "audio_path", None) == path:
             return True                      # Zpět a znovu Další — stejná nahrávka, žádná nová karta
+        w.ed = None                          # nový projekt = nová karta
         ed = w.main._tab_for_new_document()
         w.main.doc_tabs.setCurrentWidget(ed)
         w.ed = ed
         ed.load_audio(path)
+        meta = ed.data.setdefault("meta", {})
+        if not meta.get("title") or meta.get("title") == "Unknown":
+            meta["title"] = os.path.splitext(os.path.basename(path))[0]   # název karty = nahrávka
+        w.main._refresh_tab_label(ed)
         return True
 
 
@@ -135,8 +140,8 @@ class _GridPage(QWizardPage):
         ed = self.wiz.ed
         wf = getattr(ed, "waveform", None) if ed is not None else None
         if self._thread is None:
-            if wf is None or getattr(wf, "pcm", None) is None or getattr(wf, "drum_act", None) is None:
-                return                       # vlnovka + ADTOF ještě běží
+            if wf is None or getattr(wf, "pcm", None) is None:
+                return                       # nahrávka se ještě načítá
             pcm, rate = wf.pcm, wf.sample_rate
 
             def work():
@@ -184,7 +189,8 @@ class _GridPage(QWizardPage):
         self.starts, self.nums = starts, nums
         bpm = np.array(nums) * 60.0 / np.maximum(1e-3, np.diff(starts))
         wf = self.wiz.ed.waveform
-        sn = DA.peak_pick(wf.drum_act[:, 1], DA.ADTOF_CLASS_THRESHOLDS[1]) * DA.HOP_S
+        act = getattr(wf, "drum_act", None)          # bez ADTOF jen bez kontroly virblu
+        sn = (DA.peak_pick(act[:, 1], DA.ADTOF_CLASS_THRESHOLDS[1]) * DA.HOP_S) if act is not None else np.zeros(0)
         back = BG.snare_on_backbeat(sn, beats, starts)
         txt = tr("wizard.grid.summary", bars=len(nums), lo=f"{np.percentile(bpm, 5):.1f}",
                  hi=f"{np.percentile(bpm, 95):.1f}", med=f"{np.median(bpm):.1f}",
@@ -260,6 +266,131 @@ class _DrumsPage(QWizardPage):
         return st
 
 
+class _BassPage(QWizardPage):
+    """Basa ze souboru (GP/MIDI — takty jako u bicích) nebo z nahrávky
+    (Demucs + sledování výšky tónu, `bass_track`)."""
+
+    def __init__(self, wiz: "RecordingWizard"):
+        super().__init__()
+        self.wiz = wiz
+        self.setTitle(tr("wizard.bass.title"))
+        lay = QVBoxLayout(self)
+        lay.addWidget(_label(tr("wizard.bass.info")))
+        b1 = QPushButton(tr("wizard.bass.file_button"))
+        b1.clicked.connect(self._from_file)
+        lay.addWidget(b1)
+        self.audio_btn = QPushButton(tr("wizard.bass.audio_button"))
+        self.audio_btn.setToolTip(tr("wizard.bass.audio_tooltip"))
+        self.audio_btn.clicked.connect(self._from_audio)
+        self.audio_btn.setEnabled(DA.demucs_available())
+        lay.addWidget(self.audio_btn)
+        if wiz.only:                         # jen „Přepracovat ▸ Basa" — průvodce nemá co transponovat
+            tr_btn = QPushButton(tr("timeline.bass_transpose"))
+            tr_btn.setToolTip(tr("timeline.bass_transpose.tooltip"))
+            tr_btn.clicked.connect(lambda: self.wiz.editor().bass_transpose_dialog())
+            lay.addWidget(tr_btn)
+        self.result = _label()
+        lay.addWidget(self.result)
+        lay.addStretch(1)
+
+    def _from_file(self) -> None:
+        from gpif_reader import load_any
+        from PySide6.QtWidgets import QMessageBox
+        p, _ = QFileDialog.getOpenFileName(self, tr("wizard.bass.file_button"), "",
+                                           "Guitar Pro / MIDI (*.gp3 *.gp4 *.gp5 *.gpx *.gp *.mid *.midi)")
+        if not p:
+            return
+        try:
+            ed = self.wiz.editor()
+            st = (ed.place_midi_bass_on_grid(p) if p.lower().endswith((".mid", ".midi"))
+                  else ed.place_gp_bass_on_grid(load_any(p)))
+        except Exception as e:
+            QMessageBox.warning(self, tr("wizard.bass.title"), str(e))
+            return
+        self.result.setText(tr("wizard.bass.done_file", n=st["n"]) if st.get("n") else tr("wizard.bass.none"))
+
+    def _from_audio(self) -> None:
+        from PySide6.QtCore import QEventLoop
+        from PySide6.QtWidgets import QMessageBox, QProgressDialog
+        ed = self.wiz.editor()
+        if getattr(ed.waveform, "pcm", None) is None:
+            QMessageBox.information(self, tr("wizard.bass.title"), tr("wizard.grid.no_audio"))
+            return
+        res: dict = {}
+
+        def work():
+            try:
+                res["notes"] = ed.bass_notes_from_audio()
+            except Exception as e:
+                res["err"] = str(e)
+
+        prog = QProgressDialog(tr("wizard.bass.busy"), "", 0, 0, self)
+        prog.setCancelButton(None)
+        prog.setMinimumDuration(0)
+        prog.show()
+        th = threading.Thread(target=work, daemon=True)
+        th.start()
+        loop = QEventLoop()
+        poll = QTimer(self)
+        poll.timeout.connect(lambda: (not th.is_alive()) and loop.quit())
+        poll.start(200)
+        loop.exec()
+        poll.stop()
+        prog.close()
+        if "err" in res:
+            QMessageBox.warning(self, tr("wizard.bass.title"), res["err"])
+            return
+        st = ed.place_audio_bass_on_grid(res["notes"])
+        self.result.setText(tr("wizard.bass.done_audio", n=st["n"]))
+
+
+class _TabPage(QWizardPage):
+    """Přepracovat ▸ Tabulatura (sólo): sólová stopa z GP na takty projektu."""
+
+    def __init__(self, wiz: "RecordingWizard"):
+        super().__init__()
+        self.wiz = wiz
+        self.setTitle(tr("regen.tab"))
+        lay = QVBoxLayout(self)
+        lay.addWidget(_label(tr("tab_regen.info")))
+        btn = QPushButton(tr("tab_regen.button"))
+        btn.clicked.connect(self._from_file)
+        lay.addWidget(btn)
+        self.result = _label()
+        lay.addWidget(self.result)
+        lay.addStretch(1)
+
+    def _from_file(self) -> None:
+        from gpif_reader import load_any
+        from PySide6.QtWidgets import QInputDialog, QMessageBox
+        import guitar_pro_viewer as G
+        p, _ = QFileDialog.getOpenFileName(self, tr("tab_regen.button"), "",
+                                           "Guitar Pro (*.gp3 *.gp4 *.gp5 *.gpx *.gp)")
+        if not p:
+            return
+        try:
+            song = load_any(p)
+        except Exception as e:
+            QMessageBox.warning(self, tr("regen.tab"), str(e))
+            return
+        tracks = [(i + 1, t) for i, t in enumerate(song.tracks) if not t.isPercussionTrack]
+        if not tracks:
+            self.result.setText(tr("tab_regen.none"))
+            return
+        names = [f"{i}: {t.name}" for i, t in tracks]
+        pre = next((k for k, (_i, t) in enumerate(tracks) if G.is_solo_like(t)), 0)
+        name, ok = QInputDialog.getItem(self, tr("regen.tab"), tr("tab_regen.pick"), names, pre, False)
+        if not ok:
+            return
+        self.place(song, tracks[names.index(name)][0])
+
+    def place(self, song, track_no: int) -> dict:
+        st = self.wiz.editor().place_gp_tab_on_grid(song, track_no)
+        self.result.setText(tr("tab_regen.done", n=st["n"], notes=st.get("notes", 0)) if st.get("n")
+                            else tr("tab_regen.none"))
+        return st
+
+
 class _TextPage(QWizardPage):
     def __init__(self, wiz: "RecordingWizard"):
         super().__init__()
@@ -270,6 +401,19 @@ class _TextPage(QWizardPage):
         btn = QPushButton(tr("wizard.text.button"))
         btn.clicked.connect(self._run)
         lay.addWidget(btn)
+        self.replace_chk = QCheckBox(tr("wizard.text.replace"))
+        self.replace_chk.setChecked(True)
+        self.replace_chk.setVisible(bool(wiz.only))   # průvodce: projekt je prázdný, není co nahrazovat
+        lay.addWidget(self.replace_chk)
+        self.align_chk = QCheckBox(tr("wizard.text.align"))
+        self.align_chk.setToolTip(tr("timeline.align_text.tooltip"))
+        self.align_chk.setChecked(True)
+        lay.addWidget(self.align_chk)
+        if wiz.only:
+            al_btn = QPushButton(tr("wizard.text.align_only"))
+            al_btn.setToolTip(tr("timeline.align_text.tooltip"))
+            al_btn.clicked.connect(lambda: self.wiz.editor().align_text_to_vocals())
+            lay.addWidget(al_btn)
         self.result = _label()
         lay.addWidget(self.result)
         lay.addStretch(1)
@@ -279,11 +423,21 @@ class _TextPage(QWizardPage):
         from PySide6.QtWidgets import QDialog
         from web_import import WebImportDialog
         dlg = WebImportDialog(self.wiz.main)
+        last = getattr(self, "_last_text", None)
+        if last:                                  # přegenerování: znovu předvyplnit předchozí vstup
+            dlg.title_input.setText(last["title"])
+            dlg.artist_input.setText(last["artist"])
+            dlg.raw_text.setPlainText(last["text"])
         if dlg.exec() != QDialog.Accepted or not dlg.result_json:
             return
+        self._last_text = {"title": dlg.title_input.text(), "artist": dlg.artist_input.text(),
+                           "text": dlg.raw_text.toPlainText()}
         flat = to_editor_model(migrate(dlg.result_json)[0])
         first_bar = 1 + int((flat.get("meta") or {}).get("count_in_bars") or 0)
-        self.wiz.editor().place_text_on_grid(flat, first_bar)
+        ed = self.wiz.editor()
+        ed.place_text_on_grid(flat, first_bar, replace_existing=self.replace_chk.isChecked())
+        if self.align_chk.isChecked() and getattr(ed.waveform, "pcm", None) is not None:
+            ed.align_text_to_vocals()        # řádky podle akordů nahrávky (+ nástupy zpěvu)
         self.result.setText(tr("wizard.text.done", n=len(flat.get("karaoke_lines", []) or []),
                                bar=first_bar))
 
@@ -298,12 +452,19 @@ class _DonePage(QWizardPage):
 
 
 class RecordingWizard(QWizard):
-    def __init__(self, main):
+    """`only` = "grid" / "drums" / "bass" / "text": jen ten jeden krok
+    v AKTUÁLNÍ kartě (Časová osa ▸ Přegenerovat) — zbytek projektu zůstane."""
+
+    def __init__(self, main, only: str | None = None):
         super().__init__(main)
         self.main = main
-        self.ed = None
-        self.setWindowTitle(tr("wizard.title"))
+        self.only = only                    # nastavit PŘED stránkami (podle toho mají tlačítka)
+        self.ed = main.timeline if only else None
+        self.setWindowTitle(tr(f"regen.{only}") if only else tr("wizard.title"))
         self.setModal(False)
+        # Aero (výchozí na Windows) kreslí vlastní světlé pozadí → světlé písmo
+        # tmavého tématu aplikace bylo nečitelné; klasický styl bere barvy z palety
+        self.setWizardStyle(QWizard.ClassicStyle)
         self.setOption(QWizard.NoBackButtonOnStartPage, True)
         # „Přeskočit krok" — jde přeskočit cokoliv (i nahrávku); krok se pak neprovede
         self.skipping = False
@@ -315,8 +476,20 @@ class RecordingWizard(QWizard):
         self.audio_page = _AudioPage(self)
         self.grid_page = _GridPage(self)
         self.drums_page = _DrumsPage(self)
+        self.bass_page = _BassPage(self)
         self.text_page = _TextPage(self)
-        self.pages_ = [self.audio_page, self.grid_page, self.drums_page, self.text_page, _DonePage(self)]
+        self.pages_ = [self.audio_page, self.grid_page, self.drums_page, self.bass_page, self.text_page,
+                       _DonePage(self)]
+        if only:
+            page = {"grid": self.grid_page, "drums": self.drums_page, "bass": self.bass_page,
+                    "text": self.text_page}.get(only) or _TabPage(self)
+            self.tab_page = page
+            self.pages_ = [page]
+            self.addPage(page)
+            self.setButtonLayout([QWizard.Stretch, QWizard.FinishButton, QWizard.CancelButton])
+            self.setButtonText(QWizard.FinishButton, tr("regen.apply") if only == "grid" else tr("regen.close"))
+            self.resize(620, 360)
+            return
         for p in self.pages_:
             self.addPage(p)
         self.setButtonLayout([QWizard.Stretch, QWizard.BackButton, QWizard.CustomButton1,

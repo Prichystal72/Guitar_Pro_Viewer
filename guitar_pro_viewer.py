@@ -972,6 +972,8 @@ class GuitarProViewer(QMainWindow):
     def _tab_label_for(self, ed: TimelineEditor) -> str:
         meta = (ed.data.get("meta", {}) or {}) if ed.data else {}
         base = meta.get("title") or ""
+        if base.strip().lower() in ("unknown", "neznámý", "t"):   # výchozí název z importu ≠ název písně
+            base = ""
         if not base:
             path = ed.current_json_file or ed.current_gp_file
             base = Path(path).stem if path else tr("tab.untitled")
@@ -1278,18 +1280,20 @@ class GuitarProViewer(QMainWindow):
         file_menu = menubar.addMenu("")
         register_tr(file_menu.setTitle, "menu.file")
         act_new = tr_action(self, "file.new", tooltip_key="file.new.tooltip",
-                             shortcut="Ctrl+N", slot=self._new_blank_file,
+                             slot=self._new_blank_file,
                              icon=std_icon(self, QStyle.StandardPixmap.SP_FileIcon))
-        file_menu.addAction(act_new)
+        # Projekt vzniká JEN průvodcem (rozhodnutí uživatele 2026-11-01): Soubor ▸ Nový projekt…
+        # = průvodce; prázdný soubor, import GP/MIDI a nová píseň z webu v menu nejsou
+        # (metody zůstávají — testy). Hotový projekt se mění jen přes menu Nahradit.
         act_web = tr_action(self, "file.new_from_web", tooltip_key="file.new_from_web.tooltip",
                              shortcut="Ctrl+Shift+N", slot=self._open_web_import, icon=icon("new_song"))
-        file_menu.addAction(act_web)
+        # „Nová píseň z webu" a „Sloučit s webem" v menu nejsou (2026-11-01): umí je průvodce
+        # a Časová osa ▸ Přegenerovat ▸ Text a akordy; metody zůstávají (testy, Ctrl+…)
         act_wizard = tr_action(self, "file.recording_wizard", tooltip_key="file.recording_wizard.tooltip",
-                               slot=self._open_recording_wizard, icon=icon("new_song"))
+                               shortcut="Ctrl+N", slot=self._open_recording_wizard, icon=icon("new_song"))
         file_menu.addAction(act_wizard)
         act_merge = tr_action(self, "file.merge_web", tooltip_key="file.merge_web.tooltip",
                                shortcut="Ctrl+M", slot=self.merge_with_web, icon=icon("merge"))
-        file_menu.addAction(act_merge)
         file_menu.addSeparator()
         # "Otevřít"/"Uložit"/"Uložit jako" se týkají VÝHRADNĚ JSONu (vlastní
         # formát appky) — Guitar Pro se do appky jen IMPORTUJE (tabulatura/
@@ -1303,11 +1307,9 @@ class GuitarProViewer(QMainWindow):
         act_import_gp = tr_action(self, "file.import_gp", tooltip_key="file.import_gp.tooltip",
                                    shortcut="Ctrl+I", slot=self.open_file,
                                    icon=icon("import_gp"))
-        file_menu.addAction(act_import_gp)
         act_import_midi = tr_action(self, "file.import_midi", tooltip_key="file.import_midi.tooltip",
                                      shortcut="Ctrl+Shift+I", slot=self.open_midi,
                                      icon=icon("import_midi"))
-        file_menu.addAction(act_import_midi)
         file_menu.addSeparator()
         act_save = tr_action(self, "file.save", tooltip_key="file.save.tooltip",
                               shortcut="Ctrl+S", slot=self.save_json,
@@ -1410,11 +1412,22 @@ class GuitarProViewer(QMainWindow):
         timeline_menu.addAction(act_repeats)
         act_fit_tempo = tr_action(self, "timeline.fit_tempo", tooltip_key="timeline.fit_tempo.tooltip",
                                    slot=lambda: self.timeline.fit_tempo_to_audio())
-        timeline_menu.addAction(act_fit_tempo)
         act_transcribe = tr_action(self, "timeline.transcribe_drums",
                                    tooltip_key="timeline.transcribe_drums.tooltip",
                                    slot=lambda: self.timeline.transcribe_drums_from_audio())
-        timeline_menu.addAction(act_transcribe)
+        act_bass_tr = tr_action(self, "timeline.bass_transpose", tooltip_key="timeline.bass_transpose.tooltip",
+                                slot=lambda: self.timeline.bass_transpose_dialog())
+        act_align_text = tr_action(self, "timeline.align_text", tooltip_key="timeline.align_text.tooltip",
+                                   slot=lambda: self.timeline.align_text_to_vocals())
+        # Nahradit — jeden krok průvodce v AKTUÁLNÍM projektu; časování projektu
+        # zůstává, nahrazované se mu přizpůsobí (takty se proto nenahrazují).
+        # Dílčí funkce (přepis bicích, transpozice basy, zarovnání textu) jsou
+        # tlačítka v příslušném kroku.
+        regen_menu = menubar.addMenu("")
+        register_tr(regen_menu.setTitle, "menu.regen")
+        for kind in ("drums", "bass", "text", "tab"):
+            act = tr_action(self, f"regen.{kind}", slot=lambda _c=False, k=kind: self._open_regen(k))
+            regen_menu.addAction(act)
 
         # Přichytit k mřížce ▸ — radio podmenu, obousměrně zrcadlí
         # snap_combo AKTIVNÍ karty. Combobox samotný je PER KARTA (viz
@@ -1572,6 +1585,12 @@ class GuitarProViewer(QMainWindow):
         Zahodit/Zrušit, pokud má neuložené změny; viz `_close_tab`).
         Stejné jako kliknutí na ✕ na kartě, jen dostupné i z menu/klávesou."""
         self._close_tab(self.doc_tabs.currentIndex())
+
+    def _open_regen(self, kind: str) -> None:
+        """Časová osa ▸ Přegenerovat ▸ … — jen jeden krok v aktuální kartě."""
+        from recording_wizard import RecordingWizard
+        self._recording_wizard = RecordingWizard(self, only=kind)
+        self._recording_wizard.show()
 
     def _open_recording_wizard(self) -> None:
         """Soubor ▸ Karaoke z nahrávky… — průvodce bez GP (`recording_wizard`)."""

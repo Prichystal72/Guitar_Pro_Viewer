@@ -773,3 +773,66 @@ platný je `schemaVersion 1` podle `JSON_FORMAT.md`.
 - Dialog textu: „Ze souboru…" — uložená HTML stránka (stejný parser jako stažená), ChordPro (`chordpro_to_chart`),
   prostý text (utf-8 / cp1250).
 - Zbývá: basa (Demucs + Basic Pitch, nebo z GP/MIDI na takty nahrávky stejně jako bicí).
+
+### Basa v průvodci (2026-11-01)
+- Krok „4. Basa": ze souboru (GP/MIDI, `place_gp_bass_on_grid` / `place_midi_bass_on_grid` — přiřazení taktů podle
+  bicích téhož souboru, `_source_bar_map`) nebo z nahrávky (Demucs + `bass_track.track_notes`, YIN).
+- Basic Pitch na Py 3.13 nejde nainstalovat (pkgutil.ImpImporter) → vlastní YIN v numpy.
+- Basa z nahrávky vs. basa z GP na taktech nahrávky (5 písní): začátek noty do 60 ms jen 18–33 % → jen hrubý návrh.
+- Transpozice: nahrávka zní jinak než GP (GnR a Arakain ladí o půltón níž). `bass_track.transpose_offset` (chroma
+  40–400 Hz celé nahrávky v době not GP, bez Demucsu): Knockin' −1, Zimní královna −1, Pohoda/Bára/Let It Be 0,
+  jistota 2,3–3,5×. Použije se při jistotě ≥ 1,1; mění se MIDI výška, struna/pražec zůstávají; `meta.bass_transpose`.
+- Průvodce měl nečitelné písmo (styl Aero kreslí světlé pozadí pod světlé písmo tmavého tématu) → ClassicStyle.
+- Zbývá: akordy z webu můžou být v jiné tónině než nahrávka (neřešeno); lepší basa z nahrávky (neuronová síť).
+
+### Vrátit se (zadal uživatel 2026-11-01): ovládání posunu textu, akordů (a tabulatur/sól)
+- Chybí pohodlné ovládání posunu textu a akordů (a sólové tabulatury) v čase — dnes jen tažení, „vybrat dopředu/dozadu"
+  (`select_ripple`) a Posun vybraných. Navrhnout: posun o takty/doby, přichycení na doby nahrávky, posun od kurzoru dál.
+- Transpozice při zpěvu níž/výš: `meta.bass_transpose` je celkový posun basy proti souboru; ESP32 má jednou
+  transponovat akordy i basu NAJEDNOU jedním číslem (zatím jen basa, akordy se netransponují).
+- „Vybrat dopředu/dozadu od kurzoru": kód vybírá správně (změřeno), uživatel to vnímal opačně → popisky přejmenovány na
+  „Vybrat tento prvek a všechny pozdější/dřívější"; pokud to bylo vůči přehrávacímu kurzoru, je to jiná funkce (neřešeno).
+- Text Pohody: v kproj je celá píseň (28 řádků), refrén zdroj zkracuje na „R: Když se u nás chlapi poperou…" — chyba zdroje, ne kódu.
+
+### Revize načítání textu — takty, doby, rozložení (2026-11-01)
+Nálezy v cestě dialog → `build_karaoke_json` → `place_text_on_grid`:
+1. Značky „1.", „Ref:", „R:" zůstávaly v textu řádku (na displeji) → `split_section_marker`: značka → `section`,
+   z textu pryč (bez dvojtečky/tečky jen čísla; „Refrén se nezpívá" zůstane textem).
+2. „Intro G-G G-D-Emi-C" / „Sólo …" bylo TEXTOVÝ řádek → akordový řádek. Akordový řádek = takt na akord
+   (min. bars_per_line); dřív 8 akordů intra ve 2 taktech.
+3. Zkrácený refrén („R: Když se u nás…", „…") → `expand_repeats` rozbalí celý dřívější blok.
+4. Přenos na osu počítal DOBY → ve 3/4 / za taktem 2/4 řádky mimo začátky taktů. Teď takt dialogu → takt osy,
+   poloha poměrně, akordy přichycené na dobu.
+5. Začátky řádků byly jen na umělé mřížce (bars_per_line). Měřeno proti nezávislé pravdě = časované texty lrclib
+   (texty/lrclib.lrc, JEN pro měření — uživatel nechce text z lrclib používat), začátek řádku do 1 doby:
+   | metoda | Jasná | Let It Be | Pohoda | Stairway |
+   |---|---|---|---|---|
+   | pevné takty (nejlepší úvodní takt) | 0 % | 3 % | 0 % | 5 % |
+   | pauzy ve zpěvu + délka řádku (DP, zahozeno) | 95 % | 13 % | 21 % | 30 % |
+   | **zarovnání textu na zpěv (Demucs + MMS-FA)** | **95 %** | **95 %** | (LRC chybné*) | **81 %** |
+   *Pohoda: LRC zkracuje refrény a od 2. sloky je ~3 s napřed; zarovnání padá přesně na začátky zpěvu.
+   Pravda ze zpěvní stopy GP (přes takty bicích) byla nespolehlivá (Jasná za sólem, Stairway bez bicích v úvodu).
+→ ZAMÍTNUTO uživatelem (model 1,2 GB, text nemusí odpovídat zpěvu); smazáno. Místo toho `chord_align.py`:
+  akordy textu na akordy nahrávky (chroma po dobách, DP) + přichycení na nástup zpěvu (Demucs): Jasná 77 %,
+  Let It Be 63 %; Pohoda/Stairway selhávají (texty UG bez celé struktury). `TimelineEditor.align_text_to_vocals`
+  (kotvy = začátky řádků, mezi nimi plynulý přepočet všeho, akordy na dobu; Ctrl+Z), menu Časová osa ▸ Zarovnat text
+  na zpěv…, v průvodci zaškrtnuté. Podmínka: text = zpívané (vypsané refrény). Zpěv z Demucsu v mezipaměti.
+- Pomalý test: `GPV_SLOW=1 python -m pytest tests -k zarovnany_na_zpev` (~3 min).
+- Zbývá: akordy uvnitř řádku jdou dál podle pořadí slova (ne podle sloupce nad textem); čas slov ze zarovnání se
+  zatím nepoužije (řádek = jedna jednotka podle formátu).
+
+### Úklid souborů (2026-11-01)
+- Staré exporty/pokusy → `pisne/<píseň>/archiv/` (git mv): Jasná (1)_karaoke, _nova_verze, bicí z nahrávky_karaoke;
+  Arakain _karaoke; Iron Maiden .json. Uložené projekty z průvodce → `.kproj` ve složce písně (Arakain, Let It Be).
+- `.dist/` (prázdná) smazána, `vocal_lines.py` (zahozený pokus) smazán. Nahrávky `pisne/**/*.mp3` a poslechové WAV
+  v .gitignore. `drum_samples.json` v kořeni NECHÁN (čte ho format_migrate; kopie v assets/drums).
+
+### Menu a průvodce — nové schéma (2026-11-01, rozhodnutí uživatele)
+- Projekt vzniká JEN průvodcem (Soubor ▸ Nový projekt…, Ctrl+N; průvodce předpokládá prázdný projekt).
+- Hotový projekt: menu Přepracovat ▸ Bicí / Basa / Text a akordy / Tabulatura (sólo); časování projektu zůstává,
+  nahrazované se mu přizpůsobí. Doplňky (transpozice basy, jen zarovnat text) jen v okně z menu.
+- Bicí/basa/tab ze souboru na osu po DOBÁCH (skok ve struktuře jen na začátek taktu zdroje): shoda bicích
+  Jasná 63 → 78 %, Stairway 68 → 88, Let It Be 84 → 91, Bára 87 → 95, Pohoda 94 → 96, Zimní královna 92 → 96,
+  Knockin' 91 → 93, Iron Maiden 83 → 78 (17 skoků — zkontrolovat).
+- Takty z nahrávky: okraje mimo ±20 % mediánu nahrazeny pravidelnými (Jasná 126/85 → 65 BPM, Pohoda 55 → 140).
+- Název karty: „Unknown" z importu se ignoruje (název souboru / nahrávky).

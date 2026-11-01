@@ -163,6 +163,10 @@ def demucs_available() -> bool:
 
 
 def demucs_drums(mono: np.ndarray, sample_rate: int) -> np.ndarray:
+    return demucs_stems(mono, sample_rate, ("drums",))["drums"]
+
+
+def demucs_stems(mono: np.ndarray, sample_rate: int, names=("drums", "bass")) -> dict[str, np.ndarray]:
     """Oddělí bicí z nahrávky (Demucs htdemucs, CPU; 4min píseň ~75 s,
     poprvé se stáhne model ~80 MB). Vrací mono stopu bicích 44,1 kHz.
     Změřeno (8 umělých mixů): kopák F 0,77 → 0,89, hi-hat 0,69 → 0,84,
@@ -182,7 +186,7 @@ def demucs_drums(mono: np.ndarray, sample_rate: int) -> np.ndarray:
     with torch.no_grad():
         out = apply_model(model, ((wav - mu) / sd)[None], device="cpu", shifts=0,
                           split=True, overlap=0.25, progress=False)[0] * sd + mu
-    return out[model.sources.index("drums")].mean(0).numpy().astype(np.float32)
+    return {n: out[model.sources.index(n)].mean(0).numpy().astype(np.float32) for n in names}
 
 
 def cache_path(audio_path: str, kind: str) -> Path:
@@ -595,7 +599,7 @@ def fit_bars(envs: dict[str, np.ndarray], bar_hits: list[list[tuple[float, str]]
 
 def align_gp_bars(envs: dict[str, np.ndarray], gp_bars: list[list[tuple[float, str]]],
                   rec_starts: np.ndarray, quarters: np.ndarray, jump: float = 0.8,
-                  empty: float = 0.08) -> dict:
+                  empty: float = 0.08, shifts=range(4), jump_to=None) -> dict:
     """Přiřazení taktů GP taktům NAHRÁVKY (oprava struktury GP podle
     nahrávky — GP mívá repetici navíc/míň, jiný úvod).
 
@@ -618,7 +622,9 @@ def align_gp_bars(envs: dict[str, np.ndarray], gp_bars: list[list[tuple[float, s
     q = np.asarray(quarters[:n_rec], dtype=float)
     wide = {g: np.append(_widen(e, 2), 0.0) for g, e in envs.items()}
     best = None
-    for shift in range(4):
+    can_jump = np.ones(n_gp, bool) if jump_to is None else np.asarray(jump_to, bool)
+    jpen = np.where(can_jump, 0.0, 1e9)                  # skok jen na začátek taktu zdroje
+    for shift in shifts:
         S = np.full((n_gp, n_rec), empty)
         for i, hb in enumerate(gp_bars):
             hb = [(f, g) for f, g in hb if g in wide]
@@ -636,7 +642,7 @@ def align_gp_bars(envs: dict[str, np.ndarray], gp_bars: list[list[tuple[float, s
                 wsum += WEIGHTS[g]
             S[i] = np.clip(tot / wsum, 0.0, 1.0)
         # DP: stavy 0..n_gp-1 = takt GP, n_gp = bez bicích
-        V = np.concatenate([S[:, 0] - jump, [empty]])
+        V = np.concatenate([S[:, 0] - jump - jpen, [empty]])
         V[0] += jump                                    # začít taktem 1 GP zdarma
         back = []
         for j in range(1, n_rec):
@@ -647,7 +653,9 @@ def align_gp_bars(envs: dict[str, np.ndarray], gp_bars: list[list[tuple[float, s
             cont[1:n_gp] = V[:n_gp - 1]                 # takt GP i-1 → i
             cont[n_gp] = V[n_gp]                        # bez bicích → zůstat bez bicích
             src = np.where(cont >= jump_v, np.r_[n_gp, np.arange(0, n_gp - 1), n_gp], k)
-            nv = np.maximum(cont, jump_v)
+            jv = np.r_[jump_v - jpen, jump_v]
+            src = np.where(cont >= jv, src, k)
+            nv = np.maximum(cont, jv)
             nv[:n_gp] += S[:, j]
             nv[n_gp] += empty
             back.append(src)

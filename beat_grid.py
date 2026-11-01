@@ -65,12 +65,40 @@ def bars(beats: np.ndarray, downs: np.ndarray, meter: int | None = None) -> tupl
         starts_i = merged
     nums = [b - a for a, b in zip(starts_i, starts_i[1:])]
     starts = [float(beats[i]) for i in starts_i]
+    if meter and len(starts) > 8:
+        starts, nums = _regular_edges(starts, nums, int(meter))
     # poslední takt: stejný počet dob jako obvykle, délka podle posledních dob
     usual = int(np.bincount(nums).argmax()) if nums else (int(meter) if meter else 4)
     ibi = float(np.median(np.diff(beats[-9:]))) if beats.size > 2 else 0.5
     nums.append(usual)
     starts.append(starts[-1] + usual * ibi)
     return np.asarray(starts), nums
+
+
+def _regular_edges(starts: list[float], nums: list[int], m: int) -> tuple[list[float], list[int]]:
+    """Úvod/konec bez bicích: Beat This tam chytá doby v jiném tempu (Jasná
+    zpráva: první takty 126 a 85 BPM místo 65, Pohoda 55 místo 140). Takty
+    mimo ±20 % mediánu na okrajích se nahradí pravidelnými (délka mediánu)
+    od prvního/posledního pravidelného taktu."""
+    lens = np.diff(starts)
+    med = float(np.median(lens))
+    ok = np.abs(lens - med) <= 0.2 * med
+    first = next((k for k in range(len(ok) - 2) if ok[k] and ok[k + 1] and ok[k + 2]), 0)
+    last = next((k for k in range(len(ok) - 1, 1, -1) if ok[k] and ok[k - 1] and ok[k - 2]), len(ok) - 1)
+    t0 = starts[first]
+    head = []
+    t = t0 - med
+    while t > starts[0] - med * 0.5:
+        head.insert(0, t)
+        t -= med
+    core = starts[first:last + 2]
+    tail = []
+    t = core[-1] + med
+    while t < starts[-1] + med * 0.5:
+        tail.append(t)
+        t += med
+    new = head + core + tail
+    return new, [m] * (len(new) - 1)
 
 
 def snare_on_backbeat(snare_times: np.ndarray, beats: np.ndarray, bar_starts: np.ndarray) -> float:

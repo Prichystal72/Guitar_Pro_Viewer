@@ -113,6 +113,7 @@ DRUM_MIDI_NAMES = {
     80: "Mute Triangle", 81: "Open Triangle",
 }
 DRUM_NAME_TO_MIDI = {v: k for k, v in DRUM_MIDI_NAMES.items()}
+_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 # nabídka „Změnit všechny údery na…": běžná souprava po skupinách
 # (kopák, virbl, hi-hat, tomy, činely), zbytek v podnabídce „Ostatní"
 DRUM_REMAP_GROUPS = [(36, 35), (38, 40, 37), (42, 46, 44),
@@ -938,6 +939,11 @@ class BassNoteItem(QGraphicsLineItem):
         self.setCursor(Qt.OpenHandCursor)
         self.setToolTip(tr("bass_note.tooltip", note=event.get('note_name', '?'),
                            string=event.get('string', '?'), fret=event.get('fret', '?')))
+        # jméno AKTUÁLNÍ (po transpozici) noty — dřív nota nesla jen čáru
+        self._label = QGraphicsSimpleTextItem(self.event.get("note_name", ""), self)
+        self._label.setFont(QFont("Segoe UI", 7, QFont.Bold))
+        self._label.setBrush(QBrush(QColor("#0d3b66")))
+        self._label.setPos(1, -13)
         self._sync_from_event()
         self.setFlags(
             QGraphicsItem.ItemIsMovable
@@ -948,6 +954,7 @@ class BassNoteItem(QGraphicsLineItem):
     def _sync_from_event(self) -> None:
         self._syncing = True
         try:
+            self._label.setText(self.event.get("note_name", ""))
             t0 = float(self.event.get("time_s", 0.0))
             dur = max(0.02, float(self.event.get("duration_s", 0.2)))
             x0 = HEADER_W + t0 * self.editor.pps
@@ -3651,6 +3658,30 @@ class TimelineEditor(QWidget):
         self._relayout()
         self._refresh_loaded_mixes()
 
+    def _fresh_without_audio(self) -> bool:
+        """Projekt bez nahrávky a zatím bez obsahu — časování převezme ze
+        souboru (GP/MIDI), jinak by zůstalo výchozích 120 BPM."""
+        return not self.audio_path and not any(
+            self.data.get(k) for k in ("lyrics_timeline", "chords_timeline", "drums_timeline", "bass_timeline"))
+
+    def adopt_timing(self, tempo_map: list[dict], meter_map: list[dict]) -> None:
+        """Tempo a metrum projektu ze souboru (tick 960 = začátek)."""
+        if not tempo_map:
+            return
+        self.data["tempo_map"] = tempo_map
+        self.data["meter_map"] = meter_map or [{"bar": 1, "num": 4, "den": 4}]
+        meta = self.data.setdefault("meta", {})
+        num = int(self.data["meter_map"][0].get("num", 4))
+        meta["tempo_bpm"] = int(round(float(tempo_map[0]["bpm"])))
+        meta["beats_per_measure"] = num
+        meta["time_signature"] = f"{num}/{self.data['meter_map'][0].get('den', 4)}"
+        self.bpm = meta["tempo_bpm"]
+        self.beats_per_measure = num
+        self.beat_s = 60.0 / self.bpm
+        self.bar_s = self.beat_s * self.beats_per_measure
+        self.default_chord_dur = round(self.beat_s, 3)
+        self._update_snap_s()
+
     def place_gp_drums_on_grid(self, song) -> dict:
         """Skutečné bicí z GP na takty AKTUÁLNÍ osy (mřížka z nahrávky,
         `set_recording_grid`): úder z GP taktu i na poměrné pozici v taktu →
@@ -3671,13 +3702,16 @@ class TimelineEditor(QWidget):
         events, _info = G.gp_drum_events(song, tm)
         if not events:
             return {"n": 0}
+        if self._fresh_without_audio():          # projekt bez nahrávky: časování z GP
+            self.adopt_timing([{"tick": tk, "bpm": b} for tk, b in G.play_tempo_map(ms, order, tm)], mm)
         items = []
         for e in events:
             beat = gp.beat(float(e["time_s"]))
             b, in_bar = gp.bar_beat(beat)
             items.append((int(b), (in_bar - 1.0) / gp.quarters_in_bar(b), int(e["midi"]),
                           e.get("drum"), float(e.get("duration_s") or 0.1)))
-        return self.place_drum_bars_on_grid(items, "gp")
+        n_src = max(it[0] for it in items)
+        return self.place_drum_bars_on_grid(items, "gp", [gp.quarters_in_bar(b) for b in range(1, n_src + 1)])
 
     def place_midi_drums_on_grid(self, path: str) -> dict:
         """Bicí z MIDI souboru na takty aktuální osy — stejně jako z GP
@@ -3686,54 +3720,321 @@ class TimelineEditor(QWidget):
         items = [(b, f, m, None, 0.1) for b, f, m in MI.midi_drum_bars(path)]
         if not items:
             return {"n": 0}
-        return self.place_drum_bars_on_grid(items, "gp")
+        if self._fresh_without_audio():          # projekt bez nahrávky: časování z MIDI
+            self.adopt_timing(*MI.midi_timing(path))
+        return self.place_drum_bars_on_grid(items, "gp", MI.midi_bar_quarters(path))
 
-    def place_drum_bars_on_grid(self, items: list, source: str = "gp") -> dict:
+    def _source_bar_map(self, drum_items: list, n_src: int, bar_quarters: list | None = None) -> dict:
+        """Přiřazení zdroje (GP/MIDI) na osu po DOBÁCH (čtvrtkách): doba zdroje
+        → doba osy, pokračování zdarma, skok ve struktuře zdroje (repetice
+        navíc/míň, jiný úvod) jen na začátek taktu zdroje (`drum_align.
+        align_gp_bars` na dobách). Dřív se přiřazovaly celé takty — takty 2/4
+        v GP (Jasná zpráva) pak za sebou rozjely mřížku 4/4 o půl taktu.
+        `drum_items` = [(takt, poměrná pozice v taktu, GM číslo)],
+        `bar_quarters` = čtvrtek v taktu zdroje (bez něj 4). Vrací `place(b, f)`
+        → časy na ose (repetice v nahrávce = víc časů) a `beat_len(b, f)`."""
+        import numpy as np
+        import drum_align as DA
+        bq = list(bar_quarters or []) + [4.0] * max(0, n_src - len(bar_quarters or []))
+        q0 = np.concatenate([[0.0], np.cumsum(bq[:n_src])])          # začátek taktu zdroje ve čtvrtkách
+        n_units = int(np.ceil(q0[-1] - 1e-9))
+        rec = self._music_grid()
+        end = self._song_end()
+        if self.waveform is not None and self.waveform.duration_s:
+            end = max(end, self._audio_to_timeline_t(self.waveform.duration_s))
+        envs = getattr(self.waveform, "onset_env", None) or {}
+
+        def unit_of(b, f):
+            q = q0[min(max(b, 1), n_src) - 1] + f * bq[min(max(b, 1), n_src) - 1]
+            u = int(np.floor(q + 1e-6))
+            return u, q - u
+
+        units = [[] for _ in range(max(1, n_units))]
+        for b, f, m in drum_items:
+            g = DA.drum_group(int(m))
+            if g and 1 <= b <= n_src:
+                u, fu = unit_of(b, f)
+                if u < len(units):
+                    units[u].append((float(fu), g))
+        use_audio = bool(envs) and any(units)
+        n_rec = int(np.ceil(rec.beat(end))) + 1
+        if not use_audio:
+            n_rec = max(n_rec, n_units)
+        rb = np.array([rec.seconds(k) for k in range(n_rec + 1)])     # doby osy (čas na ose)
+        if use_audio:
+            stretch = self.audio_stretch or 1.0
+            starts_u = set(int(round(x)) for x in q0[:-1])
+            al = DA.align_gp_bars(envs, units, (rb - self.audio_offset_s) / stretch, np.ones(n_rec),
+                                  shifts=[0], jump_to=[u in starts_u for u in range(len(units))])
+        else:
+            al = {"assign": [j if j < len(units) else -1 for j in range(n_rec)], "jumps": []}
+        where: dict[int, list[int]] = {}
+        for j, u in enumerate(al["assign"]):
+            if u >= 0:
+                where.setdefault(u, []).append(j)
+
+        def place(b, f):
+            u, fu = unit_of(b, f)
+            return [float(rb[j] + fu * (rb[j + 1] - rb[j])) for j in where.get(u, [])]
+
+        def beat_len(b, f):
+            u, _fu = unit_of(b, f)
+            js = where.get(u, [])
+            return float(rb[js[0] + 1] - rb[js[0]]) if js else float(np.median(np.diff(rb)))
+
+        # takty: přiřazení po taktech jen pro statistiku (GP takt 1 = takt osy …)
+        jumps = [(rec.bar_of(float(rb[j])), int(al["assign"][j - 1]), int(al["assign"][j]))
+                 for j in range(1, len(al["assign"]))
+                 if al["assign"][j] >= 0 and al["assign"][j - 1] >= 0 and al["assign"][j] != al["assign"][j - 1] + 1]
+        first = next((rec.bar_of(float(rb[j])) for j, u in enumerate(al["assign"]) if u == 0), 0)
+        return {"place": place, "beat_len": beat_len, "jumps": jumps, "first_bar": first,
+                "assign": al["assign"], "n_rec": n_rec, "bq": bq}
+
+    def place_bass_bars_on_grid(self, notes: list, drum_items: list, n_src: int, source: str = "gp",
+                                bar_quarters: list | None = None) -> dict:
+        """Basa ze souboru (GP/MIDI) na takty osy se STEJNÝM přiřazením taktů
+        jako bicí téhož souboru (`_source_bar_map`). `notes` = [(takt, poměrná
+        pozice, délka v taktech, MIDI, struna, pražec)]. Nahradí basovou stopu
+        (Ctrl+Z vrátí)."""
+        mp = self._source_bar_map(drum_items, n_src, bar_quarters)
+        self._push_undo()
+        ti = next((t.get("index") for t in self.tracks if t.get("type") == "bass"), None)
+        if ti is None:
+            ti = max((int(t.get("index", 0)) for t in self.tracks), default=0) + 1
+            self.tracks.append({"index": ti, "name": "Bass", "type": "bass", "is_drums": False,
+                                "instrument_midi": 33})
+            self.data["tracks"] = self.tracks
+        keep = [e for e in self.data.get("bass_timeline", []) if e.get("track_index") != ti]
+        new = []
+        for b, f, fd, midi, string, fret in notes:
+            for x in mp["place"](int(b), f):
+                dur = fd * mp["bq"][min(int(b), n_src) - 1] * mp["beat_len"](int(b), f)
+                new.append({"time_s": round(float(x), 4), "duration_s": round(max(0.03, dur), 4),
+                            "note_name": _NOTE_NAMES[int(midi) % 12],
+                            "midi": int(midi), "string": int(string), "fret": int(fret),
+                            "track_index": ti, "source": source})
+        # nahrávka může znít jinak než soubor (kapela ladí o půltón níž — GnR,
+        # Arakain): odhad z nahrávky, noty se posunou (struna/pražec zůstávají
+        # — basista hraje stejné hmaty na přeladěném nástroji)
+        transpose, conf = 0, 0.0
+        wf = self.waveform
+        if new and wf is not None and getattr(wf, "pcm", None) is not None:
+            import bass_track as BT
+            transpose, conf = BT.transpose_offset(
+                wf.pcm.astype("float32") / 32767.0, wf.sample_rate,
+                [(self._timeline_to_audio_t(e["time_s"]),
+                  self._timeline_to_audio_t(e["time_s"] + e["duration_s"]), e["midi"]) for e in new])
+            if transpose and conf >= 1.1:
+                for e in new:
+                    e["midi"] += transpose
+                    e["note_name"] = _NOTE_NAMES[e["midi"] % 12]
+                self.data.setdefault("meta", {})["bass_transpose"] = transpose
+            else:
+                transpose = 0
+        self.data["bass_timeline"] = sorted(keep + new, key=lambda e: e["time_s"])
+        self._relayout()
+        self._refresh_loaded_mixes()
+        st = {"n": len(new), "jumps": mp["jumps"], "transpose": transpose, "conf": conf}
+        self.last_bass = st
+        return st
+
+    def bass_notes_from_audio(self) -> list:
+        """Noty basy z nahrávky [(začátek s, konec s, MIDI)] v čase NAHRÁVKY:
+        Demucs oddělí basu, `bass_track.track_notes` najde tóny. Výsledek
+        v mezipaměti k nahrávce (podruhé hned). Smí běžet ve vlákně."""
+        import numpy as np
+        import bass_track as BT
+        import drum_align as DA
+        cache = DA.cache_path(self.audio_path, "bass_notes") if self.audio_path else None
+        if cache is not None and cache.exists():
+            return [tuple(r) for r in np.load(cache).tolist()]
+        wf = self.waveform
+        stem = DA.demucs_stems(wf.pcm.astype(np.float32) / 32767.0, wf.sample_rate, ("bass",))["bass"]
+        notes = BT.track_notes(stem, 44100)
+        if cache is not None:
+            np.save(cache, np.asarray(notes, dtype=np.float64).reshape(-1, 3))
+        return notes
+
+    def place_audio_bass_on_grid(self, notes: list) -> dict:
+        """Noty basy z nahrávky na mřížku osy: začátek na šestnáctinu, délka
+        aspoň šestnáctina; struna/pražec pro 4strunnou basu E A D G.
+        `source: "generated"` (ke kontrole poslechem). Ctrl+Z vrátí."""
+        from ascii_tab import note_to_string_fret
+        grid = self._music_grid()
+        tuning = [43, 38, 33, 28]
+        self._push_undo()
+        ti = next((t.get("index") for t in self.tracks if t.get("type") == "bass"), None)
+        if ti is None:
+            ti = max((int(t.get("index", 0)) for t in self.tracks), default=0) + 1
+            self.tracks.append({"index": ti, "name": "Bass", "type": "bass", "is_drums": False,
+                                "instrument_midi": 33})
+            self.data["tracks"] = self.tracks
+        keep = [e for e in self.data.get("bass_timeline", []) if e.get("track_index") != ti]
+        new, ps, pf, seen = [], None, None, set()
+        for t0, t1, midi in notes:
+            a = self._audio_to_timeline_t(float(t0))
+            if a < 0:
+                continue
+            b0 = round(grid.beat(a) * 4) / 4
+            b1 = max(b0 + 0.25, round(grid.beat(self._audio_to_timeline_t(float(t1))) * 4) / 4)
+            if b0 in seen:
+                continue
+            seen.add(b0)
+            string, fret = note_to_string_fret(int(midi), tuning, ps, pf)
+            ps, pf = string, fret
+            ts = grid.seconds(b0)
+            new.append({"time_s": round(ts, 4), "duration_s": round(grid.seconds(b1) - ts, 4),
+                        "note_name": _NOTE_NAMES[int(midi) % 12], "midi": int(midi),
+                        "string": int(string), "fret": int(fret), "track_index": ti, "source": "generated"})
+        self.data["bass_timeline"] = sorted(keep + new, key=lambda e: e["time_s"])
+        self._relayout()
+        self._refresh_loaded_mixes()
+        st = {"n": len(new)}
+        self.last_bass = st
+        return st
+
+    def transpose_bass(self, semitones: int) -> int:
+        """Posune VŠECHNY noty basy o `semitones` půltónů (výška a jméno,
+        struna/pražec zůstávají jako hmat). Sečte se v `meta.bass_transpose`
+        (celkový posun proti souboru) — z něj později ESP32 sjednotí
+        transpozici basy s akordy při zpěvu níž/výš. Ctrl+Z vrátí."""
+        semitones = int(semitones)
+        evs = self.data.get("bass_timeline", []) or []
+        if not semitones or not evs:
+            return 0
+        self._push_undo()
+        for e in evs:
+            e["midi"] = int(e.get("midi", 0)) + semitones
+            e["note_name"] = _NOTE_NAMES[e["midi"] % 12]
+        meta = self.data.setdefault("meta", {})
+        meta["bass_transpose"] = int(meta.get("bass_transpose", 0)) + semitones
+        self._relayout()
+        self._refresh_loaded_mixes()
+        return len(evs)
+
+    def bass_transpose_dialog(self) -> None:
+        cur = int((self.data.get("meta", {}) or {}).get("bass_transpose", 0))
+        val, ok = QInputDialog.getInt(self, tr("bass.transpose.title"),
+                                      tr("bass.transpose.label", cur=cur), 0, -12, 12)
+        if ok and val:
+            if not self.transpose_bass(val):
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.information(self, tr("bass.transpose.title"), tr("bass.transpose.none"))
+
+    def place_gp_tab_on_grid(self, song, track_no: int) -> dict:
+        """Sólová tabulatura z GP stopy `track_no` (1-based) na takty projektu
+        — přiřazení taktů podle bicích téhož GP (jako basa), noty se rozdělí
+        na fráze a vykreslí jako ASCII bloky (`ascii_tab`). Nahradí tabulaturu
+        projektu (Ctrl+Z vrátí)."""
+        import guitar_pro_viewer as G
+        from ascii_tab import segment_and_render_tab_blocks
+        from music_grid import TimeGrid, meter_map_from_measures
+        track = song.tracks[track_no - 1]
+        ms = song.tracks[0].measures
+        tm = G.build_tempo_map(song)
+        order = G.expand_measure_order(ms)
+        mm = meter_map_from_measures(ms, order)
+        gp = TimeGrid([{"tick": tk, "bpm": b} for tk, b in G.play_tempo_map(ms, order, tm)],
+                      mm[0]["num"] if mm else 4, meter_map=mm)
+
+        def pos(t):
+            b, in_bar = gp.bar_beat(gp.beat(float(t)))
+            return int(b), (in_bar - 1.0) / gp.quarters_in_bar(b)
+
+        drums, _ = G.gp_drum_events(song, tm)
+        drum_items = [pos(e["time_s"]) + (int(e["midi"]),) for e in drums]
+        src = []
+        for _m, b, time_s, _dur in G.walk_track_beats(track, tm):
+            for n in sorted(b.notes, key=lambda n: n.string):
+                if n.type == G.gpm.NoteType.tie:
+                    continue
+                src.append(pos(time_s) + (n.string, n.value, G._note_tech_char(n)))
+        if not src:
+            return {"n": 0}
+        n_src = max([x[0] for x in src] + [d[0] for d in drum_items])
+        mp = self._source_bar_map(drum_items, n_src, [gp.quarters_in_bar(b) for b in range(1, n_src + 1)])
+        rec = self._music_grid()
+        notes = []
+        for b, f, string, fret, tech in src:
+            for t in mp["place"](b, f):
+                notes.append((float(t), string, fret, tech, rec.bpm_at(float(t))))
+        notes.sort(key=lambda x: x[0])
+        self._push_undo()
+        ti = next((t.get("index") for t in self.tracks if t.get("type") == "solo_guitar"), None)
+        if ti is None:
+            ti = max((int(t.get("index", 0)) for t in self.tracks), default=0) + 1
+            self.tracks.append({"index": ti, "name": track.name or "Solo", "type": "solo_guitar",
+                                "is_drums": False})
+            self.data["tracks"] = self.tracks
+        blocks = segment_and_render_tab_blocks(notes, G._tab_string_labels(track), ti,
+                                               tuning=[s_.value for s_ in track.strings])
+        keep = [e for e in self.data.get("tab_timeline", []) or [] if e.get("track_index") != ti]
+        self.data["tab_timeline"] = sorted(keep + blocks, key=lambda e: e["time_s"])
+        self._relayout()
+        st = {"n": len(blocks), "notes": len(notes)}
+        self.last_tab = st
+        return st
+
+    def place_gp_bass_on_grid(self, song) -> dict:
+        """Basa z GP (`pick_bass_track`) na takty osy — přiřazení taktů podle
+        bicích téhož GP (stejně jako `place_gp_drums_on_grid`)."""
+        import guitar_pro_viewer as G
+        from music_grid import TimeGrid, meter_map_from_measures
+        ms = song.tracks[0].measures
+        tm = G.build_tempo_map(song)
+        order = G.expand_measure_order(ms)
+        mm = meter_map_from_measures(ms, order)
+        gp = TimeGrid([{"tick": tk, "bpm": b} for tk, b in G.play_tempo_map(ms, order, tm)],
+                      mm[0]["num"] if mm else 4, meter_map=mm)
+        drums, _ = G.gp_drum_events(song, tm)
+        bass, _ = G.gp_bass_events(song, tm)
+        if not bass:
+            return {"n": 0}
+
+        def pos(t):
+            b, in_bar = gp.bar_beat(gp.beat(float(t)))
+            return int(b), (in_bar - 1.0) / gp.quarters_in_bar(b)
+
+        drum_items = [pos(e["time_s"]) + (int(e["midi"]),) for e in drums]
+        notes = []
+        for e in bass:
+            b, f = pos(e["time_s"])
+            q = gp.quarters_in_bar(b)
+            fd = (gp.beat(float(e["time_s"]) + float(e.get("duration_s") or 0.1)) - gp.beat(float(e["time_s"]))) / q
+            notes.append((b, f, fd, int(e["midi"]), int(e.get("string") or 1), int(e.get("fret") or 0)))
+        n_src = max([n[0] for n in notes] + [d[0] for d in drum_items])
+        return self.place_bass_bars_on_grid(notes, drum_items, n_src, "gp",
+                                            [gp.quarters_in_bar(b) for b in range(1, n_src + 1)])
+
+    def place_midi_bass_on_grid(self, path: str) -> dict:
+        """Basa z MIDI (stopa rozpoznaná jako basa) na takty osy, přiřazení
+        taktů podle bicích téhož MIDI."""
+        import midi_import as MI
+        notes = MI.midi_bass_bars(path)
+        if not notes:
+            return {"n": 0}
+        drum_items = MI.midi_drum_bars(path)
+        n_src = max([n[0] for n in notes] + [d[0] for d in drum_items])
+        return self.place_bass_bars_on_grid(notes, drum_items, n_src, "gp", MI.midi_bar_quarters(path))
+
+    def place_drum_bars_on_grid(self, items: list, source: str = "gp", bar_quarters: list | None = None) -> dict:
         """Společné jádro bicích ze souboru (GP/MIDI): `items` =
         [(takt zdroje 1-based, poměrná pozice v taktu, GM číslo, jméno|None,
         délka s)]. Takty zdroje se přiřadí taktům osy podle nahrávky
         (`drum_align.align_gp_bars`), bez nahrávky takt po taktu."""
         import numpy as np
         import drum_align as DA
-        rec = self._music_grid()
-        end = self._song_end()
-        if self.waveform is not None and self.waveform.duration_s:
-            end = max(end, self._audio_to_timeline_t(self.waveform.duration_s))
-        n_rec = max(1, rec.bar_of(end))
-        bars = [it[0] for it in items]
-        frac = [it[1] for it in items]
-        grp = [DA.drum_group(int(it[2])) for it in items]
+        bars_a = np.asarray([it[0] for it in items])
+        frac_a = np.asarray([it[1] for it in items])
         events = [{"midi": it[2], "drum": it[3] or DRUM_MIDI_NAMES.get(it[2], f"Perc {it[2]}"),
                    "duration_s": it[4]} for it in items]
-        bars_a, frac_a = np.asarray(bars), np.asarray(frac)
         n_gp = int(bars_a.max())
-        if not (getattr(self.waveform, "onset_env", None) or {}):
-            n_rec = max(n_rec, n_gp)             # bez nahrávky: celé GP takt po taktu
-        # začátky taktů osy a v nahrávce (u mřížky z nahrávky je tempo v taktu stálé)
-        b_start = np.array([rec.bar_start_seconds(k) for k in range(1, n_rec + 2)])
-        b_len = np.diff(b_start)
-        quarters = np.array([rec.quarters_in_bar(k) for k in range(1, n_rec + 1)])
-        stretch = self.audio_stretch or 1.0
-        rec_audio = (b_start - self.audio_offset_s) / stretch
-        gp_bars = [[] for _ in range(n_gp)]
-        for b, f, g in zip(bars_a, frac_a, grp):
-            if g:
-                gp_bars[b - 1].append((float(f), g))
+        mp = self._source_bar_map([(it[0], it[1], it[2]) for it in items], n_gp, bar_quarters)
         envs = getattr(self.waveform, "onset_env", None) or {}
-        if envs:
-            al = DA.align_gp_bars(envs, gp_bars, rec_audio, quarters)
-        else:                                    # bez nahrávky: takt GP i = takt osy i
-            al = {"assign": [j if j < n_gp else -1 for j in range(n_rec)], "shift": 0, "jumps": []}
-        assign, shift = al["assign"], al["shift"]
-        # takt GP → seznam taktů osy, kam se posadí (repetice v nahrávce = víckrát)
-        where: dict[int, list[int]] = {}
-        for j, i in enumerate(assign):
-            if i >= 0:
-                where.setdefault(i + 1, []).append(j)
+        al = {"jumps": mp["jumps"]}
         placed = []                              # (událost GP, čas na ose)
         for e, b, f in zip(events, bars_a, frac_a):
-            for j in where.get(int(b), []):
-                x = b_start[j] + (f + shift / max(1.0, quarters[j])) * b_len[j]
+            for x in mp["place"](int(b), f):
                 placed.append((e, float(x), DA.drum_group(int(e["midi"]))))
         # shoda: údery kopáku/virblu z GP, které mají v nahrávce úder svého bubnu do ±40 ms
         ok = tot = 0
@@ -3767,32 +4068,204 @@ class TimelineEditor(QWidget):
         self.data["drums_timeline"] = sorted(keep + new, key=lambda e: e["time_s"])
         self._relayout()
         self._refresh_loaded_mixes()
-        first = next((j + 1 for j, i in enumerate(assign) if i == 0), 0)
-        stats = {"n": len(new), "gp_bar1": first, "match": (ok / tot) if tot else 0.0,
-                 "gp_bars": n_gp, "rec_bars": n_rec, "shift": shift, "jumps": al["jumps"],
-                 "empty": sum(1 for i in assign if i < 0)}
+        stats = {"n": len(new), "gp_bar1": mp["first_bar"], "match": (ok / tot) if tot else 0.0,
+                 "gp_bars": n_gp, "rec_bars": self._music_grid().bar_of(max([x for _e, x, _g in placed] or [0])),
+                 "jumps": al["jumps"], "empty": sum(1 for i in mp["assign"] if i < 0)}
         self.last_gp_drums = stats      # pro testy
         return stats
 
-    def place_text_on_grid(self, flat: dict, first_bar: int = 1) -> None:
+    def text_lines_for_alignment(self) -> list[tuple[int, float, str]]:
+        """Řádky textu (index, začátek na ose, text) v pořadí času."""
+        lines = [kl for kl in self.data.get("karaoke_lines", []) or [] if (kl.get("text") or "").strip()]
+        lines.sort(key=lambda k: float(k.get("start_s", 0.0)))
+        return [(i, float(kl.get("start_s", 0.0)), kl["text"]) for i, kl in enumerate(lines)]
+
+    def vocal_line_starts(self) -> list[float | None]:
+        """Začátky řádků textu v čase NAHRÁVKY podle AKORDŮ (`chord_align`):
+        akordy textu se zarovnají na akordy nahrávky po dobách, řádek začne na
+        době svého prvního akordu a přichytí se na nejbližší nástup zpěvu
+        (Demucs, v mezipaměti) do 2,5 doby. Smí běžet ve vlákně."""
+        import numpy as np
+        import chord_align as CA
+        import drum_align as DA
+        wf = self.waveform
+        mono = wf.pcm.astype(np.float32) / 32767.0
+        grid = self._music_grid()
+        end = self._audio_to_timeline_t(wf.duration_s)
+        beats_tl = [grid.seconds(b) for b in range(int(grid.beat(end)) + 2)]
+        beats = np.array([self._timeline_to_audio_t(t) for t in beats_tl])
+        beats = beats[(beats >= 0) & (beats <= wf.duration_s)]
+        chords = sorted(self.data.get("chords_timeline", []) or [], key=lambda c: float(c.get("time_s", 0)))
+        if beats.size < 4 or not chords:
+            return []
+        chroma = CA.beat_chroma(mono, wf.sample_rate, beats)
+        tr = int((self.data.get("meta", {}) or {}).get("bass_transpose", 0)) % 12
+        st, _tr = CA.align_chords(chroma, [c.get("chord", "") for c in chords], transpositions=[tr])
+        first: dict = {}
+        for c, b in zip(chords, st):
+            if c.get("line") is not None:
+                first.setdefault(c["line"], float(beats[b]))
+        onsets = np.zeros(0)
+        if DA.demucs_available():
+            cache = DA.cache_path(self.audio_path, "vocal_onsets") if self.audio_path else None
+            if cache is not None and cache.exists():
+                onsets = np.load(cache)
+            else:
+                voc = DA.demucs_stems(mono, wf.sample_rate, ("vocals",))["vocals"]
+                onsets = CA.vocal_onsets(voc, 44100)
+                if cache is not None:
+                    np.save(cache, onsets)
+        beat_s = float(np.median(np.diff(beats)))
+        lines = sorted([kl for kl in self.data.get("karaoke_lines", []) or [] if (kl.get("text") or "").strip()],
+                       key=lambda k: float(k.get("start_s", 0.0)))
+        out: list[float | None] = []
+        for kl in lines:
+            x = first.get(kl.get("line"))
+            if x is not None and onsets.size:
+                k = int(np.argmin(np.abs(onsets - x)))
+                if abs(onsets[k] - x) <= 2.5 * beat_s:
+                    x = float(onsets[k])
+            out.append(x)
+        return out
+
+    def apply_line_starts(self, audio_starts: list) -> int:
+        """Řádky textu na začátky ze zpěvu (`vocal_line_starts`). Mezi řádky
+        se čas převede plynule (kotvy = začátky řádků), takže se s nimi
+        posunou slova, akordy i akordové řádky (intro, sólo); akordy se pak
+        přichytí na nejbližší dobu. Ctrl+Z vrátí. Vrací počet kotev."""
+        import numpy as np
+        lines = self.text_lines_for_alignment()
+        anchors = []
+        for (_i, old, _t), a in zip(lines, audio_starts):
+            if a is None:
+                continue
+            new = self._audio_to_timeline_t(float(a))
+            if anchors and (old <= anchors[-1][0] + 1e-3 or new <= anchors[-1][1] + 0.05):
+                continue                         # kotvy musí jít po sobě
+            anchors.append((old, new))
+        if not anchors:
+            return 0
+        xo = np.array([a for a, _ in anchors])
+        xn = np.array([b for _, b in anchors])
+
+        def warp(t: float) -> float:
+            if t <= xo[0]:
+                return float(xn[0] + (t - xo[0]))
+            if t >= xo[-1]:
+                return float(xn[-1] + (t - xo[-1]))
+            return float(np.interp(t, xo, xn))
+
+        self._push_undo()
+        grid = self._music_grid()
+        for key in ("lyrics_timeline", "chords_timeline"):
+            for ev in self.data.get(key, []) or []:
+                t0 = float(ev.get("time_s", 0.0))
+                t1 = t0 + float(ev.get("duration_s") or 0.0)
+                nt = warp(t0)
+                if key == "chords_timeline":     # akord na dobu
+                    nt = grid.seconds(round(grid.beat(max(0.0, nt))))
+                ev["time_s"] = round(max(0.0, nt), 4)
+                if ev.get("duration_s") is not None:
+                    ev["duration_s"] = round(max(0.05, warp(t1) - warp(t0)), 4)
+        for kl in self.data.get("karaoke_lines", []) or []:
+            for k in ("start_s", "end_s"):
+                if kl.get(k) is not None:
+                    kl[k] = round(max(0.0, warp(float(kl[k]))), 4)
+            for w in kl.get("words", []) or []:
+                t0 = float(w.get("time_s", 0.0))
+                if w.get("duration_s") is not None:
+                    w["duration_s"] = round(max(0.05, warp(t0 + float(w["duration_s"])) - warp(t0)), 4)
+                w["time_s"] = round(max(0.0, warp(t0)), 4)
+        self._relayout()
+        return len(anchors)
+
+    def align_text_to_vocals(self) -> None:
+        """Časová osa ▸ Zarovnat text podle akordů — akordy textu na akordy
+        nahrávky (+ nástupy zpěvu), řádky se posunou (`apply_line_starts`)."""
+        import threading
+        from PySide6.QtCore import QEventLoop
+        from PySide6.QtWidgets import QMessageBox, QProgressDialog
+        if getattr(self.waveform, "pcm", None) is None or not self.text_lines_for_alignment() \
+                or not self.data.get("chords_timeline"):
+            QMessageBox.information(self, tr("align_text.title"), tr("align_text.need"))
+            return
+        res: dict = {}
+
+        def work():
+            try:
+                res["starts"] = self.vocal_line_starts()
+            except Exception as e:
+                res["err"] = str(e)
+
+        prog = QProgressDialog(tr("align_text.busy"), "", 0, 0, self)
+        prog.setCancelButton(None)
+        prog.setWindowTitle(tr("align_text.title"))
+        prog.setMinimumDuration(0)
+        prog.show()
+        th = threading.Thread(target=work, daemon=True)
+        th.start()
+        loop = QEventLoop()
+        poll = QTimer(self)
+        poll.timeout.connect(lambda: (not th.is_alive()) and loop.quit())
+        poll.start(200)
+        loop.exec()
+        poll.stop()
+        prog.close()
+        if "err" in res:
+            QMessageBox.warning(self, tr("align_text.title"), res["err"])
+            return
+        n = self.apply_line_starts(res["starts"])
+        self.last_text_alignment = {"starts": res["starts"], "anchors": n}   # pro testy
+        main = self.window()
+        if hasattr(main, "status"):
+            main.status.showMessage(tr("align_text.done", n=n, total=len(res["starts"])))
+
+    def place_text_on_grid(self, flat: dict, first_bar: int = 1, replace_existing: bool = False) -> None:
         """Text a akordy z webového importu (`format_migrate.to_editor_model`,
         sekundy na vlastní pravidelné mřížce dialogu) přenese na takty
         aktuální osy: stejná DOBA, počítaná od taktu `first_bar`. Bicí a basa
         zůstanou. Stopy textu dostanou čísla za stávajícími stopami."""
         tempo = float((flat.get("meta") or {}).get("tempo_bpm") or 120)
         grid = self._music_grid()
-        base = grid.beats_before_bar(max(1, int(first_bar)))
+        first_bar = max(1, int(first_bar))
 
         def remap(t: float) -> float:
-            return round(grid.seconds(base + max(0.0, t) * tempo / 60.0), 4)
+            # dialog skládá text na mřížku 4/4: takt dialogu → takt osy, poloha
+            # v taktu poměrně. Dřív se přenášely DOBY, takže ve 3/4 nebo za
+            # taktem 2/4 se řádky rozjely mimo začátky taktů.
+            q = max(0.0, t) * tempo / 60.0
+            bar = int(q // 4 + 1e-9)
+            frac = (q - bar * 4) / 4.0
+            s0 = grid.bar_start_seconds(first_bar + bar)
+            s1 = grid.bar_start_seconds(first_bar + bar + 1)
+            return round(s0 + frac * (s1 - s0), 4)
 
         self._push_undo()
+        # opakované vložení (přegenerování) nahradí předchozí text z tohoto místa
+        old_ti = {int(t.get("index", 0)) for t in self.tracks if t.get("text_import")}
+        if replace_existing:
+            # hotový projekt (otevřený z .kproj, příznak text_import se neukládá):
+            # stopy, na kterých leží text/akordy/řádky, jsou „text" a nahradí se
+            for key in ("lyrics_timeline", "chords_timeline", "karaoke_lines"):
+                old_ti |= {int(e.get("track_index", 0)) for e in self.data.get(key, []) or []
+                           if e.get("track_index") is not None}
+            old_ti = {i for i in old_ti if not any(
+                int(t.get("index", 0)) == i and (t.get("is_drums") or t.get("type") in ("drums", "bass"))
+                for t in self.tracks)}
+        if old_ti:
+            self.tracks[:] = [t for t in self.tracks if int(t.get("index", 0)) not in old_ti]
+            for key in ("lyrics_timeline", "chords_timeline"):
+                self.data[key] = [e for e in self.data.get(key, []) or []
+                                  if e.get("track_index") not in old_ti]
+            self.data["karaoke_lines"] = [k for k in self.data.get("karaoke_lines", []) or []
+                                          if k.get("track_index") not in old_ti]
         shift = max((int(t.get("index", 0)) for t in self.tracks), default=0)
         ti_map = {}
         for t in flat.get("tracks", []) or []:
             if t.get("is_drums") or t.get("type") in ("drums", "bass"):
                 continue
             nt = dict(t)
+            nt["text_import"] = True
             nt["index"] = int(t.get("index", 0)) + shift
             ti_map[t.get("index")] = nt["index"]
             self.tracks.append(nt)
@@ -3805,9 +4278,12 @@ class TimelineEditor(QWidget):
                 if ev.get("duration_s") is not None:
                     ev["duration_s"] = round(max(0.01, remap(t0 + float(ev["duration_s"])) - remap(t0)), 4)
                 ev["time_s"] = remap(t0)
+                if key == "chords_timeline":     # akord na dobu (ve 3/4 vyjde poměrná poloha mimo dobu)
+                    ev["time_s"] = round(grid.seconds(round(grid.beat(ev["time_s"]))), 4)
                 ev["track_index"] = ti_map.get(ev.get("track_index"), ev.get("track_index"))
                 out.append(ev)
-            self.data[key] = out
+            self.data[key] = [e for e in self.data.get(key, []) or []
+                              if e.get("track_index") not in old_ti] + out
         lines = []
         for kl in flat.get("karaoke_lines", []) or []:
             kl = dict(kl)
@@ -3827,11 +4303,13 @@ class TimelineEditor(QWidget):
             if kl.get("track_index") is not None:
                 kl["track_index"] = ti_map.get(kl["track_index"], kl["track_index"])
             lines.append(kl)
-        self.data["karaoke_lines"] = lines
+        self.data["karaoke_lines"] = [k for k in self.data.get("karaoke_lines", []) or []
+                                      if k.get("track_index") not in old_ti] + lines
         meta = self.data.setdefault("meta", {})
         for k in ("title", "artist", "source_url", "has_line_structure", "bars_per_line"):
-            if (flat.get("meta") or {}).get(k) is not None:
-                meta[k] = flat["meta"][k]
+            v = (flat.get("meta") or {}).get(k)
+            if v is not None and not (k in ("title", "artist") and (not v or v == "Unknown")):
+                meta[k] = v
         self._relayout()
 
     def apply_bar_times(self, old_starts, new_starts, bpm, audio_offset: float) -> None:

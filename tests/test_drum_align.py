@@ -635,9 +635,9 @@ def test_pruvodce_bici_z_gp_a_preskoceni(window, qapp):
     poll.stop()
     page.validatePage()
     st = wiz.drums_page.place_gp(parse_gp(JASNA_GP))
-    # pevné 4/4 u Jasné zprávy (má takty 2/4) je za nimi o půl taktu vedle: změřeno 63 %,
-    # s „takty podle nahrávky" 74 %; jeden společný posun dával 64 %
-    assert st["match"] >= 0.6, st
+    # přiřazení po DOBÁCH (takty 2/4 v GP už mřížku nerozjedou): změřeno 78 %
+    # (po taktech 63 %, jeden společný posun 64 %)
+    assert st["match"] >= 0.72, st
     assert all(e["source"] == "gp" for e in wiz.ed.data["drums_timeline"])
 
 
@@ -705,3 +705,250 @@ def test_text_ze_souboru_chordpro_a_html(window):
         dlg2 = WebImportDialog(window)
         dlg2.load_text_file(str(page))
         assert len(dlg2._detected) > 10 and "Let it be" in dlg2.raw_text.toPlainText()
+
+
+# ------------------------------------------------------------------- basa ---
+
+def test_transpozice_basy_umela_nahravka():
+    """Nahrávka hraje o půltón níž než noty souboru → posun −1."""
+    import bass_track as BT
+    notes, t, sig = [], 0.0, []
+    for midi in [40, 43, 45, 38, 40, 47, 45, 43] * 4:          # E G A D … (GP v E)
+        f = 440.0 * 2 ** ((midi - 1 - 69) / 12)                 # nahrávka v Eb
+        n = int(0.5 * SR)
+        tt = np.arange(n) / SR
+        sig.append((np.sin(2 * np.pi * f * tt) + 0.5 * np.sin(4 * np.pi * f * tt)) * np.exp(-tt * 3))
+        notes.append((t, t + 0.5, midi))
+        t += 0.5
+    k, conf = BT.transpose_offset(np.concatenate(sig).astype(np.float32) * 0.5, SR, notes)
+    assert k == -1 and conf > 1.5, (k, conf)
+
+
+def test_basa_z_gp_a_midi_bez_nahravky(window):
+    """Průvodce bez nahrávky: basa z GP i z MIDI takt po taktu."""
+    from recording_wizard import RecordingWizard
+    wiz = RecordingWizard(window)
+    ed = wiz.editor()
+    from conftest import GNR_GP
+    st = ed.place_gp_bass_on_grid(parse_gp(GNR_GP))            # Jasná zpráva v GP basu nemá
+    assert st["n"] > 100 and st["transpose"] == 0
+    ev = ed.data["bass_timeline"]
+    assert all(e["source"] == "gp" and 0 <= e["fret"] <= 24 and e["note_name"] for e in ev)
+    mid = SONGS / "Led Zeppelin - Stairway to Heaven" / "Led Zeppelin-Stairway to Heaven-08-13-2026.mid"
+    if mid.exists():
+        st = ed.place_midi_bass_on_grid(str(mid))
+        assert st["n"] == 508
+        ed.undo()
+        assert len(ed.data["bass_timeline"]) == len(ev)
+
+
+def test_transpozice_basy_rucne_a_popisek(window):
+    """Ruční transpozice basy: výška i jméno noty se posunou, součet v meta,
+    popisek na notě ukazuje AKTUÁLNÍ jméno; Ctrl+Z vrátí."""
+    from conftest import GNR_GP
+    gp_import(window, GNR_GP)
+    ed = window.timeline
+    before = [(e["midi"], e["note_name"]) for e in ed.data["bass_timeline"]]
+    assert ed.transpose_bass(2) == len(before)
+    assert ed.data["meta"]["bass_transpose"] == 2
+    ed.transpose_bass(-3)
+    assert ed.data["meta"]["bass_transpose"] == -1
+    after = [(e["midi"], e["note_name"]) for e in ed.data["bass_timeline"]]
+    assert all(a[0] == b[0] - 1 for a, b in zip(after, before))
+    names = {it._label.text() for it in ed.bass_note_items}
+    assert names == {n for _m, n in after}
+    ed.undo()
+    ed.undo()
+    assert [(e["midi"], e["note_name"]) for e in ed.data["bass_timeline"]] == before
+
+
+def test_pregenerovani_textu_nahradi_predchozi(window):
+    """Opakované vložení textu (průvodce) nenechá staré řádky/stopy navíc."""
+    import web_import as W
+    from format_migrate import migrate, to_editor_model
+    from recording_wizard import RecordingWizard
+    lines = (SONGS / "Olympic - Jasná zpráva" / "Jasná Zpráva.txt").read_text(encoding="utf-8").splitlines()
+    det = W.apply_chord_templates(W.detect_chord_chart(lines))
+    ed = RecordingWizard(window).editor()
+    for bars in (2, 4):
+        flat = to_editor_model(migrate(W.build_karaoke_json(det, "T", "A", 120, "", bars_per_line=bars,
+                                                            count_in_bars=1))[0])
+        ed.place_text_on_grid(flat, 2)
+        n_tracks = len(ed.tracks)
+        n_lines = len(ed.data["karaoke_lines"])
+    assert n_lines == len(flat["karaoke_lines"])
+    assert sum(1 for t in ed.tracks if t.get("text_import")) == n_tracks - sum(
+        1 for t in ed.tracks if not t.get("text_import"))
+    ed.place_text_on_grid(flat, 2)
+    assert len(ed.tracks) == n_tracks and len(ed.data["karaoke_lines"]) == n_lines
+
+
+@pytest.mark.skipif(not __import__("os").environ.get("GPV_SLOW"), reason="pomalý (Beat This + Demucs ~2 min), GPV_SLOW=1")
+def test_text_zarovnany_na_zpev_jasna_zprava(window, qapp, monkeypatch):
+    """Celá cesta průvodce na studiovce: takty z nahrávky, text, zarovnání na
+    zpěv podle akordů. Pravda = časovaný text lrclib (texty/lrclib.lrc):
+    ≥ 70 % řádků do jedné doby (změřeno 77 %)."""
+    import re
+    import beat_grid as BG
+    import web_import as W
+    import drum_align as A
+    from format_migrate import migrate, to_editor_model
+    from PySide6.QtCore import QEventLoop, QTimer
+    from recording_wizard import RecordingWizard
+    if not (BG.available() and A.demucs_available()):
+        pytest.skip("chybí beat-this / demucs")
+    song = SONGS / "Olympic - Jasná zpráva"
+    wiz = RecordingWizard(window)
+    wiz.audio_page.path.setText(str(song / "10. Olympic - Jasná zpráva.wav"))
+    wiz.audio_page.validatePage()
+    page = wiz.grid_page
+    page.initializePage()
+    loop = QEventLoop()
+    poll = QTimer()
+    poll.timeout.connect(lambda: page.isComplete() and loop.quit())
+    poll.start(200)
+    QTimer.singleShot(180000, loop.quit)
+    loop.exec()
+    poll.stop()
+    page.validatePage()
+    ed = wiz.ed
+    lines = (song / "Jasná Zpráva.txt").read_text(encoding="utf-8").splitlines()
+    flat = to_editor_model(migrate(W.build_karaoke_json(W.apply_chord_templates(W.detect_chord_chart(lines)),
+                                                        "T", "A", 120, "", bars_per_line=2, count_in_bars=1))[0])
+    ed.place_text_on_grid(flat, 2)
+    ed.align_text_to_vocals()
+    lrc = []
+    for ln in (song / "texty" / "lrclib.lrc").read_text(encoding="utf-8").splitlines():
+        m = re.match(r"\[(\d+):(\d+(?:\.\d+)?)\](.*)", ln)
+        if m and m.group(3).strip():
+            lrc.append(int(m.group(1)) * 60 + float(m.group(2)))
+    starts = [ed._timeline_to_audio_t(s) for _i, s, _t in ed.text_lines_for_alignment()]
+    assert len(starts) == len(lrc) + 1                 # LRC slévá dva krátké řádky refrénu do jednoho
+    beat = 60.0 / ed.data["meta"]["tempo_bpm"]
+    ok = sum(1 for t in lrc if min(abs(s - t) for s in starts) <= beat)
+    assert ok >= 0.7 * len(lrc), (ok, len(lrc))
+
+
+def test_text_na_takty_ve_tri_ctvrtecnim(window):
+    """Text z dialogu (mřížka 4/4) na osu ve 3/4: řádek = 2 takty osy,
+    každý řádek začíná na taktu, akordy na dobách."""
+    import web_import as W
+    from format_migrate import migrate, to_editor_model
+    from recording_wizard import RecordingWizard
+    ed = RecordingWizard(window).editor()
+    starts = np.arange(0, 40) * 1.8                          # 3/4 po 0,6 s na dobu
+    ed.set_recording_grid(starts, [3] * 39)
+    txt = ["G           D", "Prvni radek textu tady", "Emi      C", "Druhy radek textu", "G D", "Treti radek"]
+    flat = to_editor_model(migrate(W.build_karaoke_json(W.apply_chord_templates(W.detect_chord_chart(txt)),
+                                                        "T", "A", 120, "", bars_per_line=2, count_in_bars=0))[0])
+    ed.place_text_on_grid(flat, 3)
+    grid = ed._music_grid()
+    kls = sorted(ed.data["karaoke_lines"], key=lambda k: k["start_s"])
+    assert [round(k["start_s"], 3) for k in kls] == [round(grid.bar_start_seconds(b), 3) for b in (3, 5, 7)]
+    for c in ed.data["chords_timeline"]:
+        assert abs(grid.beat(c["time_s"]) - round(grid.beat(c["time_s"]))) < 1e-3
+
+
+def test_pregenerovat_jen_jeden_krok_v_projektu(window):
+    """Časová osa ▸ Přegenerovat ▸ Basa: jen ten krok, v TÉŽE kartě; bicí
+    a text zůstanou, žádná nová karta."""
+    import web_import as W
+    from conftest import GNR_GP
+    from format_migrate import migrate, to_editor_model
+    gp_import(window, GNR_GP)
+    ed, n_tabs = window.timeline, window.doc_tabs.count()
+    lines = (SONGS / "Olympic - Jasná zpráva" / "Jasná Zpráva.txt").read_text(encoding="utf-8").splitlines()
+    flat = to_editor_model(migrate(W.build_karaoke_json(W.apply_chord_templates(W.detect_chord_chart(lines)),
+                                                        "T", "A", 120, "", bars_per_line=2, count_in_bars=1))[0])
+    ed.place_text_on_grid(flat, 2)
+    n_drums, n_lines = len(ed.data["drums_timeline"]), len(ed.data["karaoke_lines"])
+    window._open_regen("bass")
+    wiz = window._recording_wizard
+    assert wiz.ed is ed and wiz.pages_ == [wiz.bass_page]
+    mid = SONGS / "Led Zeppelin - Stairway to Heaven" / "Led Zeppelin-Stairway to Heaven-08-13-2026.mid"
+    if mid.exists():
+        assert wiz.editor().place_midi_bass_on_grid(str(mid))["n"] == 508
+    assert window.doc_tabs.count() == n_tabs and window.timeline is ed
+    assert len(ed.data["drums_timeline"]) == n_drums and len(ed.data["karaoke_lines"]) == n_lines
+    wiz.close()
+
+
+
+def test_menu_novy_projekt_a_nahradit(window):
+    """Projekt vzniká jen průvodcem (Ctrl+N), hotový projekt se mění menu
+    Nahradit (bicí, basa, text a akordy); import GP/MIDI v menu není."""
+    from i18n import tr
+    from PySide6.QtWidgets import QMenu
+    titles = {m.title(): m for m in window.menuBar().findChildren(QMenu)}
+    file_items = [a.text() for a in titles[tr("menu.file")].actions() if a.text()]
+    assert tr("file.recording_wizard") in file_items
+    assert tr("file.import_gp") not in file_items and tr("file.import_midi") not in file_items
+    assert [a.text() for a in titles[tr("menu.regen")].actions()] == [
+        tr("regen.drums"), tr("regen.bass"), tr("regen.text"), tr("regen.tab")]
+
+
+def test_projekt_bez_nahravky_prevezme_casovani_z_gp(window):
+    """Průvodce bez nahrávky + bicí z GP: projekt převezme tempo a metrum GP
+    (jako dřív import GP), údery jsou tam, kde v GP."""
+    import guitar_pro_viewer as G
+    from recording_wizard import RecordingWizard
+    song = parse_gp(JASNA_GP)
+    wiz = RecordingWizard(window)
+    wiz.restart()
+    wiz._skip()
+    wiz._skip()
+    st = wiz.drums_page.place_gp(song)
+    ed = wiz.ed
+    assert st["n"] > 900 and ed.data["meta"]["tempo_bpm"] == 65
+    ref, _ = G.gp_drum_events(song, G.build_tempo_map(song))
+    got = sorted(e["time_s"] for e in ed.data["drums_timeline"])
+    assert np.allclose(got[:50], sorted(e["time_s"] for e in ref)[:50], atol=0.002)
+
+
+
+def test_pruvodce_jen_novy_projekt_menu_doplnky(window):
+    """Průvodce: žádné napasování/transpozice/„nahradit"/„jen zarovnat"
+    (projekt je prázdný). Přepracovat ▸ Basa / Text je mají."""
+    from PySide6.QtWidgets import QPushButton
+    from recording_wizard import RecordingWizard
+    from i18n import tr
+    wiz = RecordingWizard(window)
+    texts = {b.text() for p in wiz.pages_ for b in p.findChildren(QPushButton)}
+    assert not texts & {tr("timeline.fit_tempo"), tr("timeline.bass_transpose"), tr("wizard.text.align_only")}
+    assert not wiz.text_page.replace_chk.isVisibleTo(wiz.text_page)
+    for kind, label in (("bass", "timeline.bass_transpose"), ("text", "wizard.text.align_only")):
+        window._open_regen(kind)
+        w = window._recording_wizard
+        assert tr(label) in {b.text() for b in w.pages_[0].findChildren(QPushButton)}
+        w.close()
+
+
+def test_prepracovat_tabulatura_z_gp(window):
+    """Přepracovat ▸ Tabulatura: sólová stopa GP na takty projektu, bloky
+    s transpozičními variantami; Ctrl+Z vrátí."""
+    import guitar_pro_viewer as G
+    from conftest import GNR_GP
+    song = parse_gp(GNR_GP)
+    gp_import(window, GNR_GP)
+    ed = window.timeline
+    before = list(ed.data.get("tab_timeline", []))
+    solo = next(i + 1 for i, t in enumerate(song.tracks) if not t.isPercussionTrack and G.is_solo_like(t))
+    window._open_regen("tab")
+    st = window._recording_wizard.tab_page.place(song, solo)
+    assert st["n"] > 0 and st["notes"] > 20
+    tabs = ed.data["tab_timeline"]
+    assert tabs and all(e["text"].count("|") >= 8 and e.get("variants") for e in tabs)
+    window._recording_wizard.close()
+    ed.undo()
+    assert ed.data.get("tab_timeline", []) == before
+
+
+
+def test_nazev_karty_neni_unknown(window, tmp_path):
+    """Záložka: výchozí „Unknown" z importu se nebere jako název — místo něj
+    název souboru (uživatel: po uložení pořád „Unknown")."""
+    ed = window.timeline
+    ed.data = {"meta": {"title": "Unknown"}}
+    window.current_json_file = str(tmp_path / "Jasná zpráva.kproj")
+    ed.current_json_file = window.current_json_file
+    assert "Jasná zpráva" in window._tab_label_for(ed)

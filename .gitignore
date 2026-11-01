@@ -18,3 +18,7 @@ stažené/
 
 # Uživatelské nastavení (jazyk apod.) — generuje se za běhu, je lokální
 settings.json
+
+# Nahravky pisni (stazene / vlastni) a vygenerovane poslechove WAV — jen lokalne
+pisne/**/*.mp3
+pisne/**/*poslech*.wav

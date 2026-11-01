@@ -13,3 +13,4 @@ musixmatch.html | musixmatch | https://www.musixmatch.com/lyrics/Led-Zeppelin/St
 —  | pisnicky-akordy | https://pisnicky-akordy.cz/led-zeppelin/stairway-to-heaven | NESTAŽENO: HTTP 403 — ochrana proti robotům
 —  | supermusic | https://www.supermusic.cz/piesen.php?id=8208 | NESTAŽENO: JS výzva proti robotům (supermusic)
 —  | velkyzpevnik | https://www.velkyzpevnik.cz/led-zeppelin/stairway-to-heaven | NESTAŽENO: HTTP 503 — web nedostupný
+lrclib.lrc | lrclib.net | https://lrclib.net/api/get/34971575 | LRC — text s časem každého řádku („Led Zeppelin – Led Zeppelin - Stairway To Heaven“, 483 s), staženo 2026-11-01

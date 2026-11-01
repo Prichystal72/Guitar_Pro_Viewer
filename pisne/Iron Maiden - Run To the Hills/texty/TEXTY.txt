@@ -13,3 +13,4 @@ chordie.html | chordie | https://www.chordie.com/chord.pere/www.guitartabs.cc/ta
 —  | pisnicky-akordy | https://pisnicky-akordy.cz/iron-maiden/run-to-the-hills | NESTAŽENO: HTTP 403 — ochrana proti robotům
 —  | supermusic | https://www.supermusic.cz/piesen.php?id=355570 | NESTAŽENO: JS výzva proti robotům (supermusic)
 —  | velkyzpevnik | https://www.velkyzpevnik.cz/iron-maiden/run-to-the-hills | NESTAŽENO: HTTP 503 — web nedostupný
+lrclib.lrc | lrclib.net | https://lrclib.net/api/get/8022671 | LRC — text s časem každého řádku („Iron Maiden – Run to the Hills“, 234 s), staženo 2026-11-01

@@ -12,3 +12,4 @@ guitaretab.html | guitaretab | https://www.guitaretab.com/g/guns-n-roses/294031.
 —  | pisnicky-akordy | https://pisnicky-akordy.cz/guns-n-roses/knockin-on-heaven-s-door | NESTAŽENO: HTTP 403 — ochrana proti robotům
 —  | supermusic | https://www.supermusic.cz/piesen.php?id=156597 | NESTAŽENO: JS výzva proti robotům (supermusic)
 —  | velkyzpevnik | https://www.velkyzpevnik.cz/guns-n-roses/knockin-on-heaven-s-door | NESTAŽENO: HTTP 503 — web nedostupný
+lrclib.lrc | lrclib.net | https://lrclib.net/api/get/19638291 | LRC — text s časem každého řádku („Guns N’ Roses – Knockin’ on Heaven’s Door“, 334 s), staženo 2026-11-01

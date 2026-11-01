@@ -29,3 +29,10 @@ umí import akordů z webu (`web_import.py`), MIDI (`midi_import.py`) a dávkov�
   Ověřeno: umělá nahrávka (známý posun −7,3 s / 98,5 %) → nalezeno přesně; `jasna_zprava.wav` i živák
   nedrží tempo (úseky ±0,3–0,5 s) — jedním posunem nejdou zarovnat celé, GP 65 BPM sedí v průměru (100,4 %).
 - Testy čekající na dekodér zvuku: čekat přes `QEventLoop`, ne `processEvents` + `time.sleep` (dekodér hladoví).
+- Rozložení textu z nahrávky: podle AKORDŮ (`chord_align.py`) + nástup zpěvu (Demucs) — Jasná 77 %, Let It Be 63 %
+  řádků do 1 doby proti lrclib; pevné takty 0–5 %. Velké modely (MMS-FA 1,2 GB) uživatel ODMÍTL. Text z lrclib
+  uživatel NECHCE používat, jen k měření. Zarovnání potřebuje akordy celé písně v pořadí.
+  Text musí odpovídat zpívanému — zkrácené refrény rozbaluje `web_import.expand_repeats`.
+- Projekt = `.kproj` (JSON + blok `project` s relativními cestami), pro ESP32 export `.json`. Staré pokusy v `pisne/*/archiv/`.
+- PySide6 zamčeno na 6.10.0 (6.11.1 cukalo přehrávání).
+

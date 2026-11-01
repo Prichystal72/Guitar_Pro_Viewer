@@ -13,3 +13,4 @@ musixmatch.html | musixmatch | https://www.musixmatch.com/lyrics/The-Beatles/Let
 —  | pisnicky-akordy | https://pisnicky-akordy.cz/the-beatles/let-it-be | NESTAŽENO: HTTP 403 — ochrana proti robotům
 —  | supermusic | https://www.supermusic.cz/piesen.php?id=108412 | NESTAŽENO: JS výzva proti robotům (supermusic)
 —  | velkyzpevnik | https://www.velkyzpevnik.cz/the-beatles/let-it-be | NESTAŽENO: HTTP 503 — web nedostupný
+lrclib.lrc | lrclib.net | https://lrclib.net/api/get/37876761 | LRC — text s časem každého řádku („The Beatles – The Beatles - The Beatles - Let It Be“, 243 s), staženo 2026-11-01

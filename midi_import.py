@@ -309,13 +309,9 @@ def build_karaoke_json_from_midi(path: str) -> tuple[dict, list[str]]:
     return result, warnings
 
 
-def midi_drum_bars(path: str) -> list[tuple[int, float, int]]:
-    """Bicí z MIDI po taktech zdroje: [(takt 1-based, poměrná pozice v taktu
-    0..1, GM číslo bubnu)] — pro průvodce „Karaoke z nahrávky", který údery
-    posadí na takty NAHRÁVKY (tempo MIDI se nepoužije). Takty podle
-    `time_signature` (bez něj 4/4); bicí = stopy, které `_classify_track`
-    pozná jako bicí, a vůbec všechny noty na kanálu 10."""
-    mid = mido.MidiFile(path)
+def _midi_bars(mid) -> list[tuple[int, int]]:
+    """Takty MIDI souboru: [(tick začátku, délka v tickách)] podle
+    `time_signature` (bez něj 4/4)."""
     tpb = mid.ticks_per_beat or 480
     sigs: dict[int, tuple[int, int]] = {}
     for track in mid.tracks:
@@ -326,8 +322,7 @@ def midi_drum_bars(path: str) -> list[tuple[int, float, int]]:
                 sigs[t] = (msg.numerator, msg.denominator)
     sigs.setdefault(0, sigs[min(sigs)] if sigs else (4, 4))
     marks = sorted(sigs.items())
-    # začátky taktů v tickách (úseky metra)
-    bars: list[tuple[int, int]] = []          # (tick začátku, délka taktu v tickách)
+    bars: list[tuple[int, int]] = []
     end = max((sum(m.time for m in tr) for tr in mid.tracks), default=0)
     for i, (tick, (num, den)) in enumerate(marks):
         stop = marks[i + 1][0] if i + 1 < len(marks) else end + 1
@@ -336,6 +331,42 @@ def midi_drum_bars(path: str) -> list[tuple[int, float, int]]:
         while t < stop:
             bars.append((t, length))
             t += length
+    return bars
+
+
+def midi_bass_bars(path: str) -> list[tuple[int, float, float, int, int, int]]:
+    """Basa z MIDI po taktech zdroje: [(takt, poměrná pozice, délka v taktech,
+    MIDI, struna, pražec)] — první stopa, kterou `_classify_track` pozná jako
+    basu; struna/pražec pro 4strunnou basu E A D G."""
+    import bisect
+    mid = mido.MidiFile(path)
+    bars = _midi_bars(mid)
+    starts = [b[0] for b in bars]
+    tuning = [43, 38, 33, 28]
+    for track in mid.tracks:
+        if _classify_track(track) != "bass":
+            continue
+        out = []
+        ps = pf = None
+        for start, end, _ch, pitch in sorted(_track_notes(track)):
+            b = max(0, bisect.bisect_right(starts, start) - 1)
+            string, fret = _note_to_string_fret(pitch, tuning, ps, pf)
+            ps, pf = string, fret
+            out.append((b + 1, (start - bars[b][0]) / bars[b][1], max(1, end - start) / bars[b][1],
+                        pitch, string, fret))
+        if out:
+            return out
+    return []
+
+
+def midi_drum_bars(path: str) -> list[tuple[int, float, int]]:
+    """Bicí z MIDI po taktech zdroje: [(takt 1-based, poměrná pozice v taktu
+    0..1, GM číslo bubnu)] — pro průvodce „Karaoke z nahrávky", který údery
+    posadí na takty NAHRÁVKY (tempo MIDI se nepoužije). Takty podle
+    `time_signature` (bez něj 4/4); bicí = stopy, které `_classify_track`
+    pozná jako bicí, a vůbec všechny noty na kanálu 10."""
+    mid = mido.MidiFile(path)
+    bars = _midi_bars(mid)
     starts = [b[0] for b in bars]
     import bisect
     out: list[tuple[int, float, int]] = []
@@ -352,3 +383,34 @@ def midi_drum_bars(path: str) -> list[tuple[int, float, int]]:
             out.append((b + 1, (start - bars[b][0]) / bars[b][1], pitch))
     out.sort()
     return out
+
+
+def midi_timing(path: str) -> tuple[list[dict], list[dict]]:
+    """(tempo_map [{tick (960 = začátek), bpm}], meter_map [{bar, num, den}])
+    MIDI souboru — pro projekt bez nahrávky."""
+    import bisect
+    mid = mido.MidiFile(path)
+    tpb = mid.ticks_per_beat or 480
+    tempo = [{"tick": 960 + int(round(t * 960 / tpb)), "bpm": float(b)} for t, b in _merged_tempo_events(mid)]
+    bars = _midi_bars(mid)
+    starts = [b[0] for b in bars]
+    sigs: dict[int, tuple[int, int]] = {}
+    for track in mid.tracks:
+        t = 0
+        for msg in track:
+            t += msg.time
+            if msg.type == "time_signature":
+                sigs[t] = (msg.numerator, msg.denominator)
+    meter = []
+    for t, (num, den) in sorted(sigs.items()) or [(0, (4, 4))]:
+        bar = max(0, bisect.bisect_right(starts, t) - 1) + 1
+        if not meter or (meter[-1]["num"], meter[-1]["den"]) != (num, den):
+            meter.append({"bar": bar, "num": num, "den": den})
+    return tempo, meter or [{"bar": 1, "num": 4, "den": 4}]
+
+
+def midi_bar_quarters(path: str) -> list[float]:
+    """Délka každého taktu MIDI ve čtvrtkách (podle time_signature)."""
+    mid = mido.MidiFile(path)
+    tpb = mid.ticks_per_beat or 480
+    return [length / tpb for _t, length in _midi_bars(mid)]
